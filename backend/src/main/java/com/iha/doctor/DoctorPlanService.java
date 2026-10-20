@@ -51,10 +51,13 @@ public class DoctorPlanService {
 	private final NotificationService notifications;
 	private final AuditService audit;
 	private final JsonMapper json;
+	private final DoctorConsultationService consultations;
 
 	DoctorPlanService(DoctorAccountService accounts, DoctorCaseService caseService, TreatmentPlanRepository plans,
 			TreatmentPlanSpecialistRepository specialists, CaseRepository cases, HospitalRepository hospitals,
-			NotificationService notifications, AuditService audit, JsonMapper json) {
+			NotificationService notifications, AuditService audit, JsonMapper json,
+			DoctorConsultationService consultations) {
+		this.consultations = consultations;
 		this.accounts = accounts;
 		this.caseService = caseService;
 		this.plans = plans;
@@ -73,7 +76,8 @@ public class DoctorPlanService {
 		DoctorCaseAssignment assignment = caseService.requireAccepted(doctor, caseId);
 		MedicalCase medicalCase = cases.findById(caseId).orElseThrow(() -> ApiException.notFound("Case not found."));
 		Optional<TreatmentPlan> plan = plans.findByCaseIdAndDoctorId(caseId, doctor.getId());
-		return new PlanView(medicalCase, assignment, plan.orElse(null),
+		return new PlanView(medicalCase, assignment, consultations.initialState(doctor, assignment).state(),
+				plan.orElse(null),
 				plan.map(p -> specialists.findByTreatmentPlanIdOrderByCreatedAtAsc(p.getId())).orElse(List.of()),
 				plan.map(p -> costItems(p.getCostBreakdownJson())).orElse(List.of()), accounts.affiliatedHospitals(doctor));
 	}
@@ -98,6 +102,11 @@ public class DoctorPlanService {
 		Map<String, String> errors = submitErrors(input);
 		if (!errors.isEmpty()) {
 			throw new FieldValidationException(errors);
+		}
+		if (!consultations.initialSatisfied(doctor, assignment)) {
+			throw ApiException.conflict("initial_consultation_required",
+					"Hold the initial Zoom consultation with the patient (or record why it isn't needed) "
+							+ "before submitting the plan.");
 		}
 		TreatmentPlan plan = save(doctor, caseId, input);
 		if (!plan.isComplete()) {
@@ -258,7 +267,9 @@ public class DoctorPlanService {
 			List<String> aftercare, List<SpecialistInput> specialists) {
 	}
 
-	public record PlanView(MedicalCase medicalCase, DoctorCaseAssignment assignment, TreatmentPlan plan,
+	/** @param initialConsultation see {@link DoctorConsultationService#initialState}; held or skipped unlocks submit */
+	public record PlanView(MedicalCase medicalCase, DoctorCaseAssignment assignment, String initialConsultation,
+			TreatmentPlan plan,
 			List<TreatmentPlanSpecialist> specialists, List<CostItem> costItems, List<Hospital> hospitals) {
 	}
 

@@ -257,6 +257,56 @@ class DoctorPortalFlowTests {
 				 "costItems":[{"label":"Surgery Charge","amount":4000}],"aftercare":["Rest"," ",""],
 				 "specialists":[{"specialistType":"anaesthetist","costAud":1200}]}
 				""".formatted(start, start.plusDays(6), hospital.getId());
+		// ── Initial Zoom consultation gates the plan ──────────────────────
+		perform(post("/api/doctor/cases/" + caseId + "/treatment-plan/submit").contentType(MediaType.APPLICATION_JSON)
+			.content(plan), doctorToken)
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value("initial_consultation_required"));
+		perform(post("/api/doctor/cases/" + caseId + "/initial-consultation/skip").contentType(MediaType.APPLICATION_JSON)
+			.content("{\"reason\":\"no\"}"), doctorToken)
+			.andExpect(jsonPath("$.code").value("reason_required"));
+		LocalDate consultDay = LocalDate.now(ZoneId.of("Australia/Brisbane")).plusDays(2);
+		String initial = perform(post("/api/doctor/cases/" + caseId + "/initial-consultation")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"slots\":[{\"date\":\"%s\",\"startTime\":\"11:00\",\"endTime\":\"11:30\"}]}".formatted(consultDay)),
+				doctorToken)
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.kind").value("initial"))
+			.andExpect(jsonPath("$.status").value("slots_proposed"))
+			.andReturn().getResponse().getContentAsString();
+		UUID initialId = UUID.fromString(JsonPath.read(initial, "$.id"));
+		perform(post("/api/doctor/cases/" + caseId + "/initial-consultation").contentType(MediaType.APPLICATION_JSON)
+			.content("{\"slots\":[{\"date\":\"%s\",\"startTime\":\"12:00\",\"endTime\":\"12:30\"}]}".formatted(consultDay)),
+				doctorToken)
+			.andExpect(jsonPath("$.code").value("initial_consultation_exists"));
+		perform(get("/api/doctor/cases/" + caseId), doctorToken)
+			.andExpect(jsonPath("$.initialConsultation.state").value("slots_proposed"));
+		// The patient sees it on the case, picks the time and pays the fee.
+		String patientView = perform(get("/api/patient/cases/" + caseId + "/consultations"), patientToken)
+			.andExpect(jsonPath("$[0].kind").value("initial"))
+			.andExpect(jsonPath("$[0].doctorName").value("Dr. Jane Smith"))
+			.andReturn().getResponse().getContentAsString();
+		String slotId = JsonPath.read(patientView, "$[0].slots[0].id");
+		perform(post("/api/patient/consultations/" + initialId + "/select-slot").contentType(MediaType.APPLICATION_JSON)
+			.content("{\"slotId\":\"%s\"}".formatted(slotId)), patientToken)
+			.andExpect(status().isOk());
+		String consultCheckout = perform(post("/api/patient/consultations/" + initialId + "/checkout"), patientToken)
+			.andExpect(status().isOk())
+			.andReturn().getResponse().getContentAsString();
+		perform(post("/api/patient/payments/simulate/" + JsonPath.read(consultCheckout, "$.intentId")), patientToken)
+			.andExpect(status().isNoContent());
+		perform(get("/api/doctor/cases/" + caseId), doctorToken)
+			.andExpect(jsonPath("$.initialConsultation.state").value("scheduled"));
+		perform(post("/api/doctor/cases/" + caseId + "/treatment-plan/submit").contentType(MediaType.APPLICATION_JSON)
+			.content(plan), doctorToken)
+			.andExpect(jsonPath("$.code").value("initial_consultation_required"));
+		// Once its time has come, the plan can go.
+		jdbc.update("update consultation_slots set slot_time = ?, slot_end_time = ? where id = ?",
+				java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(3600)),
+				java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(1800)), UUID.fromString(slotId));
+		perform(get("/api/doctor/cases"), doctorToken)
+			.andExpect(jsonPath("$[0].initialConsultation").value("held"));
+
 		perform(post("/api/doctor/cases/" + caseId + "/treatment-plan/submit").contentType(MediaType.APPLICATION_JSON)
 			.content(plan), doctorToken)
 			.andExpect(status().isOk())
@@ -281,7 +331,9 @@ class DoctorPortalFlowTests {
 			.andReturn().getResponse().getContentAsString();
 		UUID requestId = UUID.fromString(JsonPath.read(consultation, "$.id"));
 		perform(get("/api/doctor/consultations"), doctorToken)
+			.andExpect(jsonPath("$.length()").value(2))
 			.andExpect(jsonPath("$[0].id").value(requestId.toString()))
+			.andExpect(jsonPath("$[0].kind").value("option"))
 			.andExpect(jsonPath("$[0].procedureName").value("TAVI"))
 			.andExpect(jsonPath("$[0].status").value("requested"));
 		perform(get("/api/doctor/consultations/" + requestId), strangerToken).andExpect(status().isNotFound());
@@ -322,6 +374,19 @@ class DoctorPortalFlowTests {
 				planId);
 		perform(post("/api/doctor/cases/" + caseId + "/complete"), doctorToken).andExpect(status().isNoContent());
 		assertThat(caseStatus(caseId)).isEqualTo("completed");
+
+		// Dashboard insights reflect the journey (no paid treatment here, so no earnings).
+		perform(get("/api/doctor/insights"), doctorToken)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.patientsTreated").value(1))
+			.andExpect(jsonPath("$.funnel[0].label").value("Assigned"))
+			.andExpect(jsonPath("$.funnel[0].count").value(1))
+			.andExpect(jsonPath("$.funnel[3].count").value(1))
+			.andExpect(jsonPath("$.money.earnedYearAud").value(0))
+			.andExpect(jsonPath("$.money.feesPaidAud").value(5000.0))
+			.andExpect(jsonPath("$.verification[0].state").value("verified"));
+		perform(get("/api/doctor/insights"), strangerToken)
+			.andExpect(jsonPath("$.patientsTreated").value(0));
 
 		// ── Support chat ───────────────────────────────────────────────────
 		perform(post("/api/doctor/messages").contentType(MediaType.APPLICATION_JSON).content("{\"body\":\"Hi\"}"),

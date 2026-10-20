@@ -36,7 +36,8 @@ The database starts empty on every API start, so the dev profile seeds demo data
 | Account | Password | What's there |
 |---|---|---|
 | `patient@demo.local` | `Demo1234` | Complete profile, medical history, two cases |
-| `doctor@demo.local` | `Demo1234` | Approved, registration fee paid, four affiliated hospitals; one new case invitation and one case already in evaluation |
+| `doctor@demo.local` | `Demo1234` | Approved, registration fee paid, four affiliated hospitals; one new case invitation, one case in evaluation, and a year of history for the dashboard (treated and paid cases over past months, a case lost to another doctor) |
+| `peer1@demo.local`, `peer2@demo.local` | `Demo1234` | Two more Cardiology doctors, so the anonymised benchmark and rank have data |
 
 Turn seeding off with `iha.dev.seed-demo-data=false`.
 
@@ -116,6 +117,17 @@ API_LOG=../api.log node doctor-journey.mjs   # doctor: sign-up → scheduled con
 ```
 
 Screenshots go to `e2e/shots/` (git-ignored). The scripts expect Chrome at `C:/Program Files/Google/Chrome/Application/chrome.exe`; change `executablePath` elsewhere.
+
+## Continuous integration
+
+GitHub Actions ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs on every push to `main` and every pull request:
+
+| Job | Runs |
+|---|---|
+| API tests (Java 21) | `./mvnw -B test` in `backend/`; uploads the Surefire reports when a test fails |
+| Web app type-check and build | `npm ci && npm run build` in `frontend/` (Node 24) |
+
+The Chrome journeys in `e2e/` need both servers running and stay a local check.
 
 ## Before you push
 

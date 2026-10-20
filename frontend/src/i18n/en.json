@@ -397,7 +397,9 @@
     "successToast": "Consultation request sent to the doctor.",
     "timeConfirmed": "Consultation time confirmed.",
     "changeTimeButton": "Change Time",
-    "cancelChange": "Cancel"
+    "cancelChange": "Cancel",
+    "initialTitle": "Initial consultation with {doctor}",
+    "initialIntro": "Before preparing your treatment plan, your doctor would like to talk with you on Zoom about your condition, history and expectations."
   },
   "payments": {
     "title": "Payments",

@@ -97,7 +97,7 @@ audit.record(user.id(), user.email(), "doctor", "treatment_plan.submitted", "tre
 
 ### Database migrations
 
-- Flyway, append-only: the next file is `V5__<description>.sql`.
+- Flyway, append-only: the next file is `V6__<description>.sql`.
 - SQL must run on **both** H2 (PostgreSQL mode) and PostgreSQL: ids are UUIDs generated in Java (no `gen_random_uuid()`), use `varchar` not `text`, arrays have no defaults.
 - Entities are validated against the schema at startup (`ddl-auto: validate`), so a mismatch fails fast.
 
@@ -116,7 +116,7 @@ All settings are under `iha.*` in `application.yml`; secrets come from environme
 
 ## Adding a feature (checklist)
 
-1. Migration `V5__….sql` if the schema changes (portable SQL).
+1. Migration `V6__….sql` if the schema changes (portable SQL).
 2. Entity + repository (own file) in the feature package.
 3. Service with the rules, ownership checks, notifications, audit entry and status transitions.
 4. Controller under the right role prefix (`/api/<role>/…`) with request/response records.

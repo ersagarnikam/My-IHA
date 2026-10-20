@@ -62,13 +62,14 @@ public class DoctorConsultationController {
 	public record SlotResponse(UUID id, Instant slotTime, Instant slotEndTime) {
 	}
 
-	public record ConsultationResponse(UUID id, UUID caseId, String caseReference, String patientName,
+	/** {@code kind}: initial (before the plan) or option (about a published treatment option). */
+	public record ConsultationResponse(UUID id, String kind, UUID caseId, String caseReference, String patientName,
 			String procedureName, LocalDate treatmentStartDate, String status, Instant requestedAt, Instant updatedAt,
 			UUID selectedSlotId, String zoomLink, String cancellationReason, List<SlotResponse> slots) {
 
 		static ConsultationResponse of(DoctorConsultationService.ConsultationView v) {
 			ConsultationRequest r = v.request();
-			return new ConsultationResponse(r.getId(), r.getCaseId(), v.caseReference(), v.patientName(),
+			return new ConsultationResponse(r.getId(), r.getKind(), r.getCaseId(), v.caseReference(), v.patientName(),
 					v.procedureName(), v.treatmentStartDate(), r.getStatus(), r.getRequestedAt(), r.getUpdatedAt(),
 					r.getSelectedSlotId(), r.getZoomLink(), r.getCancellationReason(),
 					v.slots().stream()

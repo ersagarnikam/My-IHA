@@ -8,6 +8,7 @@ import { useFormat } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { DevDoctorPanel } from './DevPanel'
 import { initial } from './DoctorLayout'
+import { InitialConsultationCard } from './InitialConsultationCard'
 import { BackHeader, brisbaneToday, CaseBadge, formatDate } from './shared'
 import { DOCUMENT_TYPE_LABELS, GENDER_LABELS, specialtyLabel, type CaseDetail } from './types'
 
@@ -27,9 +28,14 @@ export function CaseDetailPage() {
   const dev: { label: string; path: string }[] = []
   if (pendingRequests)
     dev.push({ label: 'Upload the requested documents (patient)', path: `/api/dev/doctor/cases/${c.caseId}/upload-requested` })
+  const initialId = c.initialConsultation?.consultationId
+  if (initialId && c.initialConsultation?.state === 'slots_proposed')
+    dev.push({ label: 'Choose the first time and pay (patient)', path: `/api/dev/doctor/consultations/${initialId}/select-and-pay` })
+  if (initialId && c.initialConsultation?.state === 'scheduled')
+    dev.push({ label: 'Fast-forward: the consultation has taken place', path: `/api/dev/doctor/consultations/${initialId}/mark-held` })
   if (c.planStatus === 'submitted_to_iha')
     dev.push({ label: 'Approve plan and send it to the patient (admin)', path: `/api/dev/doctor/cases/${c.caseId}/publish-plan` })
-  if (c.planStatus === 'presented_to_patient' && c.caseStatus === 'treatment_plan' && c.consultations.length === 0)
+  if (c.planStatus === 'presented_to_patient' && c.caseStatus === 'treatment_plan' && !c.consultations.some((x) => x.kind === 'option'))
     dev.push({ label: 'Request an online consultation (patient)', path: `/api/dev/doctor/cases/${c.caseId}/request-consultation` })
 
   return (
@@ -127,11 +133,16 @@ export function CaseDetailPage() {
         </section>
       )}
 
-      {c.consultations.length > 0 && (
+      <InitialConsultationCard detail={c} onChanged={detail.reload} />
+
+      {c.consultations.some((r) => r.kind === 'option') && (
         <section className="dr-card stack">
-          <h2 className="dr-subtitle">Consultation Request</h2>
+          <h2 className="dr-subtitle">Follow-up Consultation</h2>
+          <p className="muted small" style={{ margin: 0 }}>
+            The patient asked to discuss your published treatment plan before choosing.
+          </p>
           <div className="dr-actions">
-            {c.consultations.map((r) => (
+            {c.consultations.filter((r) => r.kind === 'option').map((r) => (
               <Link key={r.id} className="button" to={`/doctor/consultations/${r.id}`}>
                 View Consultation
               </Link>

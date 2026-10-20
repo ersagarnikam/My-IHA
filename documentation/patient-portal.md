@@ -42,7 +42,10 @@ Journey progress for the most recent case, the next action to take, quick action
 ### Treatment options
 Published options show the doctor, hospital, procedure, timeline, recovery, aftercare and a cost breakdown (doctor fees, hospital fees, itemised costs, specialists, MTA service fee). Choosing one confirms the treatment and creates the payment.
 
-### Online consultations
+### Initial consultation
+While a doctor evaluates the case, they propose up to three times for a Zoom consultation. The case page shows "Initial consultation with Dr …": pick a time, pay the AUD 200 fee, and join on Zoom (the button opens 15 minutes before). The doctor prepares the treatment plan after this conversation.
+
+### Online consultations (follow-up)
 Request one about an option → the doctor proposes up to three times (shown in Brisbane time plus the patient's own time zone) → pick a time → pay the AUD 200 fee → the consultation is scheduled with a Zoom link (the join button opens 15 minutes before).
 
 ### Payments

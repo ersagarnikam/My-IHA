@@ -126,6 +126,7 @@ function Shell() {
             <span className="topbar-divider" />
           </div>
           <div className="topbar-right">
+            {doctor.status === 'approved' && <span className="topbar-badge">✓ Verified Doctor</span>}
             <NotificationBell />
             <div className="topbar-user">
               {photo ? (

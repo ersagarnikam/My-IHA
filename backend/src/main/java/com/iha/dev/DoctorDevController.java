@@ -67,13 +67,16 @@ class DoctorDevController {
 	private final TreatmentOptionRepository options;
 	private final DoctorCaseAssignmentRepository assignments;
 	private final PasswordEncoder passwordEncoder;
+	private final org.springframework.jdbc.core.JdbcTemplate jdbc;
 
 	DoctorDevController(DoctorAccountService accounts, DoctorAdminService admin, CaseService caseService,
 			CaseRepository cases, CaseDocumentRequestRepository documentRequests, PatientRepository patients,
 			AppUserRepository users, TreatmentPlanRepository plans, ConsultationService consultations,
 			ConsultationRequestRepository consultationRequests, PaymentService payments,
 			ProviderMessageService providerMessages, TreatmentOptionRepository options,
-			DoctorCaseAssignmentRepository assignments, PasswordEncoder passwordEncoder) {
+			DoctorCaseAssignmentRepository assignments, PasswordEncoder passwordEncoder,
+			org.springframework.jdbc.core.JdbcTemplate jdbc) {
+		this.jdbc = jdbc;
 		this.accounts = accounts;
 		this.admin = admin;
 		this.caseService = caseService;
@@ -175,6 +178,20 @@ class DoctorDevController {
 		PaymentService.Checkout checkout = payments.startConsultationCheckout(patient, requestId);
 		payments.simulateSuccess(patient, checkout.intentId());
 		return Map.of("status", "scheduled");
+	}
+
+	/** Time travel: the caller's booked consultation has taken place (unlocks plan submission for an initial one). */
+	@PostMapping("/consultations/{requestId}/mark-held")
+	public Map<String, Object> markHeld(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID requestId) {
+		accounts.requireActive(CurrentUser.from(jwt));
+		ConsultationRequest request = consultationRequests.findById(requestId)
+			.orElseThrow(() -> ApiException.notFound("Consultation request not found."));
+		assignedCase(jwt, request.getCaseId());
+		if (!ConsultationRequest.SCHEDULED.equals(request.getStatus())) {
+			throw ApiException.conflict("not_scheduled", "The patient must choose a time and pay first.");
+		}
+		DevTime.consultationHeld(jdbc, requestId);
+		return Map.of("status", "held");
 	}
 
 	/** Admin: open the caller's support thread and say hello. */

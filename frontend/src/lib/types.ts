@@ -91,7 +91,10 @@ export type ConsultationStatus =
 export type Consultation = {
   id: string
   caseId: string
-  treatmentOptionId: string
+  /** initial: the doctor's consultation before the plan; option: about a published treatment option. */
+  kind: 'initial' | 'option'
+  doctorName: string | null
+  treatmentOptionId: string | null
   status: ConsultationStatus
   zoomLink: string | null
   selectedSlotId: string | null

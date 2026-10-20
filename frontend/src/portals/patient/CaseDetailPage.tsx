@@ -19,10 +19,11 @@ import type { CaseVisa, Consultation, TreatmentOption, VisaDocument } from '../.
 import { useApi } from '../../lib/useApi'
 import { DevCasePanel } from './DevPanel'
 import { usePatient } from './PatientContext'
-import { TreatmentDetailModal, TreatmentOptionCard } from './treatments/TreatmentComponents'
+import { ConsultationPanel, TreatmentDetailModal, TreatmentOptionCard } from './treatments/TreatmentComponents'
 
 export function CaseDetailPage() {
   const t = useT('caseDetail')
+  const tc = useT('consultation')
   const format = useFormat()
   const { caseId } = useParams()
   const { specialties } = usePatient()
@@ -34,19 +35,16 @@ export function CaseDetailPage() {
   const options = useApi<TreatmentOption[]>(
     showTreatments ? `/api/patient/cases/${caseId}/treatment-options` : null,
   )
-  const consultations = useApi<Consultation[]>(
-    showTreatments ? `/api/patient/cases/${caseId}/consultations` : null,
-  )
+  // Initial consultations exist from evaluation onwards, before any treatment option.
+  const consultations = useApi<Consultation[]>(`/api/patient/cases/${caseId}/consultations`)
   const visa = useApi<CaseVisa>(showVisa ? `/api/patient/cases/${caseId}/visa` : null)
 
   // Status changes, new options and consultation updates all arrive as notifications for this case.
   useRealtime<{ caseId: string | null }>('notification', (n) => {
     if (n.caseId !== caseId) return
     void detail.reload()
-    if (showTreatments) {
-      void options.reload()
-      void consultations.reload()
-    }
+    void consultations.reload()
+    if (showTreatments) void options.reload()
     if (showVisa) void visa.reload()
   })
 
@@ -95,6 +93,22 @@ export function CaseDetailPage() {
             <h2>{t('conditionDescription')}</h2>
             <p className="prewrap">{c.description}</p>
           </section>
+
+          {(consultations.data ?? [])
+            .filter((x) => x.kind === 'initial')
+            .map((x) => (
+              <section key={x.id} className="card">
+                <ConsultationPanel
+                  consultation={x}
+                  title={tc('initialTitle', { doctor: x.doctorName ?? '' })}
+                  intro={tc('initialIntro')}
+                  onChanged={() => {
+                    void detail.reload()
+                    void consultations.reload()
+                  }}
+                />
+              </section>
+            ))}
 
           {showTreatments ? (
             <TreatmentOptionsSection

@@ -43,10 +43,13 @@ public class DoctorCaseController {
 
 	private final DoctorCaseService caseService;
 	private final DoctorPlanService planService;
+	private final DoctorConsultationService consultationService;
 
-	DoctorCaseController(DoctorCaseService caseService, DoctorPlanService planService) {
+	DoctorCaseController(DoctorCaseService caseService, DoctorPlanService planService,
+			DoctorConsultationService consultationService) {
 		this.caseService = caseService;
 		this.planService = planService;
+		this.consultationService = consultationService;
 	}
 
 	@GetMapping("/cases")
@@ -97,6 +100,24 @@ public class DoctorCaseController {
 		caseService.markCompleted(CurrentUser.from(jwt), caseId);
 	}
 
+	/** Proposes 1-3 times for the initial Zoom consultation (during evaluation, before the plan). */
+	@PostMapping("/cases/{caseId}/initial-consultation")
+	@ResponseStatus(HttpStatus.CREATED)
+	public DoctorConsultationController.ConsultationResponse proposeInitialConsultation(
+			@AuthenticationPrincipal Jwt jwt, @PathVariable UUID caseId,
+			@RequestBody DoctorConsultationController.ProposeSlotsRequest request) {
+		return DoctorConsultationController.ConsultationResponse
+			.of(consultationService.proposeInitial(CurrentUser.from(jwt), caseId, request.slots()));
+	}
+
+	/** Records why no initial consultation is needed (visible to MTA); unlocks plan submission. */
+	@PostMapping("/cases/{caseId}/initial-consultation/skip")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void skipInitialConsultation(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID caseId,
+			@Valid @RequestBody SkipRequest request) {
+		consultationService.skipInitial(CurrentUser.from(jwt), caseId, request.reason());
+	}
+
 	@GetMapping("/cases/{caseId}/treatment-plan")
 	public PlanResponse plan(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID caseId) {
 		return PlanResponse.of(planService.get(CurrentUser.from(jwt), caseId));
@@ -114,6 +135,9 @@ public class DoctorCaseController {
 		return PlanResponse.of(planService.submit(CurrentUser.from(jwt), caseId, input));
 	}
 
+	public record SkipRequest(@NotBlank @Size(max = 500) String reason) {
+	}
+
 	public record RespondRequest(@NotBlank String status, @Size(max = 500) String declineReason) {
 	}
 
@@ -121,24 +145,26 @@ public class DoctorCaseController {
 	}
 
 	public record AssignmentResponse(UUID id, String status, String declineReason, Instant invitedAt,
-			Instant respondedAt, Instant evaluationStartedAt, Instant planSubmittedAt) {
+			Instant respondedAt, Instant evaluationStartedAt, Instant planSubmittedAt,
+			String consultationSkippedReason) {
 
 		static AssignmentResponse of(DoctorCaseAssignment a) {
 			return new AssignmentResponse(a.getId(), a.getStatus(), a.getDeclineReason(), a.getInvitedAt(),
-					a.getRespondedAt(), a.getEvaluationStartedAt(), a.getPlanSubmittedAt());
+					a.getRespondedAt(), a.getEvaluationStartedAt(), a.getPlanSubmittedAt(),
+					a.getConsultationSkippedReason());
 		}
 
 	}
 
 	public record CaseRowResponse(UUID caseId, String referenceNumber, String patientName, String specialty,
 			String specialtyOther, CaseStatus caseStatus, Instant caseCreatedAt, AssignmentResponse assignment,
-			String planStatus, LocalDate treatmentStartDate, LocalDate treatmentEndDate) {
+			String planStatus, LocalDate treatmentStartDate, LocalDate treatmentEndDate, String initialConsultation) {
 
 		static CaseRowResponse of(DoctorCaseService.CaseRow r) {
 			MedicalCase c = r.medicalCase();
 			return new CaseRowResponse(c.getId(), c.getReferenceNumber(), r.patientName(), c.getSpecialty(),
 					c.getSpecialtyOther(), c.getStatus(), c.getCreatedAt(), AssignmentResponse.of(r.assignment()),
-					r.planStatus(), r.treatmentStartDate(), r.treatmentEndDate());
+					r.planStatus(), r.treatmentStartDate(), r.treatmentEndDate(), r.initialConsultation());
 		}
 
 	}
@@ -176,14 +202,18 @@ public class DoctorCaseController {
 
 	}
 
-	public record ConsultationLink(UUID id, String status, Instant requestedAt) {
+	public record ConsultationLink(UUID id, String kind, String status, Instant requestedAt) {
+	}
+
+	/** @param state none, slots_proposed, slot_selected, scheduled, held or skipped */
+	public record InitialConsultationResponse(String state, UUID consultationId, String skippedReason) {
 	}
 
 	public record CaseDetailResponse(UUID caseId, String referenceNumber, String specialty, String specialtyOther,
 			String description, CaseStatus caseStatus, Instant caseCreatedAt, AssignmentResponse assignment,
 			PatientResponse patient, List<DocumentResponse> documents, List<DocumentRequestResponse> documentRequests,
 			String planStatus, LocalDate treatmentStartDate, LocalDate treatmentEndDate,
-			List<ConsultationLink> consultations) {
+			List<ConsultationLink> consultations, InitialConsultationResponse initialConsultation) {
 
 		static CaseDetailResponse of(DoctorCaseService.CaseDetail d) {
 			MedicalCase c = d.medicalCase();
@@ -195,8 +225,12 @@ public class DoctorCaseController {
 					plan == null ? null : plan.getStatus(), plan == null ? null : plan.getTreatmentStartDate(),
 					plan == null ? null : plan.getTreatmentEndDate(),
 					d.consultations().stream()
-						.map((ConsultationRequest r) -> new ConsultationLink(r.getId(), r.getStatus(), r.getRequestedAt()))
-						.toList());
+						.map((ConsultationRequest r) -> new ConsultationLink(r.getId(), r.getKind(), r.getStatus(),
+								r.getRequestedAt()))
+						.toList(),
+					d.initialConsultation() == null ? null
+							: new InitialConsultationResponse(d.initialConsultation().state(),
+									d.initialConsultation().consultationId(), d.initialConsultation().skippedReason()));
 		}
 
 	}
@@ -208,7 +242,8 @@ public class DoctorCaseController {
 	}
 
 	public record PlanResponse(UUID caseId, String referenceNumber, String specialty, String specialtyOther,
-			CaseStatus caseStatus, Instant evaluationStartedAt, UUID planId, String status, Instant submittedAt,
+			CaseStatus caseStatus, Instant evaluationStartedAt, String initialConsultation, UUID planId, String status,
+			Instant submittedAt,
 			Instant updatedAt, String diagnosis, String treatmentType, String procedureName, String description,
 			String technique, String expectedOutcome, String successRate, LocalDate treatmentStartDate,
 			LocalDate treatmentEndDate, Integer treatmentDurationDays, String recoveryTime,
@@ -230,12 +265,14 @@ public class DoctorCaseController {
 				.toList();
 			if (p == null) {
 				return new PlanResponse(c.getId(), c.getReferenceNumber(), c.getSpecialty(), c.getSpecialtyOther(),
-						c.getStatus(), v.assignment().getEvaluationStartedAt(), null, null, null, null, null, null, null,
+						c.getStatus(), v.assignment().getEvaluationStartedAt(), v.initialConsultation(), null, null, null,
+						null, null, null, null,
 						null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
 						List.of(), null, null, List.of(), List.of(), hospitals);
 			}
 			return new PlanResponse(c.getId(), c.getReferenceNumber(), c.getSpecialty(), c.getSpecialtyOther(),
-					c.getStatus(), v.assignment().getEvaluationStartedAt(), p.getId(), p.getStatus(), p.getSubmittedAt(),
+					c.getStatus(), v.assignment().getEvaluationStartedAt(), v.initialConsultation(), p.getId(), p.getStatus(),
+					p.getSubmittedAt(),
 					p.getUpdatedAt(), p.getDiagnosis(), p.getTreatmentType(), p.getProcedureName(), p.getDescription(),
 					p.getTechnique(), p.getExpectedOutcome(), p.getSuccessRate(), p.getTreatmentStartDate(),
 					p.getTreatmentEndDate(), p.getTreatmentDurationDays(), p.getRecoveryTime(),

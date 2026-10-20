@@ -33,9 +33,20 @@ flowchart LR
 Until the doctor is approved and has paid, every portal page redirects to the right gate step, and the API refuses portal calls.
 
 ## Dashboard
-- Welcome, quick actions (View All Cases, View All Consultations, Chat with Admin).
-- Metrics: Accepted Cases, Under Evaluation, Treatment Plans Confirmed, Completed Cases.
-- Upcoming Consultations (date and time in Brisbane), Upcoming Treatments (start/end), Recent Cases.
+Laid out after the *MTA Doctor Dashboard Concept*. Every figure is computed from real records by `GET /api/doctor/insights`; cross-doctor figures are anonymised aggregates.
+
+| Area | Shows |
+|---|---|
+| Welcome line | Membership renewal date, "Last 12 months". Top bar: *Verified Doctor* badge for approved doctors. |
+| Hero banner | **Return on membership**: doctor fees on plans patients paid for in the last 12 months, and that as a multiple of the fees paid to MTA. Patients treated, rank in the main specialty (top % by treated patients among active doctors in it; shown with 3+ doctors), fees awaiting treatment. |
+| Stat cards | Cases received (vs the previous quarter), plan acceptance rate (vs platform average), average response time to invitations (target ≤ 48 h), patient rating (*Soon*), profile strength (share of profile fields completed). |
+| Action needed today | New invitations with time left on the 48-hour target, plans due, consultation requests needing times, consultations in the next 7 days (*Add to calendar* downloads an .ics file), documents patients uploaded this week, plans MTA declined, cases ready to mark completed. |
+| Conversion funnel | Assigned → Accepted → Consulted → Plan sent → Chosen by patient → Treated. |
+| Why cases didn't proceed | Chose another doctor, plan declined by MTA, visa rejected, cases you declined; plus a pricing insight when your prices differ ≥ 10% from the platform. |
+| Price benchmark | Your median whole-plan total per specialty vs the median of other doctors' plans (only when 2+ other doctors have plans, so no individual price can be inferred). |
+| Earnings | This year / awaiting treatment / treated, and a 9-month bar chart by payment month. Payouts *Soon*. |
+| Membership & growth | Annual membership renewal and fees paid (link to Billing), refer a colleague (*Soon*), verification badges: AHPRA licence and qualifications (verified on approval), indemnity insurance (not collected yet). |
+| Feature cards (*Soon*) | Patient follow-ups, hospital packages, plan templates, public profile. |
 
 ## My Cases
 Tabs **All · New · Evaluation · Treatment Plan Submitted · Plan Confirmed · Completed · Declined**, search by patient or case ID, date filter (All Time / 7 / 30 / 90 days), 15 rows per page.
@@ -55,9 +66,28 @@ Status badges, from the doctor's point of view:
 | Declined | The doctor declined, or MTA rejected the plan |
 | Withdrawn / Case Closed | Withdrawn by the doctor / closed because another plan was chosen |
 
+## How a case flows
+
+```mermaid
+flowchart LR
+  A[Invitation] --> B[Accept]
+  B --> C[Start evaluation]
+  C --> D[Review documents<br/>request more if needed]
+  D --> E[Initial Zoom consultation<br/>propose times · patient pays · meeting]
+  E --> F[Build and submit treatment plan]
+  F --> G[MTA reviews and publishes]
+  G --> H[Patient chooses and pays]
+  H --> I[Treatment · mark completed]
+```
+
+**The initial Zoom consultation is required before the plan.** During evaluation the doctor offers up to three times (Brisbane time); the patient picks one and pays the AUD 200 consultation fee; the Zoom meeting is created on payment. *Submit Plan* stays locked until the consultation's time has come. When a consultation really isn't needed (e.g. they already spoke), the doctor can skip it with a reason MTA can see. Drafting the plan is allowed at any time.
+
+The patient can still ask for a **follow-up consultation** about a published plan before choosing; it works the same way and doesn't block anything.
+
 ## Case details
 - Case ID and status; **Patient Info** (name, condition, date of birth, gender, country); **Case Summary** (condition, symptoms); **Medical History** (history, allergies, medications, past surgeries).
 - **Uploaded Documents** — view or download each file.
+- **Initial Zoom Consultation** card (once evaluation has started): propose times, then follow it — waiting for the patient, awaiting payment, booked (with *Join Zoom*), held — or *Skip with a reason*.
 - **Request More Documents** (during evaluation) — tick document types and add a message; the patient is notified by portal, email and SMS. **Document Requests** then lists each request as *Pending* until the patient uploads that type, then *Received* with the date.
 - **Actions**, depending on the stage:
   - *Accept* / *Decline* (optional reason) an invitation.
@@ -80,12 +110,12 @@ Collapsible sections:
 | Specialists | Role, name, fee, notes |
 | Doctor Notes | Instructions for the patient, aftercare (one per line) |
 
-A sticky **Estimated Total** sums doctor fees, hospital fees, itemised costs and specialists (MTA's commission is added later by admin). *Save Draft* keeps partial work (and unsaved typing survives a page refresh); *Submit Plan* needs the confirmation tick and the required fields (*) and notifies the chosen hospital. Submitted plans are read-only, with a banner explaining their state.
+Until the initial consultation is held (or skipped), a banner explains why *Submit Plan* is locked and links to the consultation. A sticky **Estimated Total** sums doctor fees, hospital fees, itemised costs and specialists (MTA's commission is added later by admin). *Save Draft* keeps partial work (and unsaved typing survives a page refresh); *Submit Plan* needs the confirmation tick and the required fields (*) and notifies the chosen hospital. Submitted plans are read-only, with a banner explaining their state.
 
 ## Consultations
 Tabs **All · Awaiting Slots · Awaiting Patient Confirmation · Scheduled · Completed · Cancelled**, search, paging.
 
-On a consultation:
+Initial consultations show as "Initial consultation" in the list; follow-ups show the plan's procedure. On a consultation:
 - **Propose Consultation Times** — 1 to 3 slots (date, start, end in 30-minute steps), in the future and not after the treatment start date. Proposing again replaces the earlier times and tells the patient they were updated.
 - **Proposed Times** — the patient's pick is marked *PATIENT SELECTED*.
 - **Scheduled Meeting** — after the patient pays: the time and a *Join Zoom* button that opens 15 minutes before the start.

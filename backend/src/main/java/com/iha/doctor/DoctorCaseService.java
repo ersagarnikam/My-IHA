@@ -100,7 +100,8 @@ public class DoctorCaseService {
 			Patient p = patientById.get(c.getPatientId());
 			TreatmentPlan plan = planByCase.get(c.getId());
 			return new CaseRow(a, c, p == null ? null : p.getFullName(), plan == null ? null : plan.getStatus(),
-					plan == null ? null : plan.getTreatmentStartDate(), plan == null ? null : plan.getTreatmentEndDate());
+					plan == null ? null : plan.getTreatmentStartDate(), plan == null ? null : plan.getTreatmentEndDate(),
+					a.isAccepted() ? consultations.initialState(doctor, a).state() : null);
 		}).toList();
 	}
 
@@ -113,7 +114,8 @@ public class DoctorCaseService {
 		TreatmentPlan plan = plans.findByCaseIdAndDoctorId(caseId, doctor.getId()).orElse(null);
 		return new CaseDetail(assignment, medicalCase, patient, documents.findByCaseIdOrderByUploadedAtAsc(caseId),
 				documentRequests.findByCaseIdOrderByRequestedAtDesc(caseId), plan,
-				consultations.requestsForCase(doctor, caseId));
+				consultations.requestsForCase(doctor, caseId),
+				assignment.isAccepted() ? consultations.initialState(doctor, assignment) : null);
 	}
 
 	@Transactional(readOnly = true)
@@ -265,13 +267,14 @@ public class DoctorCaseService {
 		return list.stream().collect(Collectors.toMap(key, Function.identity(), (a, b) -> a));
 	}
 
+	/** @param initialConsultation see {@link DoctorConsultationService#initialState}; null until accepted */
 	public record CaseRow(DoctorCaseAssignment assignment, MedicalCase medicalCase, String patientName,
-			String planStatus, LocalDate treatmentStartDate, LocalDate treatmentEndDate) {
+			String planStatus, LocalDate treatmentStartDate, LocalDate treatmentEndDate, String initialConsultation) {
 	}
 
 	public record CaseDetail(DoctorCaseAssignment assignment, MedicalCase medicalCase, Patient patient,
 			List<CaseDocument> documents, List<CaseDocumentRequest> documentRequests, TreatmentPlan plan,
-			List<ConsultationRequest> consultations) {
+			List<ConsultationRequest> consultations, DoctorConsultationService.InitialState initialConsultation) {
 	}
 
 }

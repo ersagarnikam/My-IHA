@@ -305,10 +305,14 @@ export function ConsultationPanel({
   option,
   consultation,
   onChanged,
+  title,
+  intro,
 }: {
-  option: TreatmentOption
+  option?: TreatmentOption
   consultation?: Consultation
   onChanged: () => void
+  title?: string
+  intro?: string
 }) {
   const t = useT('consultation')
   const toast = useToast()
@@ -336,7 +340,9 @@ export function ConsultationPanel({
   const slot = consultation?.slots.find((s) => s.id === consultation.selectedSlotId)
   let body: ReactNode
 
-  if (!consultation) {
+  if (!consultation && !option) {
+    body = null
+  } else if (!consultation && option) {
     body = (
       <>
         <p className="muted">{t('preRequestText')}</p>
@@ -346,7 +352,7 @@ export function ConsultationPanel({
           disabled={pending}
           onClick={() =>
             run(
-              () => apiPost(`/api/patient/treatment-options/${option.id}/consultation`),
+              () => apiPost(`/api/patient/treatment-options/${option!.id}/consultation`),
               t('successToast'),
             )
           }
@@ -355,6 +361,8 @@ export function ConsultationPanel({
         </button>
       </>
     )
+  } else if (!consultation) {
+    body = null
   } else if (consultation.status === 'requested') {
     body = <p className="muted">{t('requestSent')}</p>
   } else if (
@@ -434,7 +442,8 @@ export function ConsultationPanel({
 
   return (
     <section className="panel stack">
-      <h3>{t('onlineConsultation')}</h3>
+      <h3>{title ?? t('onlineConsultation')}</h3>
+      {intro && <p className="muted">{intro}</p>}
       {body}
       <FormError error={error} />
     </section>

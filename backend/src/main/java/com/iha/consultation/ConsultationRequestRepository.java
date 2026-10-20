@@ -19,4 +19,9 @@ public interface ConsultationRequestRepository extends JpaRepository<Consultatio
 
 	List<ConsultationRequest> findByTreatmentOptionIdInOrderByRequestedAtDesc(Collection<UUID> treatmentOptionIds);
 
+	List<ConsultationRequest> findByDoctorIdAndKindOrderByRequestedAtDesc(UUID doctorId, String kind);
+
+	List<ConsultationRequest> findByCaseIdAndDoctorIdAndKindOrderByRequestedAtDesc(UUID caseId, UUID doctorId,
+			String kind);
+
 }

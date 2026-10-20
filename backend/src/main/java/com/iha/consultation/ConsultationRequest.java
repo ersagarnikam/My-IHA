@@ -24,6 +24,12 @@ public class ConsultationRequest {
 	public static final String SCHEDULED = "scheduled";
 	public static final String CANCELLED = "cancelled";
 
+	/** Before the plan: proposed by the doctor during evaluation. */
+	public static final String INITIAL = "initial";
+
+	/** After the plan: requested by the patient about a published treatment option. */
+	public static final String OPTION = "option";
+
 	@Id
 	private UUID id;
 
@@ -33,8 +39,16 @@ public class ConsultationRequest {
 	@Column(name = "patient_id", nullable = false, updatable = false)
 	private UUID patientId;
 
-	@Column(name = "treatment_option_id", nullable = false, updatable = false)
+	@Column(nullable = false, updatable = false)
+	private String kind;
+
+	/** Null for initial consultations. */
+	@Column(name = "treatment_option_id", updatable = false)
 	private UUID treatmentOptionId;
+
+	/** The doctor for initial consultations; option consultations reach the doctor through the plan. */
+	@Column(name = "doctor_id", updatable = false)
+	private UUID doctorId;
 
 	@Column(name = "selected_slot_id")
 	private UUID selectedSlotId;
@@ -61,10 +75,29 @@ public class ConsultationRequest {
 		this.id = UUID.randomUUID();
 		this.caseId = caseId;
 		this.patientId = patientId;
+		this.kind = OPTION;
 		this.treatmentOptionId = treatmentOptionId;
 		this.status = REQUESTED;
 		this.requestedAt = Instant.now();
 		this.updatedAt = requestedAt;
+	}
+
+	/** A doctor-initiated consultation during evaluation; starts at "slots proposed". */
+	public static ConsultationRequest initial(UUID caseId, UUID patientId, UUID doctorId) {
+		ConsultationRequest request = new ConsultationRequest(caseId, patientId, null);
+		request.kind = INITIAL;
+		request.doctorId = doctorId;
+		request.status = SLOTS_PROPOSED;
+		return request;
+	}
+
+	public boolean isInitial() {
+		return INITIAL.equals(kind);
+	}
+
+	/** Paid and its time has started. */
+	public boolean hasTakenPlace(Instant selectedSlotStart) {
+		return SCHEDULED.equals(status) && selectedSlotStart != null && !selectedSlotStart.isAfter(Instant.now());
 	}
 
 	@PreUpdate
@@ -104,6 +137,14 @@ public class ConsultationRequest {
 
 	public UUID getPatientId() {
 		return patientId;
+	}
+
+	public String getKind() {
+		return kind;
+	}
+
+	public UUID getDoctorId() {
+		return doctorId;
 	}
 
 	public UUID getTreatmentOptionId() {

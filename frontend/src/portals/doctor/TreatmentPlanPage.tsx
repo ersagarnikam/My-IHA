@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { ChevronDown, Plus, Trash2 } from 'lucide-react'
 import { useToast } from '../../components/Toasts'
 import { ErrorState, Field, FormError, fieldError, Loading } from '../../components/ui'
@@ -16,6 +16,14 @@ const QUICK_ITEMS = [
   'Medication Estimate',
   'Rehabilitation Charges',
 ]
+
+/** Why Submit is locked, by initial consultation state. */
+const CONSULTATION_HINT: Record<string, string> = {
+  none: 'Hold the initial Zoom consultation with the patient before submitting the plan.',
+  slots_proposed: 'The patient hasn\'t chosen a consultation time yet; you can submit once the consultation has taken place.',
+  slot_selected: 'The patient chose a consultation time and is paying; you can submit once it has taken place.',
+  scheduled: 'The initial consultation is booked; you can submit once it has taken place.',
+}
 
 const READ_ONLY_TEXT: Partial<Record<PlanStatus, string>> = {
   submitted_to_iha:
@@ -154,6 +162,7 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
   const navigate = useNavigate()
   const toast = useToast()
   const readOnly = plan.status !== null && plan.status !== 'draft'
+  const consultationDone = plan.initialConsultation === 'held' || plan.initialConsultation === 'skipped'
   const draftName = `treatment-plan:${plan.caseId}`
   const [form, setForm] = useState<Form>(() => (!readOnly && drafts.load<Form>(draftName)) || fromPlan(plan))
   const [confirmed, setConfirmed] = useState(false)
@@ -227,6 +236,13 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
       )}
       {!readOnly && !plan.evaluationStartedAt && (
         <div className="dr-banner info">Start your evaluation from the case page before submitting this plan.</div>
+      )}
+      {!readOnly && plan.evaluationStartedAt && !consultationDone && (
+        <div className="dr-banner info">
+          {CONSULTATION_HINT[plan.initialConsultation] ?? CONSULTATION_HINT.none} You can keep drafting in the
+          meantime.{' '}
+          <Link to={`/doctor/cases/${plan.caseId}#initial-consultation`}>Go to the consultation</Link>
+        </div>
       )}
 
       <Section title="Diagnosis">{area('diagnosis', 'Primary Diagnosis', 3, true)}</Section>
@@ -569,7 +585,12 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
             <button type="button" className="button-secondary" disabled={!!pending} onClick={() => save('draft')}>
               {pending === 'draft' ? 'Saving…' : 'Save Draft'}
             </button>
-            <button type="button" disabled={!confirmed || !!pending} onClick={() => save('submit')}>
+            <button
+              type="button"
+              disabled={!confirmed || !!pending || !consultationDone}
+              title={consultationDone ? undefined : 'Hold the initial Zoom consultation first'}
+              onClick={() => save('submit')}
+            >
               {pending === 'submit' ? 'Submitting…' : 'Submit Plan'}
             </button>
           </div>

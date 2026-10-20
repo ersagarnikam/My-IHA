@@ -22,7 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class NotificationService {
 
-	/** Same window the old {@code insertNotification} used to drop duplicate sends. */
+	/**
+	 * Same window the old {@code insertNotification} used to drop duplicate sends. A duplicate is the
+	 * same type and title for the same case: distinct updates of one type (e.g. "Doctor assigned" then
+	 * "Case in evaluation") can legitimately follow each other within seconds.
+	 */
 	private static final Duration DEDUPE_WINDOW = Duration.ofSeconds(60);
 
 	private final NotificationRepository repository;
@@ -47,8 +51,8 @@ public class NotificationService {
 
 	@Transactional
 	public void send(Draft draft) {
-		if (draft.caseId() != null && repository.existsByUserIdAndTypeAndCaseIdAndCreatedAtAfter(draft.userId(),
-				draft.type(), draft.caseId(), Instant.now().minus(DEDUPE_WINDOW))) {
+		if (draft.caseId() != null && repository.existsByUserIdAndTypeAndTitleAndCaseIdAndCreatedAtAfter(draft.userId(),
+				draft.type(), draft.title(), draft.caseId(), Instant.now().minus(DEDUPE_WINDOW))) {
 			return;
 		}
 		Notification saved = repository.save(new Notification(draft.userId(), draft.caseId(), draft.assignmentId(),

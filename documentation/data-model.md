@@ -1,6 +1,6 @@
 # Data model
 
-Schema: `backend/src/main/resources/db/migration/` — `V1__core_schema.sql` (all core tables), `V2__seed_reference_data.sql` (specialties, platform fees), `V3__patient_portal.sql`, `V4__doctor_portal.sql`. Columns ending in `_enc` are AES-GCM encrypted by the API.
+Schema: `backend/src/main/resources/db/migration/` — `V1__core_schema.sql` (all core tables), `V2__seed_reference_data.sql` (specialties, platform fees), `V3__patient_portal.sql`, `V4__doctor_portal.sql`, `V5__initial_consultation.sql`. Columns ending in `_enc` are AES-GCM encrypted by the API.
 
 ## Entity overview
 
@@ -102,6 +102,11 @@ Several doctors can be invited to the same case; each evaluates and proposes a p
 Only drafts are editable.
 
 ## Consultation lifecycle
+
+Two kinds share one table (`consultation_requests.kind`):
+
+- **initial** — before the plan. The doctor creates it during evaluation with proposed times (starts at `slots_proposed`); `doctor_id` is set, there's no treatment option. A doctor's plan can only be submitted once it has taken place (scheduled and its start time passed) or the doctor recorded a skip reason (`doctor_case_assignments.consultation_skipped_reason`).
+- **option** — after the plan. The patient asks about a published treatment option (`treatment_option_id`).
 
 `requested` (patient) → `slots_proposed` (doctor, 1–3 times; can be updated) → `slot_selected` (patient picks; AUD 200 fee due) → `scheduled` (paid; Zoom meeting created). The doctor can cancel at any point before `scheduled`. "Completed" in the doctor UI is a scheduled consultation whose time has passed.
 

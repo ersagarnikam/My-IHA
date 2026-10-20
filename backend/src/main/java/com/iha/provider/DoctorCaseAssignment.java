@@ -50,6 +50,12 @@ public class DoctorCaseAssignment {
 	@Column(name = "plan_submitted_at")
 	private Instant planSubmittedAt;
 
+	@Column(name = "consultation_skipped_reason")
+	private String consultationSkippedReason;
+
+	@Column(name = "consultation_skipped_at")
+	private Instant consultationSkippedAt;
+
 	protected DoctorCaseAssignment() {
 	}
 
@@ -79,6 +85,20 @@ public class DoctorCaseAssignment {
 
 	public void markPlanSubmitted() {
 		this.planSubmittedAt = Instant.now();
+	}
+
+	/** The doctor decided the initial consultation wasn't needed. */
+	public void skipConsultation(String reason) {
+		this.consultationSkippedReason = reason;
+		this.consultationSkippedAt = Instant.now();
+	}
+
+	public String getConsultationSkippedReason() {
+		return consultationSkippedReason;
+	}
+
+	public Instant getConsultationSkippedAt() {
+		return consultationSkippedAt;
 	}
 
 	public UUID getId() {

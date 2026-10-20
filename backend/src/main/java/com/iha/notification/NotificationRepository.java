@@ -20,7 +20,8 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
 
 	long countByUserIdAndReadFalse(UUID userId);
 
-	boolean existsByUserIdAndTypeAndCaseIdAndCreatedAtAfter(UUID userId, String type, UUID caseId, Instant after);
+	boolean existsByUserIdAndTypeAndTitleAndCaseIdAndCreatedAtAfter(UUID userId, String type, String title, UUID caseId,
+			Instant after);
 
 	@Modifying
 	@Query("update Notification n set n.read = true where n.userId = :userId and n.read = false")

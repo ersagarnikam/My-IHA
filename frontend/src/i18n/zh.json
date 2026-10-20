@@ -397,7 +397,9 @@
     "successToast": "会诊申请已发送至医生。",
     "timeConfirmed": "会诊时间已确认。",
     "changeTimeButton": "更改时间",
-    "cancelChange": "取消"
+    "cancelChange": "取消",
+    "initialTitle": "与 {doctor} 的初次会诊",
+    "initialIntro": "在制定治疗方案之前，您的医生希望通过 Zoom 与您沟通病情、病史和期望。"
   },
   "payments": {
     "title": "付款",

@@ -1,5 +1,7 @@
 # MTA Platform
 
+[![CI](https://github.com/ersagarnikam/My-IHA/actions/workflows/ci.yml/badge.svg)](https://github.com/ersagarnikam/My-IHA/actions/workflows/ci.yml)
+
 **Medical Tourism Australia** connects international patients with Australian doctors, hospitals and visa lawyers. A patient submits a medical case; MTA invites doctors; doctors evaluate it and propose treatment plans; the patient chooses one, pays, applies for a visa and travels for treatment.
 
 This repository is mid-migration from a Next.js + Supabase monorepo to:
@@ -57,6 +59,8 @@ cd e2e && API_LOG=<api log> node journey.mjs          # patient journey in Chrom
 cd e2e && API_LOG=<api log> node doctor-journey.mjs   # doctor journey in Chrome
 ```
 
+GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the API tests on Java 21 and the web app build on every push to `main` and every pull request. The Chrome journeys need both servers and run locally.
+
 ## Website and portal
 
 The public website **https://medicaltourismaustralia.com** is the home page; the portal has no landing page of its own. Signed-out visitors to `/` and anyone who signs out go back to the website (`VITE_HOME_URL` overrides it per environment). Website buttons link to `/login`, `/register`, `/register/doctor` and deep pages — see [Deployment](documentation/deployment.md#the-public-website) for the link table.
@@ -66,7 +70,7 @@ The public website **https://medicaltourismaustralia.com** is the home page; the
 | Area | Status |
 |---|---|
 | Patient portal | **Ported** — registration, onboarding, dashboard, cases and documents, treatment options, consultations, payments and invoices, visa wizard, chat, live notifications, English/Chinese. |
-| Doctor portal | **Ported** — sign-up and registration wizard, approval gate with resubmission, registration and annual fees, cases with document requests, treatment plan builder, consultation scheduling (Brisbane time), chat, settings. Matches the live dev doctor portal. |
+| Doctor portal | **Ported** — sign-up and registration wizard, approval gate with resubmission, registration and annual fees, performance dashboard (earnings, funnel, benchmark), cases with document requests, **required initial Zoom consultation before the treatment plan**, plan builder, follow-up consultations (Brisbane time), chat, settings. |
 | Admin portal | Not yet. Admin-side logic for doctors exists in `DoctorAdminService`; simulated in development. |
 | Hospital portal | Not yet. |
 | Visa lawyer portal | Not yet. |

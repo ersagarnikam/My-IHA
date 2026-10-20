@@ -55,10 +55,13 @@ class DevDataSeeder implements ApplicationRunner {
 	private final DoctorAdminService doctorAdmin;
 	private final DoctorCaseService doctorCases;
 	private final DoctorFeeService doctorFees;
+	private final DevHistory history;
 
 	DevDataSeeder(AppUserRepository users, HospitalRepository hospitals, DoctorRepository doctors,
 			PatientService patients, CaseService cases, DoctorAccountService doctorAccounts,
-			DoctorAdminService doctorAdmin, DoctorCaseService doctorCases, DoctorFeeService doctorFees) {
+			DoctorAdminService doctorAdmin, DoctorCaseService doctorCases, DoctorFeeService doctorFees,
+			DevHistory history) {
+		this.history = history;
 		this.users = users;
 		this.hospitals = hospitals;
 		this.doctors = doctors;
@@ -100,6 +103,9 @@ class DevDataSeeder implements ApplicationRunner {
 		doctorCases.respond(doctor, assignment.getId(), "accepted", null);
 		doctorCases.startEvaluation(doctor, inEvaluation.getId());
 
+		history.seed(patient, doctor, seeded,
+				(email, name, licence) -> doctor(email, name, licence, List.of("Cardiology"), seeded));
+
 		log.info("Dev demo data ready. Sign in as {} or {} with password {}", PATIENT_EMAIL, DOCTOR_EMAIL, PASSWORD);
 	}
 
@@ -121,12 +127,17 @@ class DevDataSeeder implements ApplicationRunner {
 	}
 
 	private CurrentUser doctor(List<Hospital> affiliated) {
-		doctorAccounts.createAccount(DOCTOR_EMAIL, PASSWORD);
-		CurrentUser user = verified(DOCTOR_EMAIL, Role.DOCTOR);
+		return doctor(DOCTOR_EMAIL, "Dr. Amelia Chen", "MED0001234560",
+				List.of("Cardiology", "Orthopaedics & Joint Replacement"), affiliated);
+	}
+
+	CurrentUser doctor(String email, String name, String licence, List<String> specialtyNames,
+			List<Hospital> affiliated) {
+		doctorAccounts.createAccount(email, PASSWORD);
+		CurrentUser user = verified(email, Role.DOCTOR);
 		Doctor doctor = doctorAccounts.register(user,
-				new DoctorAccountService.RegistrationInput("Dr. Amelia Chen", "+61 412 555 010",
-						List.of("Cardiology", "Orthopaedics & Joint Replacement"), "MBBS, FRACS", 15, "MED0001234560",
-						"Consultant cardiothoracic and orthopaedic surgeon with 15 years of experience.",
+				new DoctorAccountService.RegistrationInput(name, "+61 412 555 010", specialtyNames, "MBBS, FRACS", 15,
+						licence, "Consultant cardiothoracic and orthopaedic surgeon with 15 years of experience.",
 						List.of("English", "Mandarin (Chinese)"), "Surgery", "surgeon",
 						affiliated.stream().map(Hospital::getId).toList(), List.of("mon", "tue", "wed", "thu", "fri")),
 				new DoctorAccountService.RegistrationFiles(null, BytesMultipartFile.pdf("medicalLicense", "Medical license"),

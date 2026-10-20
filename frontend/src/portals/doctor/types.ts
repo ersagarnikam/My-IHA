@@ -69,7 +69,17 @@ export type Assignment = {
   respondedAt: string | null
   evaluationStartedAt: string | null
   planSubmittedAt: string | null
+  consultationSkippedReason: string | null
 }
+
+/** Where the initial Zoom consultation stands; held or skipped unlocks plan submission. */
+export type InitialConsultationState =
+  | 'none'
+  | 'slots_proposed'
+  | 'slot_selected'
+  | 'scheduled'
+  | 'held'
+  | 'skipped'
 
 export type PlanStatus =
   | 'draft'
@@ -93,6 +103,7 @@ export type CaseRow = {
   planStatus: PlanStatus | null
   treatmentStartDate: string | null
   treatmentEndDate: string | null
+  initialConsultation: InitialConsultationState | null
 }
 
 export type DocumentRequest = {
@@ -136,7 +147,12 @@ export type CaseDetail = {
   planStatus: PlanStatus | null
   treatmentStartDate: string | null
   treatmentEndDate: string | null
-  consultations: { id: string; status: string; requestedAt: string }[]
+  consultations: { id: string; kind: 'initial' | 'option'; status: string; requestedAt: string }[]
+  initialConsultation: {
+    state: InitialConsultationState
+    consultationId: string | null
+    skippedReason: string | null
+  } | null
 }
 
 export type CostItem = { label: string; amount: number | string }
@@ -155,6 +171,7 @@ export type Plan = {
   specialtyOther: string | null
   caseStatus: CaseStatus
   evaluationStartedAt: string | null
+  initialConsultation: InitialConsultationState
   planId: string | null
   status: PlanStatus | null
   submittedAt: string | null
@@ -194,6 +211,7 @@ export type ConsultationStatus =
 
 export type DoctorConsultation = {
   id: string
+  kind: 'initial' | 'option'
   caseId: string
   caseReference: string | null
   patientName: string | null

@@ -187,15 +187,17 @@ public class ConsultationService {
 	public void statusChanged(ConsultationRequest request, String previousStatus, boolean alert) {
 		patients.findById(request.getPatientId()).ifPresent(patient -> {
 			String ref = cases.findById(request.getCaseId()).map(MedicalCase::getReferenceNumber).orElse("your case");
-			String doctorName = options.findById(request.getTreatmentOptionId())
-				.flatMap(this::doctorFor)
-				.map(Doctor::getFullName)
-				.orElse(null);
-			String doctorRef = doctorName != null ? "Dr. " + doctorName : "your doctor";
-			String doctorStart = doctorName != null ? "Dr. " + doctorName : "Your doctor";
+			String doctorName = doctorOf(request).map(Doctor::getFullName).orElse(null);
+			String doctorRef = doctorName != null ? withTitle(doctorName) : "your doctor";
+			String doctorStart = doctorName != null ? withTitle(doctorName) : "Your doctor";
 			String title;
 			String message;
-			if (request.getStatus().equals(previousStatus)) {
+			if (request.isInitial()) {
+				Text text = initialText(request, previousStatus, ref, doctorStart, doctorRef);
+				title = text.title();
+				message = text.message();
+			}
+			else if (request.getStatus().equals(previousStatus)) {
 				title = "Consultation times updated";
 				message = doctorStart + " has updated the proposed consultation times for case " + ref
 						+ ". Please select a slot.";
@@ -233,9 +235,52 @@ public class ConsultationService {
 		});
 	}
 
+	/** Wording for the consultation the doctor holds before preparing the plan. */
+	private static Text initialText(ConsultationRequest request, String previousStatus, String ref, String doctorStart,
+			String doctorRef) {
+		if (request.getStatus().equals(previousStatus)) {
+			return new Text("Initial consultation times updated",
+					doctorStart + " has updated the proposed times for your initial consultation on case " + ref
+							+ ". Please choose a time.");
+		}
+		return switch (request.getStatus()) {
+			case ConsultationRequest.SLOTS_PROPOSED -> new Text("Initial consultation: choose a time",
+					doctorStart + " would like a Zoom consultation with you about case " + ref
+							+ " before preparing your treatment plan. Please choose a time.");
+			case ConsultationRequest.SLOT_SELECTED -> new Text("Initial consultation time selected",
+					"You selected a time for your initial consultation with " + doctorRef + " (case " + ref
+							+ "). Pay the consultation fee to confirm it.");
+			case ConsultationRequest.SCHEDULED -> new Text("Initial consultation scheduled",
+					"Your initial consultation with " + doctorRef + " for case " + ref + " has been scheduled.");
+			case ConsultationRequest.CANCELLED -> new Text("Initial consultation cancelled",
+					"Your initial consultation with " + doctorRef + " for case " + ref + " has been cancelled."
+							+ (request.getCancellationReason() != null ? " Reason: " + request.getCancellationReason()
+									: ""));
+			default -> new Text("Initial consultation updated",
+					"Your initial consultation for case " + ref + " has been updated.");
+		};
+	}
+
+	/** Doctors usually enter their name with "Dr." already; don't double it. */
+	static String withTitle(String doctorName) {
+		return doctorName.matches("(?i)^dr\\.?\\s.*") ? doctorName : "Dr. " + doctorName;
+	}
+
+	private record Text(String title, String message) {
+	}
+
 	ConsultationRequest requireOwned(Patient patient, UUID requestId) {
 		return requests.findByIdAndPatientId(requestId, patient.getId())
 			.orElseThrow(() -> ApiException.notFound("Consultation request not found."));
+	}
+
+	/** The doctor behind a consultation: set directly on initial ones, through the plan for option ones. */
+	public Optional<Doctor> doctorOf(ConsultationRequest request) {
+		if (request.getDoctorId() != null) {
+			return doctors.findById(request.getDoctorId());
+		}
+		return request.getTreatmentOptionId() == null ? Optional.empty()
+				: options.findById(request.getTreatmentOptionId()).flatMap(this::doctorFor);
 	}
 
 	private Optional<Doctor> doctorFor(TreatmentOption option) {
@@ -247,10 +292,13 @@ public class ConsultationService {
 				: slots.findByConsultationRequestIdInOrderBySlotTimeAsc(list.stream().map(ConsultationRequest::getId).toList())
 					.stream()
 					.collect(Collectors.groupingBy(ConsultationSlot::getConsultationRequestId));
-		return list.stream().map(r -> new RequestView(r, slotsByRequest.getOrDefault(r.getId(), List.of()))).toList();
+		return list.stream()
+			.map(r -> new RequestView(r, slotsByRequest.getOrDefault(r.getId(), List.of()),
+					doctorOf(r).map(Doctor::getFullName).orElse(null)))
+			.toList();
 	}
 
-	public record RequestView(ConsultationRequest request, List<ConsultationSlot> slots) {
+	public record RequestView(ConsultationRequest request, List<ConsultationSlot> slots, String doctorName) {
 	}
 
 }

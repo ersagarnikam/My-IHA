@@ -69,7 +69,7 @@ Document types: `lab_report`, `mri_ct`, `xray`, `prescription`, `medical_history
 | GET | `/api/patient/treatment-options/{optionId}` | One option. |
 | POST | `/api/patient/treatment-options/{optionId}/select` | Choose it → case `treatment_confirmed`, payment pending. |
 | POST | `/api/patient/treatment-options/{optionId}/consultation` | Request a paid online consultation. |
-| GET | `/api/patient/consultations` · `/api/patient/cases/{caseId}/consultations` · `/api/patient/consultations/{id}` | Consultations with proposed slots. |
+| GET | `/api/patient/consultations` · `/api/patient/cases/{caseId}/consultations` · `/api/patient/consultations/{id}` | Consultations with proposed slots; `kind` (`initial` / `option`) and `doctorName`. |
 | POST | `/api/patient/consultations/{id}/select-slot` | `{slotId}` → awaiting payment. |
 | GET | `/api/patient/payments/config` | Provider name and publishable key. |
 | POST | `/api/patient/cases/{caseId}/checkout` | Start/resume the treatment payment → client secret. |
@@ -123,19 +123,27 @@ Everything below requires an **active** doctor (approved and registration fee pa
 | POST | `/api/doctor/assignments/{assignmentId}/respond` | `{status: accepted|declined|withdrawn, declineReason?}`. Accepting moves `under_review` → `doctor_assigned`. |
 | POST | `/api/doctor/cases/{caseId}/start-evaluation` | `doctor_assigned` → `evaluation`; records this doctor's start. |
 | POST | `/api/doctor/cases/{caseId}/document-requests` | `{documentTypes[], message?}` (evaluation only). Notifies + alerts the patient. |
+| POST | `/api/doctor/cases/{caseId}/initial-consultation` | `{slots: [...]}` — book the initial Zoom consultation (1–3 slots, Brisbane time) during evaluation. Patient is notified to choose a time. |
+| POST | `/api/doctor/cases/{caseId}/initial-consultation/skip` | `{reason}` (≥10 chars) — record why it isn't needed; cancels an unpaid one. Not possible once paid. |
 | POST | `/api/doctor/cases/{caseId}/complete` | From `payment_confirmed`/`visa_processing`/`travel_ready`, after the plan's end date → `completed`. |
 | GET | `/api/doctor/cases/{caseId}/treatment-plan` | The doctor's plan (or empty) + affiliated hospitals with room types. |
 | PUT | `/api/doctor/cases/{caseId}/treatment-plan` | Save draft (all fields optional; validated where filled). |
-| POST | `/api/doctor/cases/{caseId}/treatment-plan/submit` | Save + check required fields + submit to MTA; notifies the hospital. |
+| POST | `/api/doctor/cases/{caseId}/treatment-plan/submit` | Save + check required fields + submit to MTA; notifies the hospital. `409 initial_consultation_required` until the initial consultation has taken place or was skipped. |
 
 Plan fields: `diagnosis`, `treatmentType` (`medication_only`/`surgery`/`therapy`), `procedureName`, `description`, `technique`, `expectedOutcome`, `successRate`, `treatmentStartDate`, `treatmentEndDate`, `recoveryTime`, `estimatedLengthOfStay`, `hospitalId`, `department`, `roomCategory`, `specialRequirements`, `doctorFeesAud`, `hospitalFeesAud`, `costItems[{label, amount}]`, `costNotes`, `patientInstructions`, `aftercare[]`, `specialists[{specialistType, specialistName, costAud, notes}]`.
 Required to submit: hospital, diagnosis (≥10 chars), treatment type, procedure, doctor fees > 0, start and end dates, estimated stay. Specialist types: `anaesthetist`, `radiologist`, `pathologist`, `rehabilitation`, `other`.
+
+### Dashboard
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/doctor/insights` | Dashboard figures: earnings and return on fees, patients treated, specialty rank, cases received, acceptance rate (and platform average), response time, profile strength, funnel, decline reasons, anonymised price benchmark, recent patient uploads, verification. |
 
 ### Consultations
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/doctor/consultations` | Requests on options built from the doctor's plans. |
+| GET | `/api/doctor/consultations` | The doctor's consultations: `kind` `initial` (before the plan) or `option` (follow-up about a published plan). |
 | GET | `/api/doctor/consultations/{id}` | Detail with slots, selected slot, Zoom link. |
 | POST | `/api/doctor/consultations/{id}/slots` | `{slots: [{date: "2026-11-02", startTime: "09:30", endTime: "10:00"}]}` — 1–3 slots, Brisbane time, future, on or before the treatment start date. Replaces earlier proposals. |
 | POST | `/api/doctor/consultations/{id}/cancel` | `{reason}` (≥5 chars); not once scheduled (paid). |
@@ -175,4 +183,5 @@ Not available in production. They act only on the caller's own records.
 | `POST /api/dev/doctor/cases/{caseId}/publish-plan` | admin publishes the plan |
 | `POST /api/dev/doctor/cases/{caseId}/request-consultation` | patient |
 | `POST /api/dev/doctor/consultations/{id}/select-and-pay` | patient picks the first slot and pays |
+| `POST /api/dev/doctor/consultations/{id}/mark-held` | time travel: a booked consultation has taken place |
 | `POST /api/dev/doctor/chat/open` | admin (doctor chat) |

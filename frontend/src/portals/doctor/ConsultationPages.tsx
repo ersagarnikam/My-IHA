@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { Plus, Trash2, Video } from 'lucide-react'
 import { useToast } from '../../components/Toasts'
@@ -101,7 +101,7 @@ export function ConsultationsPage() {
                       {c.caseReference}
                     </Link>
                   </td>
-                  <td>{c.procedureName ?? '—'}</td>
+                  <td>{c.kind === 'initial' ? 'Initial consultation' : (c.procedureName ?? '—')}</td>
                   <td>{formatDate(c.requestedAt)}</td>
                   <td>
                     <ConsultationBadge consultation={c} />
@@ -138,10 +138,23 @@ export function ConsultationDetailPage() {
       label: 'Choose the first time and pay (patient)',
       path: `/api/dev/doctor/consultations/${c.id}/select-and-pay`,
     })
+  if (c.status === 'scheduled' && selected && new Date(selected.slotTime).getTime() > Date.now())
+    dev.push({
+      label: 'Fast-forward: the consultation has taken place',
+      path: `/api/dev/doctor/consultations/${c.id}/mark-held`,
+    })
 
   return (
     <div className="dr-page">
-      <BackHeader to="/doctor/consultations" title="Consultation Request" />
+      <BackHeader
+        to="/doctor/consultations"
+        title={c.kind === 'initial' ? 'Initial Consultation' : 'Consultation Request'}
+        subtitle={
+          c.kind === 'initial'
+            ? 'Before the treatment plan: talk with the patient on Zoom about their case.'
+            : 'The patient asked to discuss a published treatment option.'
+        }
+      />
 
       <section className="dr-card row-between">
         <div>
@@ -155,6 +168,12 @@ export function ConsultationDetailPage() {
             <span className="muted">Patient: </span>
             <strong>{c.patientName}</strong>
           </p>
+          {c.kind === 'initial' && (
+            <p style={{ margin: 0 }}>
+              <span className="muted">Type: </span>
+              Initial consultation (before the treatment plan)
+            </p>
+          )}
           {c.procedureName && (
             <p style={{ margin: 0 }}>
               <span className="muted">Procedure: </span>
@@ -199,7 +218,7 @@ export function ConsultationDetailPage() {
 }
 
 /** Live 15 minutes before the start until the end (same window as the patient's button). */
-function JoinZoom({ link, start, end }: { link: string | null; start: string; end: string }) {
+export function JoinZoom({ link, start, end }: { link: string | null; start: string; end: string }) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60_000)
@@ -226,7 +245,7 @@ function JoinZoom({ link, start, end }: { link: string | null; start: string; en
   )
 }
 
-type SlotRow = { date: string; startTime: string; endTime: string }
+export type SlotRow = { date: string; startTime: string; endTime: string }
 
 const TIMES = Array.from({ length: 48 }, (_, i) => {
   const h = Math.floor(i / 2)
@@ -236,31 +255,31 @@ const TIMES = Array.from({ length: 48 }, (_, i) => {
   return { value, label }
 })
 
-function ProposeSlots({
-  consultation,
-  onSaved,
+/** 1-3 date/start/end rows in Brisbane time; used for initial and follow-up consultations. */
+export function SlotProposalForm({
+  title,
+  description,
+  submitLabel,
+  maxDate,
+  onSubmit,
 }: {
-  consultation: DoctorConsultation
-  onSaved: (c: DoctorConsultation) => void
+  title: string
+  description: ReactNode
+  submitLabel: string
+  maxDate?: string
+  onSubmit: (rows: SlotRow[]) => Promise<void>
 }) {
-  const toast = useToast()
-  const updating = consultation.status === 'slots_proposed'
   const [rows, setRows] = useState<SlotRow[]>([{ date: '', startTime: '10:00', endTime: '10:30' }])
   const [error, setError] = useState<unknown>(null)
   const [pending, setPending] = useState(false)
   const today = brisbaneToday()
-  const maxDate = consultation.treatmentStartDate ?? undefined
 
   async function send() {
     setPending(true)
     setError(null)
     try {
-      const saved = await apiPost<DoctorConsultation>(`/api/doctor/consultations/${consultation.id}/slots`, {
-        slots: rows,
-      })
-      toast({ title: updating ? 'Updated the proposed times.' : 'Proposed times sent to the patient.', tone: 'good' })
+      await onSubmit(rows)
       setRows([{ date: '', startTime: '10:00', endTime: '10:30' }])
-      onSaved(saved)
     } catch (err) {
       setError(err)
     } finally {
@@ -272,12 +291,11 @@ function ProposeSlots({
     setRows((r) => r.map((row, j) => (j === i ? { ...row, ...patch } : row)))
 
   return (
-    <section className="dr-card stack">
+    <div className="stack">
       <div>
-        <h2 className="dr-subtitle">{updating ? 'Update Proposed Times' : 'Propose Consultation Times'}</h2>
+        <h2 className="dr-subtitle">{title}</h2>
         <p className="muted small" style={{ margin: '0.25rem 0 0' }}>
-          Offer up to three times (Brisbane Time). The patient picks one and pays the consultation fee.
-          {maxDate && ` Times must be on or before the treatment start date (${formatDate(maxDate)}).`}
+          {description}
         </p>
       </div>
       <div className="dr-slot-rows">
@@ -338,9 +356,44 @@ function ProposeSlots({
       <FormError error={error} />
       <div className="row-end">
         <button type="button" disabled={pending || rows.some((r) => !r.date)} onClick={send}>
-          {pending ? 'Sending…' : updating ? 'Update Times' : 'Send to Patient'}
+          {pending ? 'Sending…' : submitLabel}
         </button>
       </div>
+    </div>
+  )
+}
+
+function ProposeSlots({
+  consultation,
+  onSaved,
+}: {
+  consultation: DoctorConsultation
+  onSaved: (c: DoctorConsultation) => void
+}) {
+  const toast = useToast()
+  const updating = consultation.status === 'slots_proposed'
+  const maxDate = consultation.treatmentStartDate ?? undefined
+  return (
+    <section className="dr-card">
+      <SlotProposalForm
+        title={updating ? 'Update Proposed Times' : 'Propose Consultation Times'}
+        description={
+          <>
+            Offer up to three times (Brisbane Time). The patient picks one and pays the consultation fee.
+            {maxDate && ` Times must be on or before the treatment start date (${formatDate(maxDate)}).`}
+            {updating && ' New times replace the ones you offered before.'}
+          </>
+        }
+        submitLabel={updating ? 'Update Times' : 'Send to Patient'}
+        maxDate={maxDate}
+        onSubmit={async (rows) => {
+          const saved = await apiPost<DoctorConsultation>(`/api/doctor/consultations/${consultation.id}/slots`, {
+            slots: rows,
+          })
+          toast({ title: updating ? 'Updated the proposed times.' : 'Proposed times sent to the patient.', tone: 'good' })
+          onSaved(saved)
+        }}
+      />
     </section>
   )
 }
