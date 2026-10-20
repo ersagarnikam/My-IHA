@@ -102,6 +102,8 @@ Spring Boot tests that boot the whole API on H2, run every migration, validate t
 | `cases/PatientCaseFlowTests` | Registration validation, case submission and read-back, file-type rejection, role and ownership checks. |
 | `PatientJourneyTests` | Onboarding through treatment options, consultation, payment, invoice and visa submission; chat, notifications, password change and account deletion. |
 | `DoctorPortalFlowTests` | Doctor sign-up, registration, approval gate, fee, case through to submitted plan, document requests, consultation slots, chat, settings. |
+| `AdminPortalFlowTests` | Admin access, doctor approval, case assignment, plan publish/decline, patient and provider chats. |
+| `SecurityAndAuthTests` | Every role against every API prefix, forged and altered tokens, sign-in without revealing accounts, the wrong-code limit, password reset, other patients' records and invoices, unknown ids on admin routes, the seeded demo accounts. |
 
 ### Type-check and build the web app
 
@@ -120,9 +122,11 @@ cd e2e
 npm install
 API_LOG=../api.log node journey.mjs          # patient: register → visa application
 API_LOG=../api.log node doctor-journey.mjs   # doctor: sign-up → scheduled consultation
+node admin-journey.mjs                       # admin: approve, assign, publish/decline, chat (needs a freshly started API)
+node smoke.mjs                               # opens every patient/doctor/admin page at desktop and phone width
 ```
 
-Screenshots go to `e2e/shots/` (git-ignored). The scripts expect Chrome at `C:/Program Files/Google/Chrome/Application/chrome.exe`; change `executablePath` elsewhere.
+`smoke.mjs` signs in as the demo accounts and fails on page crashes, console errors, failed API calls, error panels, missing headings, redirects or horizontal scrolling. Screenshots go to `e2e/shots/` (git-ignored). The scripts expect Chrome at `C:/Program Files/Google/Chrome/Application/chrome.exe`; change `executablePath` elsewhere.
 
 ## Continuous integration
 

@@ -12,7 +12,7 @@ The project is **mid-migration** from a Next.js + Supabase monorepo to Spring Bo
 |---|---|
 | `backend/` | **New.** Java 21, Spring Boot 4.1, Spring Security (JWT), Spring Data JPA, Flyway. H2 in dev, PostgreSQL in prod. |
 | `frontend/` | **New.** React 19, TypeScript, Vite, React Router 7. One SPA with a route tree per role. |
-| `e2e/` | **New.** Scripted Chrome (puppeteer-core) runs against the local dev servers: `journey.mjs` (patient), `doctor-journey.mjs` (doctor), `admin-journey.mjs` (admin; no API log needed), `shot-doctor-dashboard.mjs` (full-page dashboard screenshot). Run with `API_LOG=<api log> node <script>`. |
+| `e2e/` | **New.** Scripted Chrome (puppeteer-core) runs against the local dev servers: `journey.mjs` (patient), `doctor-journey.mjs` (doctor), `admin-journey.mjs` (admin; no API log needed; needs a freshly started API because it approves the one seeded pending doctor), `smoke.mjs` (opens every portal page as the demo accounts, desktop + phone; no API log), `shot-doctor-dashboard.mjs` (full-page dashboard screenshot). Run with `API_LOG=<api log> node <script>`. |
 | `documentation/` | **New.** Technical docs of the new stack: architecture, development, backend/frontend guides, API reference, data model, patient/doctor portal guides, deployment. |
 | `apps/`, `packages/`, `supabase/` | **Old** Next.js/Supabase code. Kept untouched as the reference for porting. Do not edit; delete only when the user says so. |
 | `docs/` | Technical docs of the **old** stack (per app, per package). The best source for how a feature is supposed to behave. |
@@ -79,7 +79,7 @@ API_LOG=<path to API log> node doctor-journey.mjs                # doctor
 - **Uploads:** always `Uploads.validate(...)`, which checks size and detects the type from file bytes (`storage/FileType`). Files are served through the API after an ownership check, never by storage path.
 - **Flyway:** migrations are append-only (`V6__…` next). SQL must run on both H2 (PostgreSQL mode) and Postgres: uuid ids generated in Java, `varchar` not `text`, no array defaults, no `gen_random_uuid()`.
 - **Spring Data ignores nested repository interfaces**: one repository per file.
-- **Tests:** `@SpringBootTest` + MockMvc journeys (`PatientJourneyTests`, `PatientCaseFlowTests`, `DoctorPortalFlowTests`, `AdminPortalFlowTests`, plus `IhaApplicationTests`; 10 tests). Seed provider-side data directly in the test until those portals exist; admin steps go through `DoctorAdminService`.
+- **Tests:** `@SpringBootTest` + MockMvc journeys (`PatientJourneyTests`, `PatientCaseFlowTests`, `DoctorPortalFlowTests`, `AdminPortalFlowTests`, `SecurityAndAuthTests` (role matrix, forged tokens, auth codes, cross-user access, demo seed), plus `IhaApplicationTests`; 18 tests). Seed provider-side data directly in the test until those portals exist; admin steps go through `DoctorAdminService`.
 - **Notifications:** `NotificationService.send` drops a duplicate only when the same user, type, **title** and case repeat within 60 s (matching on type alone used to swallow real back-to-back updates). Give distinct events distinct titles. Doctor names usually already start with "Dr." — use `ConsultationService.withTitle` rather than prefixing.
 
 ## Frontend conventions

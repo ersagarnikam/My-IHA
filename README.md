@@ -54,11 +54,12 @@ Email isn't sent in development: verification codes are printed in the API log (
 ## Tests
 
 ```bash
-cd backend && ./mvnw test        # boots the API on H2 and drives full patient and doctor journeys over HTTP
+cd backend && ./mvnw test        # boots the API on H2 and drives patient, doctor and admin journeys plus security checks over HTTP
 cd frontend && npm run build     # type-check + production build
 cd e2e && API_LOG=<api log> node journey.mjs          # patient journey in Chrome
 cd e2e && API_LOG=<api log> node doctor-journey.mjs   # doctor journey in Chrome
 cd e2e && node admin-journey.mjs                      # admin journey in Chrome
+cd e2e && node smoke.mjs                              # every portal page, desktop + phone
 ```
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the API tests on Java 21 and the web app build on every push to `main` and every pull request. The Chrome journeys need both servers and run locally.
