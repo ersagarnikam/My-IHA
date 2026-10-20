@@ -50,6 +50,10 @@ iha:
     account-id: ${ZOOM_ACCOUNT_ID:}
     client-id: ${ZOOM_CLIENT_ID:}
     client-secret: ${ZOOM_CLIENT_SECRET:}
+  admin:
+    # First admin account, created on startup if this email doesn't exist yet (admins can't sign up).
+    bootstrap-email: ${IHA_ADMIN_EMAIL:}
+    bootstrap-password: ${IHA_ADMIN_PASSWORD:}
   retention:
     # Daily hard delete of patient accounts past their 30-day deletion grace period.
     cron: "0 30 3 * * *"

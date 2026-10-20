@@ -28,6 +28,7 @@ public class TreatmentPlan {
 	public static final String DRAFT = "draft";
 	public static final String SUBMITTED_TO_IHA = "submitted_to_iha";
 	public static final String IHA_APPROVED = "iha_approved";
+	public static final String IHA_REVIEW_IN_PROGRESS = "iha_review_in_progress";
 	public static final String PRESENTED_TO_PATIENT = "presented_to_patient";
 	public static final String PATIENT_CONFIRMED = "patient_confirmed";
 	public static final String NOT_SELECTED = "not_selected";
@@ -129,6 +130,10 @@ public class TreatmentPlan {
 	@Column(name = "submitted_at")
 	private Instant submittedAt;
 
+	/** Why MTA sent the plan back (status rejected_by_iha). */
+	@Column(name = "rejection_reason")
+	private String rejectionReason;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -213,6 +218,16 @@ public class TreatmentPlan {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	/** MTA declines the plan; the doctor sees the reason. */
+	public void reject(String reason) {
+		this.status = REJECTED_BY_IHA;
+		this.rejectionReason = reason;
+	}
+
+	public String getRejectionReason() {
+		return rejectionReason;
 	}
 
 	public UUID getId() {

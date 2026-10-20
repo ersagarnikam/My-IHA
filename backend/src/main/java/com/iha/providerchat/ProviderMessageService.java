@@ -88,7 +88,27 @@ public class ProviderMessageService {
 				"provider_message_thread", thread.getId(), Map.of());
 	}
 
-	// ── Admin side (the admin portal will expose these) ─────────────────────
+	// ── Admin side (admin portal) ───────────────────────────────────────────
+
+	/** Every provider thread with unread provider messages and the latest message, newest activity first. */
+	@Transactional(readOnly = true)
+	public List<AdminThread> threadsForAdmin() {
+		return threads.findAll().stream().map(t -> {
+			List<ProviderMessage> list = messages.findByThreadIdOrderByCreatedAtAsc(t.getId());
+			ProviderMessage last = list.isEmpty() ? null : list.get(list.size() - 1);
+			return new AdminThread(t, messages.countByThreadIdAndSenderTypeAndReadFalse(t.getId(), t.getAccountType()),
+					last);
+		}).sorted(java.util.Comparator.comparing(AdminThread::activityAt).reversed()).toList();
+	}
+
+	/** Reads a thread as admin; marks the provider's messages read. */
+	@Transactional
+	public ThreadView threadForAdmin(UUID threadId) {
+		ProviderMessageThread thread = threads.findById(threadId)
+			.orElseThrow(() -> ApiException.notFound("Thread not found."));
+		messages.markRead(threadId, thread.getAccountType());
+		return new ThreadView(thread, messages.findByThreadIdOrderByCreatedAtAsc(threadId), 0);
+	}
 
 	@Transactional
 	public void open(UUID threadId) {
@@ -126,6 +146,17 @@ public class ProviderMessageService {
 	}
 
 	public record ThreadView(ProviderMessageThread thread, List<ProviderMessage> messages, long unread) {
+	}
+
+	public record AdminThread(ProviderMessageThread thread, long unread, ProviderMessage lastMessage) {
+
+		Instant activityAt() {
+			Instant a = lastMessage == null ? null : lastMessage.getCreatedAt();
+			Instant b = thread.getReopenRequestedAt();
+			Instant latest = a == null ? b : b == null ? a : (a.isAfter(b) ? a : b);
+			return latest == null ? Instant.EPOCH : latest;
+		}
+
 	}
 
 	public record MessageView(UUID id, String senderType, String body, boolean read, Instant createdAt) {

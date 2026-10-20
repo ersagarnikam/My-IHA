@@ -250,7 +250,8 @@ public class DoctorCaseController {
 			String estimatedLengthOfStay, UUID hospitalId, String department, String roomCategory,
 			String specialRequirements, BigDecimal doctorFeesAud, BigDecimal hospitalFeesAud,
 			List<DoctorPlanService.CostItem> costItems, String costNotes, String patientInstructions,
-			List<String> aftercare, List<SpecialistResponse> specialists, List<HospitalOption> hospitals) {
+			List<String> aftercare, List<SpecialistResponse> specialists, List<HospitalOption> hospitals,
+			String rejectionReason) {
 
 		static PlanResponse of(DoctorPlanService.PlanView v) {
 			MedicalCase c = v.medicalCase();
@@ -268,7 +269,7 @@ public class DoctorCaseController {
 						c.getStatus(), v.assignment().getEvaluationStartedAt(), v.initialConsultation(), null, null, null,
 						null, null, null, null,
 						null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-						List.of(), null, null, List.of(), List.of(), hospitals);
+						List.of(), null, null, List.of(), List.of(), hospitals, null);
 			}
 			return new PlanResponse(c.getId(), c.getReferenceNumber(), c.getSpecialty(), c.getSpecialtyOther(),
 					c.getStatus(), v.assignment().getEvaluationStartedAt(), v.initialConsultation(), p.getId(), p.getStatus(),
@@ -278,7 +279,8 @@ public class DoctorCaseController {
 					p.getTreatmentEndDate(), p.getTreatmentDurationDays(), p.getRecoveryTime(),
 					p.getEstimatedLengthOfStay(), p.getHospitalId(), p.getDepartment(), p.getRoomCategory(),
 					p.getSpecialRequirements(), p.getDoctorFeesAud(), p.getHospitalFeesAud(), v.costItems(),
-					p.getCostNotes(), p.getPatientInstructions(), p.getAftercare(), people, hospitals);
+					p.getCostNotes(), p.getPatientInstructions(), p.getAftercare(), people, hospitals,
+					p.getRejectionReason());
 		}
 
 	}

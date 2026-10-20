@@ -43,6 +43,7 @@ class DevDataSeeder implements ApplicationRunner {
 	static final String PASSWORD = "Demo1234";
 	static final String PATIENT_EMAIL = "patient@demo.local";
 	static final String DOCTOR_EMAIL = "doctor@demo.local";
+	static final String ADMIN_EMAIL = "admin@demo.local";
 
 	private static final Logger log = LoggerFactory.getLogger(DevDataSeeder.class);
 
@@ -56,12 +57,14 @@ class DevDataSeeder implements ApplicationRunner {
 	private final DoctorCaseService doctorCases;
 	private final DoctorFeeService doctorFees;
 	private final DevHistory history;
+	private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
 	DevDataSeeder(AppUserRepository users, HospitalRepository hospitals, DoctorRepository doctors,
 			PatientService patients, CaseService cases, DoctorAccountService doctorAccounts,
 			DoctorAdminService doctorAdmin, DoctorCaseService doctorCases, DoctorFeeService doctorFees,
-			DevHistory history) {
+			DevHistory history, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
 		this.history = history;
+		this.passwordEncoder = passwordEncoder;
 		this.users = users;
 		this.hospitals = hospitals;
 		this.doctors = doctors;
@@ -103,10 +106,13 @@ class DevDataSeeder implements ApplicationRunner {
 		doctorCases.respond(doctor, assignment.getId(), "accepted", null);
 		doctorCases.startEvaluation(doctor, inEvaluation.getId());
 
+		admin();
+		pendingDoctor(seeded);
 		history.seed(patient, doctor, seeded,
 				(email, name, licence) -> doctor(email, name, licence, List.of("Cardiology"), seeded));
 
-		log.info("Dev demo data ready. Sign in as {} or {} with password {}", PATIENT_EMAIL, DOCTOR_EMAIL, PASSWORD);
+		log.info("Dev demo data ready. Sign in as {}, {} or {} with password {}", PATIENT_EMAIL, DOCTOR_EMAIL,
+				ADMIN_EMAIL, PASSWORD);
 	}
 
 	private Hospital hospital(String name, String city) {
@@ -146,6 +152,27 @@ class DevDataSeeder implements ApplicationRunner {
 		DoctorFeeService.Checkout checkout = doctorFees.checkout(user, "registration");
 		doctorFees.simulate(user, checkout.intentId());
 		return user;
+	}
+
+	/** The coordinator account for the admin portal. */
+	private void admin() {
+		AppUser admin = new AppUser(ADMIN_EMAIL, passwordEncoder.encode(PASSWORD), Role.ADMIN);
+		admin.markEmailVerified();
+		users.save(admin);
+	}
+
+	/** A registration waiting in the admin portal's Doctor Approvals. */
+	private void pendingDoctor(List<Hospital> affiliated) {
+		doctorAccounts.createAccount("pending.doctor@demo.local", PASSWORD);
+		CurrentUser user = verified("pending.doctor@demo.local", Role.DOCTOR);
+		doctorAccounts.register(user,
+				new DoctorAccountService.RegistrationInput("Dr. Olivia Grant", "+61 412 555 020",
+						List.of("Dermatology"), "MBBS, FACD", 9, "MED0001234563",
+						"Dermatologist focused on chronic skin conditions and laser therapy.", List.of("English"),
+						"Dermatology", "consultant", List.of(affiliated.get(1).getId()),
+						List.of("mon", "wed", "fri")),
+				new DoctorAccountService.RegistrationFiles(null, BytesMultipartFile.pdf("medicalLicense", "Medical license"),
+						BytesMultipartFile.pdf("degreeCertificate", "Degree certificate"), List.of()));
 	}
 
 	private CurrentUser verified(String email, Role role) {

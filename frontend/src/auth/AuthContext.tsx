@@ -81,5 +81,5 @@ export const ROLE_HOME: Record<Role, string> = {
   DOCTOR: '/doctor/dashboard',
   HOSPITAL: '/hospital',
   LAWYER: '/lawyer',
-  ADMIN: '/admin',
+  ADMIN: '/admin/dashboard',
 }

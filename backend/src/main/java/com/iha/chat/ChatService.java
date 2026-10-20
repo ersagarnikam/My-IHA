@@ -92,7 +92,35 @@ public class ChatService {
 		return thread;
 	}
 
-	// ── Coordinator side (the admin portal will expose these) ───────────────
+	// ── Coordinator side (admin portal) ─────────────────────────────────────
+
+	/** Every patient thread, with unread patient messages and the latest message, newest activity first. */
+	@Transactional(readOnly = true)
+	public List<AdminThread> threadsForAdmin() {
+		return threads.findAll().stream().map(t -> {
+			List<ChatMessage> list = messages.findByThreadIdOrderByCreatedAtAsc(t.getId());
+			ChatMessage last = list.isEmpty() ? null : list.get(list.size() - 1);
+			String patientName = patients.findById(t.getPatientId()).map(Patient::getFullName).orElse(null);
+			return new AdminThread(t, patientName,
+					messages.countByThreadIdAndSenderTypeAndReadFalse(t.getId(), ChatMessage.PATIENT), last);
+		})
+			.sorted(java.util.Comparator.comparing(AdminThread::activityAt).reversed())
+			.toList();
+	}
+
+	/** Opens a thread for reading as a coordinator; marks the patient's messages read. */
+	@Transactional
+	public AdminThreadView threadForAdmin(UUID threadId) {
+		ChatThread thread = threads.findById(threadId).orElseThrow(() -> ApiException.notFound("Thread not found."));
+		messages.markRead(threadId, ChatMessage.PATIENT);
+		String patientName = patients.findById(thread.getPatientId()).map(Patient::getFullName).orElse(null);
+		return new AdminThreadView(thread, patientName, messages.findByThreadIdOrderByCreatedAtAsc(threadId));
+	}
+
+	@Transactional
+	public void closeThread(UUID threadId) {
+		threads.findById(threadId).orElseThrow(() -> ApiException.notFound("Thread not found.")).close();
+	}
 
 	@Transactional
 	public void openThread(UUID threadId) {
@@ -115,6 +143,20 @@ public class ChatService {
 	}
 
 	public record ThreadView(ChatThread thread, List<ChatMessage> messages, long unread) {
+	}
+
+	public record AdminThread(ChatThread thread, String patientName, long unread, ChatMessage lastMessage) {
+
+		java.time.Instant activityAt() {
+			java.time.Instant a = lastMessage == null ? null : lastMessage.getCreatedAt();
+			java.time.Instant b = thread.getReopenRequestedAt();
+			java.time.Instant latest = a == null ? b : b == null ? a : (a.isAfter(b) ? a : b);
+			return latest == null ? java.time.Instant.EPOCH : latest;
+		}
+
+	}
+
+	public record AdminThreadView(ChatThread thread, String patientName, List<ChatMessage> messages) {
 	}
 
 }

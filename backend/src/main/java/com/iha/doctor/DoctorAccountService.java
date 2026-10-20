@@ -243,7 +243,13 @@ public class DoctorAccountService implements AlertPreferences {
 
 	@Transactional(readOnly = true)
 	public Resource loadDocument(CurrentUser user, int index) {
-		List<RegistrationDocument> docs = documents(requireCurrent(user));
+		return loadDocument(requireCurrent(user), index);
+	}
+
+	/** For MTA admin reviewing a registration. */
+	@Transactional(readOnly = true)
+	public Resource loadDocument(Doctor doctor, int index) {
+		List<RegistrationDocument> docs = documents(doctor);
 		if (index < 0 || index >= docs.size()) {
 			throw ApiException.notFound("Document not found.");
 		}

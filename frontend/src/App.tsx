@@ -48,6 +48,12 @@ import {
   RegistrationFeePage,
 } from './portals/doctor/registration/RegistrationPages'
 import { AccountSettingsPage } from './portals/doctor/settings/AccountSettingsPage'
+import { AdminLayout } from './portals/admin/AdminLayout'
+import { AdminCaseDetailPage, AdminCasesPage } from './portals/admin/CasePages'
+import { AdminDashboardPage } from './portals/admin/DashboardPage'
+import { AdminDoctorDetailPage, AdminDoctorsPage } from './portals/admin/DoctorPages'
+import { AdminMessagesPage } from './portals/admin/MessagesPage'
+import { AdminPlanDetailPage, AdminPlansPage } from './portals/admin/PlanPages'
 import { TreatmentPlanPage } from './portals/doctor/TreatmentPlanPage'
 
 /**
@@ -218,14 +224,33 @@ const router = createBrowserRouter([
       },
       portal('/hospital', 'HOSPITAL', 'MTA Hospital Portal'),
       portal('/lawyer', 'LAWYER', 'MTA Visa Lawyer Portal'),
-      portal('/admin', 'ADMIN', 'MTA Admin Portal'),
+      {
+        path: '/admin',
+        element: <RequireRole role="ADMIN" />,
+        children: [
+          {
+            element: <AdminLayout />,
+            children: [
+              { index: true, element: <Navigate to="dashboard" replace /> },
+              { path: 'dashboard', element: <AdminDashboardPage /> },
+              { path: 'doctors', element: <AdminDoctorsPage /> },
+              { path: 'doctors/:doctorId', element: <AdminDoctorDetailPage /> },
+              { path: 'cases', element: <AdminCasesPage /> },
+              { path: 'cases/:caseId', element: <AdminCaseDetailPage /> },
+              { path: 'plans', element: <AdminPlansPage /> },
+              { path: 'plans/:planId', element: <AdminPlanDetailPage /> },
+              { path: 'messages', element: <AdminMessagesPage /> },
+            ],
+          },
+        ],
+      },
       { path: '*', element: <NotFound /> },
     ],
   },
 ])
 
 /** Placeholder area for a role whose screens haven't been ported yet. */
-function portal(path: string, role: 'HOSPITAL' | 'LAWYER' | 'ADMIN', title: string) {
+function portal(path: string, role: 'HOSPITAL' | 'LAWYER', title: string) {
   return {
     path,
     element: <RequireRole role={role} />,
