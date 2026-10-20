@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code sessions in this repository. Read this first, then `README.md` (run instructions, porting status, old→new mapping).
+Guidance for Claude Code sessions in this repository. Read this first, then `README.md` (overview, porting status) and `documentation/` (architecture, API reference, data model, guides). Keep `documentation/` current when you change behaviour, endpoints or tables.
 
 ## What this is
 
