@@ -1,0 +1,1218 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "caseManagement": "Case Management",
+    "messages": "Messages",
+    "documents": "Documents",
+    "treatment": "Treatment",
+    "visaTravel": "Visa & Travel",
+    "payments": "Payments",
+    "accountSettings": "Account & Settings",
+    "signOut": "Sign out"
+  },
+  "logout": {
+    "title": "Sign out?",
+    "body": "You will be returned to the login page.",
+    "cancel": "Cancel",
+    "confirm": "Sign out"
+  },
+  "common": {
+    "patient": "Patient",
+    "loading": "Loading...",
+    "error": "Something went wrong.",
+    "tryAgain": "Try again",
+    "paid": "Paid",
+    "processing": "Processing",
+    "pending": "Pending",
+    "notStarted": "Not started",
+    "documents": "Documents",
+    "payment": "Payment",
+    "visa": "Visa",
+    "noneUploaded": "None uploaded",
+    "files_one": "{count} file",
+    "files_other": "{count} files"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "body": "An unexpected error occurred. Please try again, or contact support if the problem persists.",
+    "tryAgain": "Try again",
+    "notFound": {
+      "title": "Page not found",
+      "body": "The page you are looking for does not exist or has been moved.",
+      "backToDashboard": "Back to dashboard"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Updates on your cases, treatment, visa, and payments.",
+    "markAllAsRead": "Mark all as read",
+    "empty": "You have no notifications yet.",
+    "viewAll": "View all",
+    "view": "View",
+    "dismiss": "Dismiss"
+  },
+  "messages": {
+    "title": "Messages",
+    "subtitle": "Chat with your MTA coordinator.",
+    "empty": "No messages yet. Your MTA coordinator will reach out here when needed.",
+    "closedBanner": "This conversation is closed. Your MTA coordinator will reopen it when needed.",
+    "reopenRequestedBanner": "Your request has been sent. Your MTA coordinator will review it shortly.",
+    "requestReopen": "Request to reopen",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "reopenModal": {
+      "title": "Request to reopen conversation",
+      "description": "Let your MTA coordinator know why you need this conversation reopened.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "e.g. I have a question about my upcoming consultation...",
+      "cancel": "Cancel",
+      "submit": "Send request",
+      "submitting": "Sending...",
+      "successToast": "Your request has been sent.",
+      "validation": {
+        "reasonMinLength": "Please describe your reason in at least 10 characters",
+        "reasonMaxLength": "Reason must be under 500 characters"
+      }
+    }
+  },
+  "caseStatus": {
+    "case_submitted": {
+      "label": "Case Submitted",
+      "description": "Your case has been received by MTA"
+    },
+    "under_review": {
+      "label": "Under Review",
+      "description": "MTA is reviewing and routing your case"
+    },
+    "doctor_assigned": {
+      "label": "Doctor Assigned",
+      "description": "Doctor has been assigned"
+    },
+    "evaluation": {
+      "label": "Evaluation",
+      "description": "Your case is being reviewed by the doctor"
+    },
+    "treatment_plan": {
+      "label": "Treatment Plan",
+      "description": "Your treatment options are ready to review"
+    },
+    "treatment_confirmed": {
+      "label": "Treatment Confirmed",
+      "description": "Treatment plan is selected"
+    },
+    "payment_confirmed": {
+      "label": "Payment Confirmed",
+      "description": "Payment received — visa processing will begin"
+    },
+    "visa_documents_submitted": {
+      "label": "Visa Documents Submitted",
+      "description": "Your visa application has been submitted to MTA"
+    },
+    "visa_processing": {
+      "label": "Visa Processing",
+      "description": "Your visa application has been reviewed by visa lawyer and sent for approval"
+    },
+    "travel_ready": {
+      "label": "Travel Ready",
+      "description": "Your visa is approved — you are ready to travel"
+    },
+    "visa_rejected": {
+      "label": "Visa Rejected",
+      "description": "Your visa application was not approved"
+    },
+    "completed": {
+      "label": "Completed",
+      "description": "Treatment completed"
+    },
+    "closed": {
+      "label": "Closed",
+      "description": "Case closed"
+    },
+    "current": "Current"
+  },
+  "dashboard": {
+    "welcomeBack": "Welcome back, {name}!",
+    "subtitle": "Here's your MTA medical journey at a glance.",
+    "quickActions": "Quick Actions",
+    "submitNewCase": "Submit New Case",
+    "submitNewCaseDesc": "Start a new medical case",
+    "myCases": "My Cases",
+    "myCasesDesc": "View and manage all cases",
+    "myDocuments": "My Documents",
+    "myDocumentsDesc": "Access uploaded documents",
+    "yourCases": "Your Cases",
+    "viewAll": "View all",
+    "noCasesYet": "No cases yet",
+    "noCasesSubtext": "Submit your first case to get started.",
+    "submitFirstCase": "Submit Your First Case",
+    "visaStatus": {
+      "documents_submitted": "Submitted",
+      "under_review": "Under Review",
+      "additional_docs_requested": "Info Requested",
+      "application_submitted": "Application Submitted",
+      "processing": "Processing",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
+  },
+  "activeCaseSection": {
+    "journeyProgress": "Journey Progress",
+    "pctCompleted": "{pct}% completed",
+    "step": "Step {current} of {total}",
+    "journeySteps": {
+      "case_submitted": "Case\nSubmitted",
+      "under_review": "Under\nReview",
+      "doctor_assigned": "Doctor\nAssigned",
+      "evaluation": "Evaluation",
+      "treatment_plan": "Treatment\nPlan",
+      "treatment_confirmed": "Treatment\nConfirmed",
+      "payment_confirmed": "Payment\nConfirmed",
+      "visa_documents_submitted": "Visa\nSubmitted",
+      "visa_processing": "Visa\nProcessing",
+      "travel_ready": "Travel\nReady",
+      "completed": "Completed"
+    },
+    "submitted": "Submitted",
+    "activeCase": "Active Case",
+    "viewCase": "View Case",
+    "noActiveCases": "No active cases",
+    "noActiveCasesSubtext": "Submit your first medical case to begin treatment review, consultation planning, and travel coordination.",
+    "submitCase": "Submit Case",
+    "nextActionRequired": "Next Action Required",
+    "noActionRequired": "No action required",
+    "noActionSubtext": "Submit a case to begin your MTA journey. Actions and approvals will appear here.",
+    "previousCase": "Previous case",
+    "nextCase": "Next case",
+    "goToCase": "Go to case {n}",
+    "nextActions": {
+      "underReview": {
+        "title": "Case Under Review",
+        "description": "MTA is reviewing your case and will assign it to the right specialist. No action needed."
+      },
+      "doctorAssigned": {
+        "title": "Doctor Assigned",
+        "description": "Doctor has been assigned and they will soon start the case evaluation."
+      },
+      "evaluation": {
+        "title": "Evaluation in Progress",
+        "description": "Your assigned doctor is reviewing your case details. You will be notified with next steps."
+      },
+      "treatmentPlan": {
+        "title": "Review Your Treatment Options",
+        "description": "Your treatment plan is ready. Please review and confirm your preferred option to proceed.",
+        "actionLabel": "Review Treatment Plan"
+      },
+      "treatmentConfirmed": {
+        "title": "Complete Your Payment",
+        "description": "Treatment confirmed. Complete payment to begin visa and travel coordination.",
+        "actionLabel": "Go to Payment"
+      },
+      "paymentConfirmed": {
+        "title": "Submit Visa Application",
+        "description": "Payment received. Complete and submit your visa application to proceed.",
+        "actionLabel": "Apply for Visa"
+      },
+      "visaSubmitted": {
+        "title": "Visa Documents Submitted",
+        "description": "Your visa application has been submitted and is being routed to your visa lawyer. No action needed."
+      },
+      "visaProcessing": {
+        "title": "Visa Being Processed",
+        "description": "Your visa application is with immigration authorities. No action needed at this time."
+      },
+      "travelReady": {
+        "title": "Ready to Travel",
+        "description": "Your visa is approved and travel details are confirmed. Check your travel plan.",
+        "actionLabel": "View Travel Details"
+      },
+      "completed": {
+        "title": "Treatment Completed",
+        "description": "Your treatment has been completed. We hope your experience with MTA was excellent."
+      },
+      "default": {
+        "title": "No Action Required",
+        "description": "There is nothing requiring your attention right now."
+      }
+    }
+  },
+  "cases": {
+    "title": "My Cases",
+    "subtitle": "Track and manage your medical cases.",
+    "addNewCase": "Add New Case",
+    "activeCases": "Active Cases",
+    "pastCases": "Past Cases",
+    "noCasesYet": "No cases yet",
+    "noCasesSubtext": "Submit your first medical case to begin your MTA journey.",
+    "submitFirstCase": "Submit Your First Case"
+  },
+  "approvedVisa": {
+    "title": "Your visa has been approved",
+    "issuedOn": "Issued on {date}",
+    "download": "Download visa",
+    "downloadFailed": "Failed to download. Please try again."
+  },
+  "caseDetail": {
+    "back": "My Cases",
+    "submitted": "Submitted",
+    "uploadedDocuments": "Uploaded Documents",
+    "conditionDescription": "Condition Description",
+    "treatmentOptions": "Treatment Options",
+    "treatmentPending": "MTA is reviewing your case. Treatment options will appear here once ready.",
+    "visaTravel": "Visa & Travel",
+    "viewDetails": "View details →",
+    "startVisaApplication": "Start visa application",
+    "startVisaApplicationLocked": "Awaiting hospital letters",
+    "visaStatus": "Visa status:",
+    "visaApplicationDesc": "Upload your visa documents to begin your Australian Medical Treatment Visa application.",
+    "visaApplicationLockedDesc": "You can upload your visa documents now. The application form unlocks once the hospital sends your invitation and appointment confirmation letters below.",
+    "hospitalInvitationLetter": "Hospital Invitation Letter",
+    "appointmentConfirmationLetter": "Appointment Confirmation Letter",
+    "letterStatusPending": "Pending",
+    "letterStatusGenerated": "Generated",
+    "letterPendingDesc": "Your hospital hasn't issued this yet.",
+    "letterDownload": "Download",
+    "letterDownloadFailed": "Failed to download. Please try again.",
+    "statusTimeline": "Status Timeline",
+    "timeline": "Timeline",
+    "viewAllActivities": "View All Activities",
+    "travelAssistance": "Travel Assistance",
+    "travelAssistanceDesc": "Let us know if you'd like help arranging your trip — our team will reach out to coordinate.",
+    "needTravelAssistance": "I need travel assistance",
+    "needStayBookingAssistance": "I need stay booking assistance",
+    "needTransportationAssistance": "I need transportation and airport pickup assistance",
+    "travelAssistanceSaved": "Your request has been saved. Our team will contact you shortly.",
+    "save": "Save",
+    "saving": "Saving..."
+  },
+  "submissionSuccess": {
+    "title": "Your medical case has been securely submitted",
+    "reference": "Reference:",
+    "body": "Your medical case has been securely submitted to our specialist review team. A care coordinator will review your request and connect you with suitable hospitals and specialists within 24–48 hours.",
+    "nextSteps": {
+      "review": "Our medical team reviews your reports",
+      "specialists": "Suitable specialists and hospitals are identified",
+      "options": "Treatment options and estimated costs are shared",
+      "visa": "Visa & travel assistance begins if you proceed"
+    },
+    "trackStatus": "Track Status",
+    "returnToDashboard": "Return to dashboard"
+  },
+  "treatments": {
+    "title": "Treatment Options",
+    "subtitle": "Review and select a treatment plan from the options MTA has prepared for your case.",
+    "noOptions": "No treatment options available yet.",
+    "noOptionsSubtext": "Options will appear here once MTA reviews your case and publishes plans.",
+    "optionSelected": "Option Selected",
+    "viewCase": "View Case",
+    "finalisingOptions": "Your treatment options are being finalised. Please check back shortly.",
+    "youHaveSelectedHospital": "You have selected {hospital}.",
+    "proceedToPayment": "Proceed to payment to confirm your treatment.",
+    "goToPayment": "Go to Payment",
+    "selected": "Selected",
+    "total": "Total",
+    "viewDetails": "View Details",
+    "consultationStatus": {
+      "requested": "Consultation requested",
+      "slots_proposed": "Consultation: select a time",
+      "slot_selected": "Consultation: time confirmed",
+      "scheduled": "Consultation scheduled",
+      "cancelled": "Consultation cancelled"
+    }
+  },
+  "treatmentDetail": {
+    "modalTitle": "Treatment Plan Details",
+    "doctor": "Doctor",
+    "internationalPatients": "International Patients",
+    "yearsExperience": "Years Experience",
+    "hospital": "Hospital",
+    "beds": "Beds",
+    "yearsOfExperience": "Years of Experience",
+    "specialties": "Specialties",
+    "department": "Department",
+    "roomCategory": "Room Category",
+    "treatmentOverview": "Treatment Overview",
+    "procedure": "Procedure",
+    "recoveryTime": "Recovery Time",
+    "technique": "Technique",
+    "successRate": "Success Rate",
+    "diagnosis": "Diagnosis",
+    "treatmentType": "Treatment Type",
+    "treatmentTypes": {
+      "medication_only": "Medication Only",
+      "surgery": "Surgery",
+      "therapy": "Therapy"
+    },
+    "recommendedTreatment": "Recommended Treatment",
+    "description": "Description",
+    "expectedOutcome": "Expected Outcome",
+    "specialRequirements": "Special Requirements",
+    "timelineRecovery": "Timeline & Recovery",
+    "treatmentStartDate": "Treatment Start Date",
+    "treatmentEndDate": "Treatment End Date",
+    "estDuration": "Est. Duration",
+    "hospitalStay": "Hospital Stay",
+    "costBreakdown": "Cost Breakdown",
+    "totalCost": "Total Cost",
+    "costItems": {
+      "doctor_fees": "Doctor Fees",
+      "hospital_fees": "Hospital Fees",
+      "iha_service_fee": "IHA Service Fee"
+    },
+    "notes": "Notes",
+    "careTeam": "Care Team & Specialists",
+    "doctorNotes": "Doctor Notes",
+    "patientInstructions": "Instructions for You",
+    "recoveryAftercare": "Recovery & Aftercare",
+    "alreadySelected": "You have selected this treatment option",
+    "otherOptionSelected": "Another option has already been selected for this case.",
+    "selectOption": "Select This Treatment Option",
+    "confirmTitle": "Confirm Treatment Selection",
+    "confirmBody": "You are about to select {hospital} for {specialty}. This selection cannot be changed after confirmation. Do you want to proceed?",
+    "cancel": "Cancel",
+    "confirming": "Confirming…",
+    "confirm": "Confirm",
+    "successToast": "Treatment option confirmed. Redirecting to payment…"
+  },
+  "consultation": {
+    "onlineConsultation": "Online Consultation",
+    "preRequestText": "Want to discuss this treatment option with the doctor before deciding? Request a free online consultation and the doctor will share a few suitable times.",
+    "requesting": "Requesting…",
+    "requestButton": "Request Online Consultation",
+    "requestSent": "Your consultation request has been sent. The doctor will share a few suitable times soon.",
+    "selectTimePrompt": "The doctor has proposed the following times. Please select one:",
+    "confirmingTime": "Confirming…",
+    "confirmSelectedTime": "Confirm Selected Time",
+    "selectedTime": "You selected {time}.",
+    "selectedTimeLabel": "You selected:",
+    "selectedTimeDefault": "your preferred time",
+    "payFeeText": "Pay the ${fee} AUD consultation fee to confirm this slot. The Zoom link will be generated automatically once payment is received.",
+    "payFeeButton": "Pay ${fee} AUD to Confirm",
+    "scheduledFor": "Your consultation is scheduled for {time}.",
+    "scheduledForLabel": "Your consultation is scheduled for:",
+    "scheduledForDefault": "the confirmed time",
+    "consultationEnded": "This consultation has ended.",
+    "joinZoom": "Join Zoom Meeting",
+    "joinLinkEnabled": "The join link will be enabled {minutes} minutes before your scheduled time.",
+    "cancelled": "This consultation request was cancelled.",
+    "successToast": "Consultation request sent to the doctor.",
+    "timeConfirmed": "Consultation time confirmed.",
+    "changeTimeButton": "Change Time",
+    "cancelChange": "Cancel"
+  },
+  "payments": {
+    "title": "Payments",
+    "subtitle": "Transaction history for all your cases",
+    "noPayments": "No payments yet",
+    "noPaymentsSubtext": "Payments will appear here after you confirm a treatment option.",
+    "search": "Search…",
+    "date": "Date",
+    "caseId": "Case ID",
+    "paymentType": "Payment Type",
+    "amount": "Amount",
+    "status": "Status",
+    "action": "Action",
+    "noResults": "No results for \"{query}\"",
+    "paymentTypeLabels": {
+      "consultation_fee": "Consultation Fee",
+      "full_payment": "Treatment Payment"
+    },
+    "statusLabels": {
+      "completed": "Success",
+      "pending": "Pending",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    },
+    "viewInvoice": "View Invoice",
+    "download": "Download",
+    "payNow": "Pay Now",
+    "retry": "Retry"
+  },
+  "visaTravel": {
+    "title": "Visa & Travel",
+    "subtitle": "Travel guidance and visa application management for your Australian medical treatment.",
+    "travelGuide": "Travel Guide",
+    "visaManagement": "Visa Management",
+    "noVisaApps": "No visa applications yet",
+    "noVisaAppsSubtext": "You can start a visa application once your treatment payment is confirmed.",
+    "visaApplicationTitle": "Visa Application",
+    "ref": "Ref:",
+    "started": "Started",
+    "viewDetails": "View Details →",
+    "startApplication": "Start Application",
+    "startApplicationLocked": "Awaiting hospital letters",
+    "visaNotStarted": "Visa application not started",
+    "statusLabels": {
+      "not_started": "Not Started",
+      "documents_submitted": "Submitted",
+      "under_review": "Under Review",
+      "additional_docs_requested": "Additional Info Needed",
+      "application_submitted": "Application Submitted",
+      "processing": "Processing",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "guide": {
+      "contents": "Contents",
+      "sectionLabels": {
+        "visa": "Subclass 602 Visa",
+        "documents": "Preparing Documents",
+        "flights": "Flights",
+        "accommodation": "Accommodation",
+        "airport": "Airport & Transport",
+        "checklist": "Pre-Arrival Checklist"
+      },
+      "visa": {
+        "title": "Australian Medical Treatment Visa (Subclass 602)",
+        "intro": "The <visaName>Subclass 602 Medical Treatment visa</visaName> allows you to travel to Australia for medical treatment not available or accessible in your home country. MTA patients apply for this visa category.",
+        "whoItIsFor": "Who it is for",
+        "whoBody": "Patients seeking specialist medical or dental treatment in Australia, and their companions or carers.",
+        "processingTime": "Processing time",
+        "processingBody": "Typically 4–8 weeks. Apply well in advance of your treatment date to avoid delays.",
+        "lengthOfStay": "Length of stay",
+        "lengthBody": "Granted for the period necessary for treatment. Extensions can be applied for if treatment is prolonged.",
+        "companions": "Companions",
+        "companionsBody": "Immediate family members or a carer may be included on the same application.",
+        "officialPage": "Official Australian Department of Home Affairs page"
+      },
+      "documents": {
+        "title": "Preparing Your Documents",
+        "intro": "The following documents are typically required for a Subclass 602 visa application. Your assigned visa lawyer will confirm the exact requirements for your case.",
+        "item0": "Valid passport (minimum 6 months validity beyond intended stay)",
+        "item1": "Hospital invitation letter (provided by MTA after treatment confirmation)",
+        "item2": "Proof of sufficient funds (bank statements, sponsor letter)",
+        "item3": "Medical records and specialist reports relevant to your treatment",
+        "item4": "Completed visa application form (Form 1005)",
+        "item5": "Two recent passport-sized photographs (as per Australian requirements)",
+        "item6": "Health insurance or evidence of ability to cover medical costs",
+        "item7": "Statutory declaration of financial support (if sponsored)"
+      },
+      "flights": {
+        "title": "Flights",
+        "intro": "MTA partners with hospitals across Australia’s major cities. Fly into the airport closest to your treatment location:",
+        "tip0": "Book a <flexFare>flexible fare</flexFare> where possible — treatment dates may shift.",
+        "tip1": "Consider <travelInsurance>travel insurance</travelInsurance> that covers medical cancellations.",
+        "tip2": "MTA does not book flights — this section is guidance only."
+      },
+      "accommodation": {
+        "title": "Accommodation",
+        "intro": "Staying close to your hospital reduces stress during your treatment period.",
+        "tip0": "<servicedApartments>Serviced apartments</servicedApartments> are popular for longer stays — they offer kitchen facilities and more space than hotel rooms.",
+        "tip1": "<hotelRooms>Hotel rooms</hotelRooms> suit shorter treatment periods or companions travelling separately.",
+        "tip2": "Look for properties within 2–5 km of your hospital for easy access to appointments.",
+        "tip3": "MTA does not book accommodation. Your visa lawyer or MTA coordinator can suggest options specific to your hospital location."
+      },
+      "airport": {
+        "title": "Airport & Transport",
+        "intro": "All major Australian airports are well-connected to city centres and hospital districts.",
+        "tip0": "<taxiRideshare>Taxis and rideshare</taxiRideshare> (Uber, DiDi) are available at all airports — no pre-booking required.",
+        "tip1": "<airportTrains>Airport trains</airportTrains> operate in Sydney, Melbourne, Brisbane, and Perth.",
+        "tip2": "<shuttleBuses>Shuttle buses</shuttleBuses> are often available for hotels near hospitals — check with your accommodation provider.",
+        "tip3": "If you have <mobilityNeeds>mobility needs</mobilityNeeds>, notify your airline and accommodation in advance. Australian airports are fully accessible."
+      },
+      "preArrival": {
+        "title": "Pre-Arrival Checklist",
+        "intro": "Complete the following before departing for Australia.",
+        "item0": "Visa approved and visa grant letter downloaded",
+        "item1": "Hospital appointment date and contact details confirmed",
+        "item2": "Flights booked with flexible fare for date changes",
+        "item3": "Accommodation arranged near your hospital",
+        "item4": "Travel insurance purchased (including medical evacuation cover)",
+        "item5": "Emergency contact informed of your travel plans",
+        "item6": "Sufficient funds accessible (local ATM and card access)",
+        "item7": "Medications packed with supporting documentation",
+        "item8": "MTA contact details saved on your phone"
+      }
+    }
+  },
+  "profile": {
+    "title": "Account & Settings",
+    "subtitle": "Manage your profile, notifications, and account settings.",
+    "tabs": {
+      "personal": "Personal Information",
+      "notifications": "Notifications",
+      "payment": "Payment & Billing",
+      "security": "Security",
+      "deleteAccount": "Delete Account"
+    },
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "select": "Select",
+    "personalDetails": {
+      "title": "Personal Details",
+      "saved": "Personal details updated.",
+      "uploadPhotoError": "Please select an image file.",
+      "photoTooLarge": "Image must be under 5 MB.",
+      "uploadFailed": "Failed to upload photo. Please try again.",
+      "fields": {
+        "fullName": "Full Name",
+        "email": "Email",
+        "dateOfBirth": "Date of Birth",
+        "gender": "Gender",
+        "nationality": "Nationality",
+        "countryOfResidence": "Country of Residence",
+        "phone": "Phone",
+        "address": "Address"
+      },
+      "genders": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other",
+        "prefer_not_to_say": "Prefer not to say"
+      },
+      "addressPlaceholder": "123 Main St, City, State"
+    },
+    "medicalBackground": {
+      "title": "Medical Background",
+      "sharedWithHospitals": "This information will be shared with hospitals when your case is reviewed.",
+      "saved": "Medical background updated.",
+      "tagPlaceholder": "Type and press Enter to add",
+      "fields": {
+        "medicalHistory": "Medical History",
+        "allergies": "Allergies",
+        "currentMedications": "Current Medications",
+        "pastSurgeries": "Past Surgeries"
+      }
+    },
+    "emergencyContact": {
+      "title": "Emergency Contact",
+      "saved": "Emergency contact updated.",
+      "fields": {
+        "name": "Name",
+        "relationship": "Relationship",
+        "phone": "Phone",
+        "contactName": "Contact Name",
+        "phoneNumber": "Phone Number"
+      },
+      "relationships": {
+        "Spouse": "Spouse",
+        "Parent": "Parent",
+        "Child": "Child",
+        "Sibling": "Sibling",
+        "Grandparent": "Grandparent",
+        "Aunt / Uncle": "Aunt / Uncle",
+        "Cousin": "Cousin",
+        "Friend": "Friend",
+        "Guardian": "Guardian",
+        "Other": "Other"
+      }
+    },
+    "notifications": {
+      "title": "Notification Preferences",
+      "intro": "In-portal notifications are always on. Choose which additional channels you'd like to receive updates on.",
+      "saved": "Notification preferences updated.",
+      "email": {
+        "label": "Email notifications",
+        "description": "Receive emails for case updates, treatment options, payments, and visa status."
+      },
+      "sms": {
+        "label": "SMS notifications",
+        "description": "Receive text messages for time-sensitive updates like consultations and document requests."
+      }
+    },
+    "payment": {
+      "title": "Payment & Billing",
+      "subtitle": "Manage your saved payment methods.",
+      "savedCards": "Saved cards",
+      "defaultBadge": "Default",
+      "saveAsDefault": "Save as Default",
+      "addNewCard": "Add new card",
+      "newCard": "New card",
+      "saveCard": "Save Card",
+      "cancel": "Cancel",
+      "noCards": "No saved cards yet.",
+      "toasts": {
+        "cardAdded": "Card added successfully.",
+        "defaultUpdated": "Default card updated.",
+        "cardRemoved": "Card removed.",
+        "failedToCreate": "Failed to create payment method",
+        "failedToSave": "Failed to save card",
+        "failedToSetDefault": "Failed to update default card",
+        "failedToRemove": "Failed to remove card"
+      }
+    },
+    "security": {
+      "title": "Change Password",
+      "subtitle": "Choose a strong password you don't use elsewhere.",
+      "updatePassword": "Update Password",
+      "fields": {
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password"
+      },
+      "toasts": {
+        "success": "Password updated successfully.",
+        "failed": "Failed to update password. Please try again."
+      },
+      "errors": {
+        "currentRequired": "Current password is required",
+        "minLength": "Password must be at least 8 characters",
+        "confirmRequired": "Please confirm your new password",
+        "noMatch": "Passwords do not match",
+        "incorrect": "Current password is incorrect"
+      }
+    },
+    "deleteAccount": {
+      "warningTitle": "Your account will be deactivated immediately",
+      "warningBody": "You'll be signed out and won't be able to log back in. Your data, case history, and uploaded documents will be permanently deleted after 30 days.",
+      "confirmInstruction": "To confirm, type",
+      "confirmSuffix": "in the box below:",
+      "deleteButton": "Delete Account",
+      "failedToast": "Failed to delete account. Please contact support."
+    },
+    "setupWizard": {
+      "steps": {
+        "personalInfo": { "label": "Personal Info", "shortLabel": "Personal", "title": "Personal Information", "subtitle": "Enter Your Personal Information" },
+        "medicalBackground": { "label": "Medical Background", "shortLabel": "Medical", "title": "Medical Background", "subtitle": "Enter Your Medical Background" },
+        "emergencyContact": { "label": "Emergency Contact", "shortLabel": "Emergency", "title": "Emergency Contact", "subtitle": "Enter Your Emergency Contact" }
+      },
+      "completedToast": "Profile set up successfully!",
+      "clickToUploadPhoto": "Click to upload photo",
+      "uploadingPhoto": "Uploading…",
+      "emailLabel": "Email",
+      "next": "Next",
+      "back": "Back",
+      "importantForVisa": "(important for visa)",
+      "optional": "(optional)",
+      "medicalHistoryPlaceholder": "Describe any previous medical conditions...",
+      "pastSurgeriesPlaceholder": "List any past surgeries...",
+      "selectRelationship": "Select relationship",
+      "submit": "Submit"
+    }
+  },
+  "documentTypes": {
+    "lab_report": "Lab Report",
+    "mri_ct": "MRI / CT Scan",
+    "xray": "X-Ray",
+    "prescription": "Prescription",
+    "medical_history": "Medical History",
+    "other": "Other"
+  },
+  "caseDocuments": {
+    "fileName": "File name",
+    "documentType": "Document type",
+    "uploaded": "Uploaded",
+    "download": "Download",
+    "addDocuments": "Add Documents",
+    "noDocuments": "No documents uploaded yet.",
+    "dropOrBrowse": "Drop files here or click to browse",
+    "maxSize": "PDF, JPEG, PNG · max 10 MB each",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "uploadLocked": "Document uploading window closed.",
+    "uploadFailed": "Failed"
+  },
+  "caseWizard": {
+    "title": "Start a New Medical Request",
+    "steps": {
+      "conditionDetails": "Condition Details",
+      "uploadDocuments": "Upload Medical Documents",
+      "reviewSubmit": "Review and submit"
+    },
+    "conditionDetails": {
+      "title": "Condition Details",
+      "medicalCondition": "Medical Condition",
+      "describeCondition": "Please describe your condition",
+      "describePlaceholder": "e.g. Chronic back pain",
+      "describeSymptoms": "Describe your symptoms",
+      "symptomsPlaceholder": "Describe your condition, symptoms, and what treatment you are seeking.",
+      "selectCondition": "Select condition",
+      "searchPlaceholder": "Search...",
+      "noResults": "No results",
+      "next": "Next",
+      "validation": {
+        "specialtyRequired": "Please select a medical specialty",
+        "specialtyOtherMaxLength": "Max 100 characters",
+        "descriptionMinLength": "Please describe your condition in at least 50 characters",
+        "descriptionMaxLength": "Description must be under 2000 characters",
+        "specialtyOtherRequired": "Please describe your specialty (at least 2 characters)"
+      }
+    },
+    "documentUpload": {
+      "title": "Upload Medical Documents",
+      "dragDrop": "Drag & Drop Files Here or Click to Upload",
+      "allowedTypes": "Allowed File Types: PDF, JPEG, PNG (Max 10 MB each)",
+      "uploadFailed": "Upload failed",
+      "prev": "Prev",
+      "next": "Next"
+    },
+    "review": {
+      "title": "Review",
+      "condition": "Condition",
+      "symptoms": "Symptoms",
+      "uploadedDocuments": "Uploaded Documents",
+      "disclosure": "By submitting, you confirm that the information and documents provided are accurate. Your details will be shared with MTA and relevant medical specialists for evaluation.",
+      "prev": "Prev",
+      "submit": "Submit",
+      "submitting": "Submitting…"
+    }
+  },
+  "paymentPage": {
+    "title": "Payment",
+    "paymentConfirmedBadge": "Payment Confirmed",
+    "alreadyPaidTitle": "Payment already confirmed",
+    "alreadyPaidBody": "Your payment for this case has been received.",
+    "successTitle": "Payment Confirmed",
+    "successBody": "Your payment of {amount} has been received.",
+    "successReference": "Reference: {ref}",
+    "backToCase": "Back to Case",
+    "paymentSummary": "Payment Summary",
+    "totalDue": "Total Due",
+    "paymentFailed": "Your payment was not successful. Please try again or contact MTA if the issue persists.",
+    "cardFailed": "Payment failed. Please check your card details and try again.",
+    "processing": "Processing…",
+    "payNow": "Pay Now",
+    "securePaymentNote": "Payments are processed securely. MTA does not store your card details.",
+    "payByCard": "Pay by Card",
+    "failedToInit": "Failed to initialise payment. Please refresh.",
+    "loadingForm": "Loading payment form…",
+    "payByBankTransfer": "Pay by Bank Transfer",
+    "bankTransferInstructions": "Transfer the exact amount to the account below and include your case reference in the description. MTA will confirm your payment within 2 business days.",
+    "bankLabel": "Bank",
+    "accountNameLabel": "Account Name",
+    "bsbLabel": "BSB",
+    "accountNumberLabel": "Account Number",
+    "referenceLabel": "Reference",
+    "amountLabel": "Amount",
+    "bankTransferNote": "Your case status will update to \"Payment Confirmed\" once MTA verifies the transfer.",
+    "consultationTitle": "Consultation Payment",
+    "onlineConsultation": "Online Consultation",
+    "selectedTime": "Selected time: {time}",
+    "selectedTimeLabel": "Selected time:",
+    "consultationFee": "Consultation Fee",
+    "consultationPaymentReceived": "Payment received. Your consultation is being confirmed — the Zoom link will appear on this case shortly.",
+    "consultationPaymentFailed": "Your payment was not successful. Please try again."
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "All your medical and visa documents in one place.",
+    "uploadDocuments": "Upload Documents",
+    "noMedicalDocs": "No medical documents yet",
+    "noVisaDocs": "No visa documents yet",
+    "noDocsSubtext": "Upload documents or link them to a case using the button above.",
+    "notLinked": "Not linked",
+    "linkDoc": "Link to case",
+    "linkDocSubtitle": "Select a case to associate this document with.",
+    "selectCase": "Select a case…",
+    "saveLink": "Save",
+    "tableFile": "File",
+    "tableType": "Type",
+    "tableCase": "Case",
+    "tableUploaded": "Uploaded",
+    "preview": "Preview",
+    "download": "Download",
+    "openInTab": "Open in tab",
+    "previewUnavailable": "Preview unavailable.",
+    "openInNewTab": "Open in new tab",
+    "tabs": {
+      "medical": "Medical",
+      "visa": "Visa"
+    },
+    "visaDocCategories": {
+      "passport": "Passport Copy",
+      "passport_photograph": "Passport Size Photograph",
+      "hospital_invitation": "Hospital Invitation Letter",
+      "appointment_confirmation": "Appointment Confirmation Letter",
+      "bank_statement": "Bank Statement",
+      "sponsorship_letter": "Sponsorship Letter",
+      "employer_letter": "Employer Letter",
+      "companion_passport": "Companion Passport Copy",
+      "companion_proof_of_relationship": "Proof of Relationship"
+    },
+    "uploadPanel": {
+      "title": "Upload Documents",
+      "cancel": "Cancel",
+      "defaultDocumentType": "Document type",
+      "defaultVisaCategory": "Visa document category",
+      "linkToCase": "Link to case (optional)",
+      "noCasesAvailable": "No unlocked cases available.",
+      "noCase": "No case",
+      "dropOrBrowse": "Drop files here or click to browse",
+      "allowedTypes": "PDF, JPEG, PNG · max 10 MB each",
+      "failed": "Failed",
+      "saving": "Saving…",
+      "save": "Save",
+      "saveWithCount": "Save ({count})"
+    },
+    "toasts": {
+      "invalidFileType": "{name}: use PDF, JPEG, or PNG.",
+      "fileTooLarge": "{name} exceeds 10 MB.",
+      "invalidPhotoDimensions": "{name}: passport photo must have a portrait aspect ratio of approximately 35mm x 45mm.",
+      "uploadFailed": "Failed to upload {name}.",
+      "maxDocuments": "Maximum 10 documents at a time.",
+      "tooManyFiles": "Only {available} more document(s) can be added.",
+      "uploadSuccess": "{count} document(s) uploaded.",
+      "linkSuccess": "Document linked to case.",
+      "previewFailed": "Failed to load preview.",
+      "downloadFailed": "Failed to generate download link."
+    }
+  },
+  "visaForm": {
+    "pageTitle": "Visa & Travel Documents",
+    "pageSubtitle": "Australian Medical Treatment Visa (Subclass 602)",
+    "steps": {
+      "traveler_details": "Traveler Details",
+      "medical_information": "Medical Information",
+      "provider_details": "Australian Provider Details",
+      "financial_details": "Financial Details",
+      "travel_details": "Travel Details",
+      "visa_documents": "Visa Documents",
+      "legal_compliance": "Legal & Compliance",
+      "companion_details": "Companion Details"
+    },
+    "statusBadge": {
+      "documents_submitted": "Submitted",
+      "under_review": "Under Review",
+      "additional_docs_requested": "Additional Info Needed",
+      "application_submitted": "Application Submitted",
+      "processing": "Processing",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "statusBanner": {
+      "documents_submitted": "Your application has been submitted and is awaiting review by your visa lawyer.",
+      "under_review": "Your visa lawyer is reviewing your application.",
+      "additional_docs_requested": "Your visa lawyer has requested additional information. Please contact MTA for details.",
+      "application_submitted": "Your visa application has been submitted to immigration authorities.",
+      "processing": "Your visa application is being processed by immigration authorities.",
+      "approved": "Your visa has been approved! Download your visa document below.",
+      "rejected": "Your visa application was not approved. Please contact MTA for next steps."
+    },
+    "approvedTitle": "Your visa has been approved",
+    "approvedBody": "Download your visa document to take with you",
+    "downloadVisa": "Download Visa",
+    "stepOf": "Step {step} of {total}",
+    "yes": "Yes",
+    "no": "No",
+    "noFileUploaded": "No file uploaded · PDF, JPG or PNG, max 10 MB",
+    "replaceFile": "Replace",
+    "uploadFile": "Upload",
+    "fields": {
+      "firstName": "First Name",
+      "firstNamePlaceholder": "e.g. John",
+      "lastName": "Last Name",
+      "lastNamePlaceholder": "e.g. Smith",
+      "gender": "Gender",
+      "genderPlaceholder": "Select gender",
+      "nationality": "Nationality",
+      "nationalityPlaceholder": "e.g. Indian",
+      "dateOfBirth": "Date of Birth",
+      "australianProviderDetails": "Australian Provider Details",
+      "australianProviderDetailsPlaceholder": "Name of hospital or specialist in Australia",
+      "passportNumber": "Passport Number",
+      "passportNumberPlaceholder": "e.g. A12345678",
+      "passportExpiry": "Passport Expiry",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "phone": "Phone",
+      "phonePlaceholder": "Phone number",
+      "conditionSummary": "Condition Summary",
+      "conditionSummaryPlaceholder": "Briefly describe your medical condition and reason for seeking treatment in Australia",
+      "hasMedicalConditions": "Do you have any pre-existing medical conditions?",
+      "medicalConditionsDetails": "Please specify your medical conditions",
+      "medicalConditionsDetailsPlaceholder": "Describe your medical conditions",
+      "healthExamCompleted": "Health Examination Completed?",
+      "providerName": "Provider Name",
+      "providerNamePlaceholder": "Name of doctor or specialist",
+      "organization": "Organization",
+      "organizationPlaceholder": "Hospital or clinic name",
+      "address": "Address",
+      "addressPlaceholder": "Full address",
+      "contact": "Contact",
+      "sourceOfFunds": "Source of Funds",
+      "sourceOfFundsPlaceholder": "Select source of funds",
+      "selfFunded": "Self-Funded",
+      "employerSponsored": "Employer Sponsored",
+      "familySponsored": "Family Sponsored",
+      "other": "Other",
+      "bankBalance": "Bank Balance",
+      "bankBalancePlaceholder": "e.g. AUD 50,000",
+      "sponsorName": "Sponsor Name",
+      "sponsorNamePlaceholder": "Full name of sponsor",
+      "relationship": "Relationship",
+      "relationshipPlaceholder": "e.g. Spouse, Parent, Employer",
+      "contactNumber": "Contact Number",
+      "supportingDocuments": "Supporting Documents",
+      "intendedArrival": "Intended Arrival Date",
+      "intendedDeparture": "Intended Departure Date",
+      "purposeOfVisit": "Purpose of Visit",
+      "purposeOfVisitPlaceholder": "e.g. Medical treatment",
+      "flightBooking": "Flight Booking (optional)",
+      "flightBookingPlaceholder": "Booking reference",
+      "accommodation": "Accommodation (optional)",
+      "accommodationPlaceholder": "Hotel name or address",
+      "companionQuestion": "Are you travelling with a companion?",
+      "companionName": "Companion Name",
+      "companionNamePlaceholder": "Full name of companion",
+      "companionPassportNumber": "Passport Number",
+      "companionPassportNumberPlaceholder": "e.g. A12345678",
+      "companionPassportExpiry": "Passport Expiry",
+      "criminalRecord": "Do you have a criminal record?",
+      "provideDetails": "Please provide details",
+      "provideDetailsPlaceholder": "Provide details here",
+      "previousVisaIssues": "Have you had previous visa refusals or issues?"
+    },
+    "genderOptions": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "preferNotToSay": "Prefer not to say"
+    },
+    "docCategories": {
+      "passport": "Passport Copy",
+      "passport_photograph": "Passport Size Photograph",
+      "hospital_invitation": "Hospital Invitation Letter",
+      "appointment_confirmation": "Appointment Confirmation Letter",
+      "bank_statement": "Bank Statement (last 3–6 months)",
+      "sponsorship_letter": "Sponsorship Letter",
+      "employer_letter": "Employer Letter",
+      "companion_passport": "Companion Passport Copy",
+      "companion_proof_of_relationship": "Proof of Relationship"
+    },
+    "fundingHints": {
+      "selfFunded": "Upload your bank statement covering the last 3–6 months.",
+      "employer": "Upload your sponsorship letter and/or employer letter. At least one is required.",
+      "family": "Upload your sponsorship letter.",
+      "other": "Upload at least one supporting financial document."
+    },
+    "visaDocsNote": "Upload clear copies of your documents. Both documents below are required.",
+    "hospitalDocsNote": "Your Hospital Invitation Letter and Appointment Confirmation Letter are issued directly by your hospital — no need to upload them here. Check your case's Visa & Travel section for their status.",
+    "validation": {
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "genderRequired": "Gender is required",
+      "nationalityRequired": "Nationality is required",
+      "dateOfBirthRequired": "Date of birth is required",
+      "dateOfBirthInvalid": "Please enter a valid date of birth",
+      "passportNumberRequired": "Passport number is required",
+      "passportNumberInvalid": "Please enter a valid passport number",
+      "passportExpiryRequired": "Passport expiry is required",
+      "passportExpiryFuture": "Passport expiry must be a future date",
+      "emailInvalid": "Please enter a valid email address",
+      "phoneInvalid": "Please enter a valid phone number",
+      "answerRequired": "Please answer this question",
+      "providerNameRequired": "Provider name is required",
+      "organizationRequired": "Organization is required",
+      "addressRequired": "Address is required",
+      "contactRequired": "Contact is required",
+      "sourceOfFundsRequired": "Source of funds is required",
+      "arrivalDateRequired": "Arrival date is required",
+      "arrivalDateFuture": "Arrival date must be today or a future date",
+      "departureDateRequired": "Departure date is required"
+    },
+    "errors": {
+      "notAuthenticated": "Not authenticated",
+      "uploadFailed": "Upload failed. Please try again.",
+      "medicalConditionsRequired": "Please specify your medical conditions.",
+      "bankBalanceRequired": "Bank balance is required for self-funded applications.",
+      "bankStatementRequired": "Please upload your bank statement (last 3–6 months).",
+      "fieldRequired": "This field is required.",
+      "sponsorshipLetterRequired": "Please upload your sponsorship letter.",
+      "oneDocRequired": "Please upload at least one document (sponsorship letter or employer letter).",
+      "financialDocRequired": "Please upload at least one supporting financial document.",
+      "departureMustBeAfter": "Departure date must be after the arrival date.",
+      "passportRequired": "Passport copy is required.",
+      "passportPhotoRequired": "Passport size photograph is required.",
+      "invalidPhotoDimensions": "Passport photo must have a portrait aspect ratio of approximately 35mm x 45mm. Please upload a properly cropped photo.",
+      "criminalRecordDetailsRequired": "Please provide details about your criminal record.",
+      "visaIssuesDetailsRequired": "Please provide details about your previous visa issues.",
+      "submitFailed": "Failed to submit application. Please try again."
+    },
+    "toasts": {
+      "fileUploaded": "{name} uploaded.",
+      "appSubmitted": "Visa application submitted successfully."
+    },
+    "submittedTitle": "Application Submitted",
+    "submittedBody": "Your visa application has been submitted. Your visa lawyer will review it and get back to you.",
+    "back": "Back",
+    "next": "Next",
+    "submitApplication": "Submit Application"
+  },
+  "visaDetail": {
+    "backToVisaManagement": "Visa Management",
+    "defaultSpecialty": "Medical Treatment",
+    "applicationTitle": "Visa Application",
+    "visaSubclassLabel": "Subclass 602 Medical Treatment Visa",
+    "rejectionReason": "Reason for rejection:",
+    "statusBadge": {
+      "not_started": "Not Started",
+      "documents_submitted": "Submitted",
+      "under_review": "Under Review",
+      "additional_docs_requested": "Additional Info Needed",
+      "application_submitted": "Application Submitted",
+      "processing": "Processing",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "sections": {
+      "travelerDetails": "Traveler Details",
+      "medicalInformation": "Medical Information",
+      "australianProviderDetails": "Australian Provider Details",
+      "financialDetails": "Financial Details",
+      "travelDetails": "Travel Details",
+      "legalCompliance": "Legal & Compliance",
+      "companionDetails": "Companion Details"
+    },
+    "fields": {
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "gender": "Gender",
+      "nationality": "Nationality",
+      "date_of_birth": "Date of Birth",
+      "passport_number": "Passport Number",
+      "passport_expiry": "Passport Expiry",
+      "email": "Email",
+      "phone": "Phone",
+      "australian_provider_details": "Australian Provider Details",
+      "condition_summary": "Condition Summary",
+      "has_medical_conditions": "Has Medical Conditions?",
+      "medical_conditions_details": "Medical Conditions Details",
+      "health_examination_completed": "Health Examination Completed?",
+      "provider_name": "Provider Name",
+      "provider_organization": "Organization",
+      "provider_address": "Address",
+      "provider_contact": "Contact",
+      "source_of_funds": "Source of Funds",
+      "bank_balance": "Bank Balance",
+      "sponsor_name": "Sponsor Name",
+      "sponsor_relationship": "Sponsor Relationship",
+      "sponsor_contact": "Sponsor Contact",
+      "arrival_date": "Intended Arrival Date",
+      "departure_date": "Intended Departure Date",
+      "purpose_of_visit": "Purpose of Visit",
+      "flight_booking": "Flight Booking",
+      "accommodation": "Accommodation",
+      "criminal_record": "Criminal Record?",
+      "criminal_record_details": "Criminal Record Details",
+      "previous_visa_issues": "Previous Visa Issues?",
+      "previous_visa_issues_details": "Previous Visa Issues Details",
+      "travelling_with_companion": "Travelling with Companion?",
+      "companion_name": "Companion Name",
+      "companion_relationship": "Relationship",
+      "companion_passport_number": "Companion Passport Number",
+      "companion_passport_expiry": "Companion Passport Expiry"
+    },
+    "documents": {
+      "title": "Uploaded Documents",
+      "fileName": "File name",
+      "documentType": "Document type",
+      "uploaded": "Uploaded",
+      "noDocuments": "No documents uploaded yet.",
+      "chooseFile": "Choose file…",
+      "cancel": "Cancel",
+      "uploading": "Uploading…",
+      "upload": "Upload",
+      "addDocuments": "Add Documents",
+      "uploadWindowClosed": "Document uploading window closed.",
+      "download": "Download",
+      "fileTooLarge": "File must be under 10 MB.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "saveFailed": "Failed to save document. Please try again.",
+      "documentUploaded": "Document uploaded.",
+      "invalidPhotoDimensions": "Passport photo must have a portrait aspect ratio of approximately 35mm x 45mm. Please upload a properly cropped photo.",
+      "downloadFailed": "Could not generate download link.",
+      "requested": "Requested",
+      "docCategories": {
+        "passport": "Passport Copy",
+        "passport_photograph": "Passport Size Photograph",
+        "hospital_invitation": "Hospital Invitation Letter",
+        "appointment_confirmation": "Appointment Confirmation Letter",
+        "bank_statement": "Bank Statement",
+        "sponsorship_letter": "Sponsorship Letter",
+        "employer_letter": "Employer Letter",
+        "companion_passport": "Companion Passport Copy",
+        "companion_proof_of_relationship": "Proof of Relationship",
+        "approved_visa": "Approved Visa"
+      }
+    }
+  },
+  "actionErrors": {
+    "common": {
+      "unauthenticated": "Unauthenticated.",
+      "invalidRequest": "Invalid request.",
+      "caseNotFound": "Case not found.",
+      "treatmentOptionNotFound": "Treatment option not found.",
+      "tryAgainWithDetails": "Please check your details and try again.",
+      "tryAgainWithSubmission": "Please check your submission and try again.",
+      "fileVerificationFailed": "One or more files could not be verified. Please re-upload.",
+      "fileSizeLimitExceeded": "One or more files exceed the 10 MB limit.",
+      "unsupportedImageType": "Unsupported image type.",
+      "photoTooLarge": "Image must be under 5 MB.",
+      "uploadErrorFileType": "File type not allowed. Please upload a PDF, JPEG, PNG, or WebP.",
+      "uploadFailed": "Upload failed. Please try again."
+    },
+    "cases": {
+      "noDocumentsProvided": "No documents provided.",
+      "uploadAtLeastOneDocument": "Please upload at least one document.",
+      "patientProfileNotFound": "Patient profile not found.",
+      "submitFailed": "Failed to submit case. Please try again.",
+      "saveDocumentsFailed": "Failed to save documents. Please try again.",
+      "travelNotReady": "Travel assistance can only be requested once your case is travel ready.",
+      "saveTravelFailed": "Failed to save. Please try again.",
+      "documentNotFound": "Document not found.",
+      "linkDocumentFailed": "Failed to link document."
+    },
+    "profile": {
+      "savePersonalInfoFailed": "Failed to save personal information.",
+      "saveMedicalBackgroundFailed": "Failed to save medical background.",
+      "saveEmergencyContactFailed": "Failed to save emergency contact.",
+      "photoVerificationFailed": "Uploaded photo could not be verified. Please re-upload.",
+      "savePhotoFailed": "Failed to save profile photo.",
+      "saveNotificationPrefsFailed": "Failed to save notification preferences.",
+      "deleteAccountFailed": "Failed to delete your account. Please try again."
+    },
+    "consultations": {
+      "alreadyRequested": "You have already requested a consultation for this option.",
+      "caseNotAcceptingRequests": "This case is no longer accepting consultation requests.",
+      "notAuthorisedToRequest": "You are not authorised to request this consultation.",
+      "requestFailed": "Failed to request consultation. Please try again.",
+      "notAwaitingSlotSelection": "This consultation is no longer awaiting a slot selection.",
+      "slotNotFound": "Selected slot not found.",
+      "notAuthorisedToUpdate": "You are not authorised to update this consultation.",
+      "confirmSlotFailed": "Failed to confirm slot. Please try again."
+    },
+    "auth": {
+      "invalidOrExpiredCode": "Invalid or expired code. Please try again.",
+      "resetPasswordFailed": "Unable to reset password. Request a new link and try again.",
+      "invalidCredentials": "Invalid email or password",
+      "genericError": "Something went wrong. Please try again.",
+      "emailAlreadyRegistered": "An account with this email already exists. Try logging in instead.",
+      "resendRateLimited": "Please wait a moment before requesting another code."
+    },
+    "chat": {
+      "messageEmpty": "Message cannot be empty",
+      "reasonRequired": "Reason is required",
+      "sendFailed": "Failed to send message. Please try again.",
+      "markReadFailed": "Failed to update message status. Please try again.",
+      "reopenRequestFailed": "Failed to request thread reopen. Please try again."
+    },
+    "treatments": {
+      "alreadyConfirmed": "This case has already had a treatment option confirmed.",
+      "notAuthorisedToSelect": "You are not authorised to select this option.",
+      "confirmSelectionFailed": "Failed to confirm selection. Please try again."
+    },
+    "visa": {
+      "patientNotFound": "Patient not found",
+      "downloadLinkFailed": "Failed to generate download link",
+      "submitApplicationFailed": "Failed to submit application",
+      "saveDocumentFailed": "Failed to save document",
+      "caseNotEligible": "This case can't accept visa documents right now"
+    }
+  },
+  "documentUpload": {
+    "unsupportedFormat": "{fileName}: unsupported format. Use PDF, JPEG, or PNG.",
+    "fileTooLarge": "{fileName} exceeds the 10 MB limit.",
+    "uploadFailed": "Failed to upload {fileName}.",
+    "maxDocuments": "Maximum {max} documents allowed.",
+    "maxDocumentsPerCase": "Maximum {max} documents allowed per case.",
+    "remainingSlots": "Only {count} more document(s) can be added.",
+    "documentsAdded": "{count} document(s) added."
+  },
+  "authToasts": {
+    "loginSuccess": "Logged in successfully",
+    "verifySuccess": "Verification successful",
+    "resetPasswordSuccess": "Password reset successfully",
+    "emailNotConfirmed": "Please verify your email before logging in. Check your inbox for the verification code."
+  }
+}

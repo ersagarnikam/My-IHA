@@ -1,0 +1,27 @@
+{
+  "name": "@iha/validations",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./case": "./src/case.ts",
+    "./treatment": "./src/treatment.ts",
+    "./patient": "./src/patient.ts",
+    "./payment": "./src/payment.ts",
+    "./auth": "./src/auth.ts",
+    "./phone": "./src/phone.ts",
+    "./result": "./src/result.ts",
+    "./provider-registration": "./src/provider-registration.ts"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "libphonenumber-js": "^1.13.5",
+    "zod": "^3.25.51"
+  },
+  "devDependencies": {
+    "@iha/config": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,13 @@
+# Real environments: PostgreSQL. All secrets come from the environment.
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+iha:
+  payments:
+    # Never simulate payments in a real environment.
+    provider: ${IHA_PAYMENTS_PROVIDER:stripe}
+  verification:
+    log-codes: false

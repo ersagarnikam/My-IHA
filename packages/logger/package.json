@@ -1,0 +1,19 @@
+{
+  "name": "@iha/logger",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0"
+  },
+  "devDependencies": {
+    "@iha/config": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}

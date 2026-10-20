@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output and caches
+.next/
+.turbo/
+dist/
+target/
+*.tsbuildinfo
+
+# Secrets: only the committed examples belong in git
+.env
+.env.*
+!.env.example
+
+# Local runtime data (dev uploads, H2, e2e artifacts)
+backend/data/
+e2e/shots/
+e2e/scan.pdf
+
+# Editor and tool settings that are per machine
+.idea/
+.claude/settings.local.json
+
+# OS / logs
+.DS_Store
+Thumbs.db
+*.log

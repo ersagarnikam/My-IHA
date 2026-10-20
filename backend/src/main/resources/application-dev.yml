@@ -1,0 +1,33 @@
+# Local development: in-memory H2 in PostgreSQL compatibility mode, so the
+# same Flyway migrations run here and on a real Postgres.
+spring:
+  datasource:
+    url: jdbc:h2:mem:iha;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    # H2 ties IN-list CHECK constraints to the connection that created them
+    # (Flyway's). If the pool ever retires that connection, every insert into
+    # those tables fails with "The database has been closed". Keep connections
+    # for the life of the app; this is dev-only, Postgres is unaffected.
+    hikari:
+      max-lifetime: 0
+      idle-timeout: 0
+      minimum-idle: 10
+      maximum-pool-size: 10
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+iha:
+  jwt:
+    secret: dev-only-jwt-secret-change-me-0123456789abcdef
+  crypto:
+    pii-key: ZGV2LW9ubHktcGlpLWtleS0wMTIzNDU2Nzg5YWJjZGU=
+  verification:
+    # Verification codes are written to the log instead of emailed.
+    log-codes: true
+
+logging:
+  level:
+    com.iha: DEBUG

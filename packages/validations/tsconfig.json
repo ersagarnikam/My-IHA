@@ -1,0 +1,8 @@
+{
+  "extends": "@iha/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
+}

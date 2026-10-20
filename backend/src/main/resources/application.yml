@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: iha-api
+  profiles:
+    default: dev
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+iha:
+  jwt:
+    # HMAC-SHA256 signing secret, at least 32 bytes. Override via IHA_JWT_SECRET outside dev.
+    secret: ${IHA_JWT_SECRET}
+    ttl: 8h
+  crypto:
+    # Base64-encoded 32-byte AES key for column-level PII encryption.
+    # Override via IHA_PII_KEY outside dev; rotating it makes existing rows unreadable.
+    pii-key: ${IHA_PII_KEY}
+  storage:
+    root: ${IHA_STORAGE_ROOT:./data/storage}
+  cors:
+    allowed-origins: ${IHA_CORS_ORIGINS:http://localhost:5173}
+  verification:
+    code-ttl: 15m
+    max-attempts: 5
+  payments:
+    # fake = simulated payments for local development; stripe = real card payments.
+    provider: ${IHA_PAYMENTS_PROVIDER:fake}
+    stripe:
+      secret-key: ${STRIPE_SECRET_KEY:}
+      publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  zoom:
+    account-id: ${ZOOM_ACCOUNT_ID:}
+    client-id: ${ZOOM_CLIENT_ID:}
+    client-secret: ${ZOOM_CLIENT_SECRET:}
+  retention:
+    # Daily hard delete of patient accounts past their 30-day deletion grace period.
+    cron: "0 30 3 * * *"

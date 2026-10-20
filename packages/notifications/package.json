@@ -1,0 +1,25 @@
+{
+  "name": "@iha/notifications",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@iha/logger": "workspace:*",
+    "@react-email/components": "^0.0.41",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "resend": "^4.5.1",
+    "twilio": "^5.7.1"
+  },
+  "devDependencies": {
+    "@iha/config": "workspace:*",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.8.3"
+  }
+}

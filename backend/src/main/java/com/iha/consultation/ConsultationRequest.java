@@ -1,0 +1,131 @@
+package com.iha.consultation;
+
+import java.time.Instant;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+
+/**
+ * A patient's request for a paid online consultation about one treatment option.
+ * Lifecycle: requested → slots_proposed (doctor) → slot_selected (patient) →
+ * scheduled (after payment, with a Zoom link) or cancelled (doctor).
+ */
+@Entity
+@Table(name = "consultation_requests")
+public class ConsultationRequest {
+
+	public static final String REQUESTED = "requested";
+	public static final String SLOTS_PROPOSED = "slots_proposed";
+	public static final String SLOT_SELECTED = "slot_selected";
+	public static final String SCHEDULED = "scheduled";
+	public static final String CANCELLED = "cancelled";
+
+	@Id
+	private UUID id;
+
+	@Column(name = "case_id", nullable = false, updatable = false)
+	private UUID caseId;
+
+	@Column(name = "patient_id", nullable = false, updatable = false)
+	private UUID patientId;
+
+	@Column(name = "treatment_option_id", nullable = false, updatable = false)
+	private UUID treatmentOptionId;
+
+	@Column(name = "selected_slot_id")
+	private UUID selectedSlotId;
+
+	@Column(nullable = false)
+	private String status;
+
+	@Column(name = "zoom_link")
+	private String zoomLink;
+
+	@Column(name = "cancellation_reason")
+	private String cancellationReason;
+
+	@Column(name = "requested_at", nullable = false, updatable = false)
+	private Instant requestedAt;
+
+	@Column(name = "updated_at", nullable = false)
+	private Instant updatedAt;
+
+	protected ConsultationRequest() {
+	}
+
+	ConsultationRequest(UUID caseId, UUID patientId, UUID treatmentOptionId) {
+		this.id = UUID.randomUUID();
+		this.caseId = caseId;
+		this.patientId = patientId;
+		this.treatmentOptionId = treatmentOptionId;
+		this.status = REQUESTED;
+		this.requestedAt = Instant.now();
+		this.updatedAt = requestedAt;
+	}
+
+	@PreUpdate
+	void touch() {
+		updatedAt = Instant.now();
+	}
+
+	void selectSlot(UUID slotId) {
+		selectedSlotId = slotId;
+		status = SLOT_SELECTED;
+	}
+
+	/** Used by the doctor portal port and tests. */
+	public void proposeSlots() {
+		status = SLOTS_PROPOSED;
+		selectedSlotId = null;
+	}
+
+	void schedule(String zoomLink) {
+		status = SCHEDULED;
+		this.zoomLink = zoomLink;
+	}
+
+	public UUID getId() {
+		return id;
+	}
+
+	public UUID getCaseId() {
+		return caseId;
+	}
+
+	public UUID getPatientId() {
+		return patientId;
+	}
+
+	public UUID getTreatmentOptionId() {
+		return treatmentOptionId;
+	}
+
+	public UUID getSelectedSlotId() {
+		return selectedSlotId;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public String getZoomLink() {
+		return zoomLink;
+	}
+
+	public String getCancellationReason() {
+		return cancellationReason;
+	}
+
+	public Instant getRequestedAt() {
+		return requestedAt;
+	}
+
+	public Instant getUpdatedAt() {
+		return updatedAt;
+	}
+
+}

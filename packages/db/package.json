@@ -1,0 +1,52 @@
+{
+  "name": "@iha/db",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts",
+    "./types": "./types/index.ts",
+    "./middleware": "./src/middleware.ts",
+    "./patients": "./src/patients.ts",
+    "./cases": "./src/cases.ts",
+    "./specialties": "./src/specialties.ts",
+    "./treatments": "./src/treatments.ts",
+    "./payments": "./src/payments.ts",
+    "./doctor-fees": "./src/doctor-fees.ts",
+    "./visa": "./src/visa.ts",
+    "./visa-status": "./src/visa-status.ts",
+    "./audit": "./src/audit.ts",
+    "./consultations": "./src/consultations.ts",
+    "./consultations-shared": "./src/consultations-shared.ts",
+    "./notifications": "./src/notifications.ts",
+    "./chat": "./src/chat.ts",
+    "./storage": "./src/storage.ts",
+    "./case-assignments": "./src/case-assignments.ts",
+    "./provider-messages": "./src/provider-messages.ts",
+    "./treatment-plans": "./src/treatment-plans.ts",
+    "./auth-lookup": "./src/auth-lookup.ts",
+    "./account-lookup": "./src/account-lookup.ts"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@iha/logger": "workspace:*",
+    "@iha/notifications": "workspace:*",
+    "@iha/validations": "workspace:*",
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.7"
+  },
+  "devDependencies": {
+    "@iha/config": "workspace:*",
+    "@types/node": "^22.15.29",
+    "@types/react": "^19.1.6",
+    "next": "^15.3.3",
+    "react": "^19.1.0",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "next": ">=14",
+    "react": ">=18"
+  }
+}

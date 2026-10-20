@@ -1,0 +1,12 @@
+{
+  "name": "iha-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Scripted Chrome runs against the local dev servers (not part of any build).",
+  "scripts": {
+    "journey": "node journey.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "24.43.1"
+  }
+}

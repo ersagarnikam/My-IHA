@@ -1,0 +1,28 @@
+{
+  "name": "iha-platform",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:patient": "turbo dev --filter=patient",
+    "dev:hospital": "turbo dev --filter=hospital",
+    "dev:doctor": "turbo dev --filter=doctor",
+    "dev:visa": "turbo dev --filter=visa",
+    "dev:admin": "turbo dev --filter=admin",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "db:types": "supabase gen types typescript --linked > packages/db/types/database.types.ts",
+    "db:migrate:new": "supabase migration new",
+    "db:migrate:push": "supabase db push",
+    "db:reset": "supabase db reset"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "@iha/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "moduleResolution": "bundler",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts", "types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
