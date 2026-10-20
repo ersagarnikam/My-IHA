@@ -70,6 +70,10 @@ The admin, hospital and lawyer portals don't exist yet, so in the dev profile `/
 
 Delete `dev/DevSimulationController`, `dev/DoctorDevController` and both `DevPanel.tsx` files once the admin portal exists.
 
+### Sharing a temporary link
+
+To let someone on another machine use your local servers, run a Cloudflare quick tunnel to the web app: `cloudflared tunnel --url http://localhost:5173`. It prints an `https://<random>.trycloudflare.com` address that lasts until you stop it. The web app's proxy forwards `/api` to the API (presenting the dev origin, so the API's CORS check accepts it), and `vite.config.ts` allows `*.trycloudflare.com` host names. Anyone with the link can use the demo accounts and dev simulation — use it for demos only.
+
 ### Looking at the database
 
 The H2 console is at http://localhost:8080/h2-console:
