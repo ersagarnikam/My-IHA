@@ -167,6 +167,31 @@ Required to submit: hospital, diagnosis (≥10 chars), treatment type, procedure
 | PUT | `/api/doctor/profile/notification-preferences` | `{emailNotificationsEnabled, smsNotificationsEnabled}`. |
 | PUT / GET | `/api/doctor/profile/photo` | Upload (*multipart* `file`) / download. |
 
+## Admin (`ADMIN` role)
+
+See the [admin portal](admin-portal.md) guide.
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/admin/overview` | Counts for the dashboard and sidebar badges, plus the latest cases. |
+| GET | `/api/admin/doctors` | All doctor registrations. |
+| GET | `/api/admin/doctors/{id}` | Registration detail with documents and review messages. |
+| GET | `/api/admin/doctors/{id}/documents/{index}` | A registration document (`?download=true` to download). |
+| POST | `/api/admin/doctors/{id}/review` | `{outcome: approved|rejected|more_info_requested, reason}`; reason required unless approving; `not_pending` otherwise. |
+| GET | `/api/admin/cases` | All cases with patient, specialty and assigned doctors. |
+| GET | `/api/admin/cases/{id}` | Case detail: description, documents, assignments, plans, consultations. |
+| GET | `/api/admin/cases/{id}/documents/{docId}/content` | A case document. |
+| GET | `/api/admin/cases/{id}/candidates` | Active doctors to invite, matching specialty first. |
+| POST | `/api/admin/cases/{id}/assignments` | `{doctorId}`; `doctor_not_active`, `already_assigned`. |
+| GET | `/api/admin/plans` | Submitted and later plans (`?status=` to filter). |
+| GET | `/api/admin/plans/{id}` | Full plan with costs and the suggested service fee. |
+| POST | `/api/admin/plans/{id}/publish` | `{mtaCommissionAud}` → published as a treatment option. |
+| POST | `/api/admin/plans/{id}/reject` | `{reason}` (≥ 10 characters). |
+| GET | `/api/admin/chats` | Patient and provider threads with unread counts and reopen requests. |
+| GET | `/api/admin/chats/{kind}/{id}` | One thread (`kind` = `patient` or `provider`); marks the other side's messages read. |
+| POST | `/api/admin/chats/{kind}/{id}/open` · `/close` | Open or close the conversation. |
+| POST | `/api/admin/chats/{kind}/{id}/messages` | `{body}`. |
+
 ## Development only (`dev` profile)
 
 Not available in production. They act only on the caller's own records.

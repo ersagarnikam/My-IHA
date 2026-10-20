@@ -47,8 +47,9 @@ Open http://localhost:5173/login and sign in with a demo account (recreated on e
 |---|---|
 | `patient@demo.local` | `Demo1234` |
 | `doctor@demo.local` | `Demo1234` |
+| `admin@demo.local` | `Demo1234` |
 
-Email isn't sent in development: verification codes are printed in the API log (`Verification code for …`). Payments are simulated with a **Pay Now** button. Dashed **Dev simulation** boxes stand in for the portals that aren't ported yet (admin, hospital, lawyer).
+Email isn't sent in development: verification codes are printed in the API log (`Verification code for …`). Payments are simulated with a **Pay Now** button. Dashed **Dev simulation** boxes stand in for the portals that aren't ported yet (hospital, lawyer) and for quick admin/patient steps.
 
 ## Tests
 
@@ -57,6 +58,7 @@ cd backend && ./mvnw test        # boots the API on H2 and drives full patient a
 cd frontend && npm run build     # type-check + production build
 cd e2e && API_LOG=<api log> node journey.mjs          # patient journey in Chrome
 cd e2e && API_LOG=<api log> node doctor-journey.mjs   # doctor journey in Chrome
+cd e2e && node admin-journey.mjs                      # admin journey in Chrome
 ```
 
 GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the API tests on Java 21 and the web app build on every push to `main` and every pull request. The Chrome journeys need both servers and run locally.
@@ -71,7 +73,7 @@ The public website **https://medicaltourismaustralia.com** is the home page; the
 |---|---|
 | Patient portal | **Ported** — registration, onboarding, dashboard, cases and documents, treatment options, consultations, payments and invoices, visa wizard, chat, live notifications, English/Chinese. |
 | Doctor portal | **Ported** — sign-up and registration wizard, approval gate with resubmission, registration and annual fees, performance dashboard (earnings, funnel, benchmark), cases with document requests, **required initial Zoom consultation before the treatment plan**, plan builder, follow-up consultations (Brisbane time), chat, settings. |
-| Admin portal | Not yet. Admin-side logic for doctors exists in `DoctorAdminService`; simulated in development. |
+| Admin portal | **Started** — dashboard, doctor approvals, case assignment, plan review (publish with MTA's fee or decline), patient and provider support inbox. See [documentation/admin-portal.md](documentation/admin-portal.md). |
 | Hospital portal | Not yet. |
 | Visa lawyer portal | Not yet. |
 | Email / SMS delivery | Not yet — alerts and codes are logged. |

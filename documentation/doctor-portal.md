@@ -134,5 +134,5 @@ Support chat with the MTA coordinator ("Chat with your MTA coordinator"). MTA op
 | Security | Change password. |
 | Notifications | Email and SMS notification toggles. |
 
-## What MTA admin does (not ported yet)
-Approve/reject doctors, invite doctors to cases, review plans and publish them to patients with MTA's service fee, and open support chats. The logic exists in `DoctorAdminService` and `ProviderMessageService`; in development the dashed **Dev simulation** buttons call it.
+## What MTA admin does
+Approve/reject doctors, invite doctors to cases, review plans and publish them to patients with MTA's service fee (or decline them with a reason), and open support chats — see the [admin portal](admin-portal.md). In development the dashed **Dev simulation** buttons still do the same steps from the doctor's side, for quick testing.

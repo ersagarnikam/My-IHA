@@ -23,6 +23,7 @@ Start the API with `SPRING_PROFILES_ACTIVE=prod`.
 | `IHA_CORS_ORIGINS` | if cross-origin | Allowed web origins, comma-separated. |
 | `IHA_PAYMENTS_PROVIDER` | no | `stripe` (default in prod) or `fake`. Never `fake` in production. |
 | `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` | for payments | Stripe keys. |
+| `IHA_ADMIN_EMAIL`, `IHA_ADMIN_PASSWORD` | first start | Creates the first MTA admin account if that email doesn't exist (password ≥ 12 characters). Remove them afterwards. |
 | `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET` | optional | Zoom Server-to-Server OAuth app; without it, scheduled consultations have no meeting link. |
 
 Web app build-time variable: `VITE_HOME_URL` — the public website the portal sends signed-out visitors to (default `https://medicaltourismaustralia.com`; see `frontend/.env.example`).
@@ -61,7 +62,7 @@ The portal's home is https://medicaltourismaustralia.com. Point the website's bu
 | Gap | What's needed |
 |---|---|
 | Email and SMS | Wire a provider (e.g. Resend, Twilio) into `notification/AlertDispatcher` and `auth/VerificationCodeSender` — today they only log. **Users can't verify their email in production until this is done.** |
-| Admin, hospital and lawyer portals | Not ported; doctors can't be approved and cases can't be assigned without them (or direct database work). |
+| Hospital and lawyer portals | Not ported; hospital letters and visa processing need them (or direct database work). The admin portal covers approvals, assignment and plan publishing, but more admin tools (users, payments, settings) aren't built yet. |
 | Several API instances | `RealtimeHub` is in memory; add a broker before scaling out. |
 | File storage | Local disk only; use shared/object storage for more than one instance. |
 | Data from the old Supabase project | Needs a migration script (decrypt with the old pgcrypto key, re-encrypt with `IHA_PII_KEY`). |

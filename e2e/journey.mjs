@@ -166,10 +166,20 @@ try {
   await (await page.waitForSelector('.doc-slot input[type=file]')).uploadFile(pdf)
   await waitText('bank_statement.pdf')
   await click('Next')
-  const travel = await page.$$('input[type=date]')
-  const fmt = (d) => `${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}${d.getFullYear()}`
-  await travel[0].type(fmt(new Date(Date.now() + 30 * 864e5)))
-  await travel[1].type(fmt(new Date(Date.now() + 60 * 864e5)))
+  // Typed dates depend on the browser locale (dd/mm vs mm/dd); set the values directly.
+  await waitText('Intended Arrival Date')
+  const iso = (days) => new Date(Date.now() + days * 864e5).toISOString().slice(0, 10)
+  await page.$$eval(
+    'input[type=date]',
+    (inputs, values) => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+      inputs.forEach((input, i) => {
+        setter.call(input, values[i])
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+    },
+    [iso(30), iso(60)],
+  )
   await click('Next')
   const slots = await page.$$('.doc-slot input[type=file]')
   await slots[0].uploadFile(pdf)

@@ -38,6 +38,8 @@ The database starts empty on every API start, so the dev profile seeds demo data
 | `patient@demo.local` | `Demo1234` | Complete profile, medical history, two cases |
 | `doctor@demo.local` | `Demo1234` | Approved, registration fee paid, four affiliated hospitals; one new case invitation, one case in evaluation, and a year of history for the dashboard (treated and paid cases over past months, a case lost to another doctor) |
 | `peer1@demo.local`, `peer2@demo.local` | `Demo1234` | Two more Cardiology doctors, so the anonymised benchmark and rank have data |
+| `pending.doctor@demo.local` | `Demo1234` | Dr. Olivia Grant, a registration waiting for admin review |
+| `admin@demo.local` | `Demo1234` | MTA coordinator (admin portal) |
 
 Turn seeding off with `iha.dev.seed-demo-data=false`.
 
@@ -53,7 +55,7 @@ Payments use the simulated provider (`iha.payments.provider=fake`): payment page
 
 ### Dev simulation (stand-ins for unported portals)
 
-The admin, hospital and lawyer portals don't exist yet, so in the dev profile `/api/dev/**` endpoints play those roles. The web app shows them as dashed **Dev simulation** boxes (only under `npm run dev`, never in a production build).
+The hospital and lawyer portals don't exist yet, so in the dev profile `/api/dev/**` endpoints play those roles — and, for quick testing from one portal, the admin and patient too. The web app shows them as dashed **Dev simulation** boxes (only under `npm run dev`, never in a production build).
 
 | Where | Button | Plays |
 |---|---|---|
@@ -68,7 +70,7 @@ The admin, hospital and lawyer portals don't exist yet, so in the dev profile `/
 | Doctor case page | Request an online consultation | patient |
 | Doctor consultation page | Choose the first time and pay | patient |
 
-Delete `dev/DevSimulationController`, `dev/DoctorDevController` and both `DevPanel.tsx` files once the admin portal exists.
+The admin steps are now available for real in the [admin portal](admin-portal.md); the buttons remain because the e2e scripts use them. Remove them once the hospital portal exists and the scripts drive the real portals.
 
 ### Sharing a temporary link
 

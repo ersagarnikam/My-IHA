@@ -98,7 +98,7 @@ Several doctors can be invited to the same case; each evaluates and proposes a p
 
 ## Treatment plan lifecycle
 
-`draft` → `submitted_to_iha` (doctor submits) → `iha_review_in_progress` / `iha_approved` / `rejected_by_iha` (admin) → `presented_to_patient` (published as an option) → `patient_confirmed` (chosen and paid) or `not_selected`.
+`draft` → `submitted_to_iha` (doctor submits) → `iha_review_in_progress` / `iha_approved` / `rejected_by_iha` (admin) → `presented_to_patient` (published as an option) → `patient_confirmed` (chosen and paid) or `not_selected`. A declined plan keeps admin's reason in `rejection_reason` (V6).
 Only drafts are editable.
 
 ## Consultation lifecycle

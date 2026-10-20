@@ -43,7 +43,7 @@ Every account has exactly one role, stored on `app_users.role` and copied into t
 | `DOCTOR` | `/doctor` | Ported |
 | `HOSPITAL` | `/hospital` | Placeholder |
 | `LAWYER` | `/lawyer` | Placeholder |
-| `ADMIN` | `/admin` | Placeholder |
+| `ADMIN` | `/admin` | Started (core coordinator workflow) |
 
 ## Authentication
 

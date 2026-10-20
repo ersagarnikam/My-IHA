@@ -28,7 +28,8 @@ frontend/src/
 - `/doctor/**` — `RequireRole DOCTOR` → `DoctorProvider` (loads `/api/doctor/account`) →
   - gate pages `register`, `pending-approval`, `registration-fee` (each wrapped in `GateStep`, which redirects if the doctor is at a different step);
   - `RequireActiveDoctor` → `DoctorLayout` → portal pages.
-- `/hospital`, `/lawyer`, `/admin` — placeholders.
+- `/admin/**` — `RequireRole ADMIN` → `AdminLayout` (sidebar with live counts, exposes `refreshCounts` through the outlet context) → dashboard, doctors, cases, plans, messages.
+- `/hospital`, `/lawyer` — placeholders.
 
 `ROLE_HOME` in `auth/AuthContext.tsx` is where each role lands after login. Login honours a `from` location when it belongs to the same role, so deep links work after signing in.
 
