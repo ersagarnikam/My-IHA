@@ -1,10 +1,12 @@
-import { Navigate, Outlet, createBrowserRouter } from 'react-router'
+import { useEffect } from 'react'
+import { Link, Navigate, Outlet, createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { AuthProvider, ROLE_HOME, useAuth } from './auth/AuthContext'
 import { RequireRole } from './auth/RequireRole'
 import { ComingSoon, PortalLayout } from './components/PortalLayout'
 import { ToastProvider } from './components/Toasts'
 import { I18nProvider, useT } from './i18n/I18nContext'
+import { goHome } from './lib/site'
 import { LoginPage } from './pages/auth/LoginPage'
 import { ForgotPasswordPage, ResetPasswordPage } from './pages/auth/PasswordResetPages'
 import { RegisterPage } from './pages/auth/RegisterPage'
@@ -29,10 +31,35 @@ import { TreatmentsPage } from './portals/patient/treatments/TreatmentsPage'
 import { VisaApplicationPage } from './portals/patient/visa/VisaApplicationPage'
 import { VisaDetailPage } from './portals/patient/visa/VisaDetailPage'
 import { VisaTravelPage } from './portals/patient/visa/VisaTravelPage'
+import { CaseDetailPage as DoctorCaseDetailPage } from './portals/doctor/CaseDetailPage'
+import { CasesPage as DoctorCasesPage } from './portals/doctor/CasesPage'
+import { ConsultationDetailPage, ConsultationsPage } from './portals/doctor/ConsultationPages'
+import { DashboardPage as DoctorDashboardPage } from './portals/doctor/DashboardPage'
+import { DoctorProvider, GateStep, RequireActiveDoctor } from './portals/doctor/DoctorContext'
+import { DoctorLayout } from './portals/doctor/DoctorLayout'
+import {
+  MessagesPage as DoctorMessagesPage,
+  NotificationsPage as DoctorNotificationsPage,
+} from './portals/doctor/MessagesPage'
+import {
+  DoctorRegisterPage,
+  DoctorSignUpPage,
+  PendingApprovalPage,
+  RegistrationFeePage,
+} from './portals/doctor/registration/RegistrationPages'
+import { AccountSettingsPage } from './portals/doctor/settings/AccountSettingsPage'
+import { TreatmentPlanPage } from './portals/doctor/TreatmentPlanPage'
 
+/**
+ * The portal has no landing page of its own: the public website is home.
+ * Signed-in users go to their role's area; everyone else back to the website.
+ */
 function Home() {
   const { user } = useAuth()
-  return <Navigate to={user ? ROLE_HOME[user.role] : '/login'} replace />
+  useEffect(() => {
+    if (!user) goHome(true)
+  }, [user])
+  return user ? <Navigate to={ROLE_HOME[user.role]} replace /> : null
 }
 
 function NotFound() {
@@ -42,7 +69,7 @@ function NotFound() {
       <section className="card auth-card">
         <h1>{t('title')}</h1>
         <p className="muted">{t('body')}</p>
-        <a href="/">{t('backToDashboard')}</a>
+        <Link to="/">{t('backToDashboard')}</Link>
       </section>
     </div>
   )
@@ -64,6 +91,14 @@ function RouteError() {
   )
 }
 
+function DoctorRoot() {
+  return (
+    <DoctorProvider>
+      <Outlet />
+    </DoctorProvider>
+  )
+}
+
 function PatientRoot() {
   return (
     <PatientProvider>
@@ -81,6 +116,7 @@ const router = createBrowserRouter([
       { path: '/', element: <Home /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
+      { path: '/register/doctor', element: <DoctorSignUpPage /> },
       { path: '/verify', element: <VerifyPage /> },
       { path: '/forgot-password', element: <ForgotPasswordPage /> },
       { path: '/reset-password', element: <ResetPasswordPage /> },
@@ -125,7 +161,61 @@ const router = createBrowserRouter([
           },
         ],
       },
-      portal('/doctor', 'DOCTOR', 'MTA Doctor Portal'),
+      {
+        path: '/doctor',
+        element: <RequireRole role="DOCTOR" />,
+        children: [
+          {
+            element: <DoctorRoot />,
+            children: [
+              {
+                path: 'register',
+                element: (
+                  <GateStep path="/doctor/register">
+                    <DoctorRegisterPage />
+                  </GateStep>
+                ),
+              },
+              {
+                path: 'pending-approval',
+                element: (
+                  <GateStep path="/doctor/pending-approval">
+                    <PendingApprovalPage />
+                  </GateStep>
+                ),
+              },
+              {
+                path: 'registration-fee',
+                element: (
+                  <GateStep path="/doctor/registration-fee">
+                    <RegistrationFeePage />
+                  </GateStep>
+                ),
+              },
+              {
+                element: <RequireActiveDoctor />,
+                children: [
+                  {
+                    element: <DoctorLayout />,
+                    children: [
+                      { index: true, element: <Navigate to="dashboard" replace /> },
+                      { path: 'dashboard', element: <DoctorDashboardPage /> },
+                      { path: 'cases', element: <DoctorCasesPage /> },
+                      { path: 'cases/:caseId', element: <DoctorCaseDetailPage /> },
+                      { path: 'cases/:caseId/treatment-plan', element: <TreatmentPlanPage /> },
+                      { path: 'consultations', element: <ConsultationsPage /> },
+                      { path: 'consultations/:requestId', element: <ConsultationDetailPage /> },
+                      { path: 'messages', element: <DoctorMessagesPage /> },
+                      { path: 'notifications', element: <DoctorNotificationsPage /> },
+                      { path: 'account-settings', element: <AccountSettingsPage /> },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
       portal('/hospital', 'HOSPITAL', 'MTA Hospital Portal'),
       portal('/lawyer', 'LAWYER', 'MTA Visa Lawyer Portal'),
       portal('/admin', 'ADMIN', 'MTA Admin Portal'),
@@ -135,7 +225,7 @@ const router = createBrowserRouter([
 ])
 
 /** Placeholder area for a role whose screens haven't been ported yet. */
-function portal(path: string, role: 'DOCTOR' | 'HOSPITAL' | 'LAWYER' | 'ADMIN', title: string) {
+function portal(path: string, role: 'HOSPITAL' | 'LAWYER' | 'ADMIN', title: string) {
   return {
     path,
     element: <RequireRole role={role} />,

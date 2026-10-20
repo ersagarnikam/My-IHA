@@ -13,4 +13,8 @@ public interface ConsultationSlotRepository extends JpaRepository<ConsultationSl
 
 	Optional<ConsultationSlot> findByIdAndConsultationRequestId(UUID id, UUID requestId);
 
+	@org.springframework.data.jpa.repository.Modifying(flushAutomatically = true)
+	@org.springframework.data.jpa.repository.Query("delete from ConsultationSlot s where s.consultationRequestId = :requestId")
+	void deleteByRequest(UUID requestId);
+
 }

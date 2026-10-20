@@ -1,8 +1,8 @@
 import { useLocale, type Locale } from '../i18n/I18nContext'
 import type { Specialty } from './cases'
 
-/** Doctors propose consultation times in Sydney time. */
-export const DOCTOR_TIME_ZONE = 'Australia/Sydney'
+/** Doctors propose consultation times in Brisbane time (AEST all year, no daylight saving). */
+export const DOCTOR_TIME_ZONE = 'Australia/Brisbane'
 
 function tag(locale: Locale) {
   return locale === 'zh' ? 'zh-CN' : 'en-AU'

@@ -12,7 +12,7 @@
   },
   "logout": {
     "title": "Sign out?",
-    "body": "You will be returned to the login page.",
+    "body": "You will be signed out and returned to the MTA website.",
     "cancel": "Cancel",
     "confirm": "Sign out"
   },

@@ -21,6 +21,11 @@ class FakePaymentGateway implements PaymentGateway {
 	}
 
 	@Override
+	public boolean simulated() {
+		return true;
+	}
+
+	@Override
 	public String publishableKey() {
 		return null;
 	}

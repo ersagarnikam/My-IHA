@@ -22,14 +22,14 @@ import org.springframework.stereotype.Component;
 
 /** Draws an A4 payment invoice (replaces the pdf-lib invoice route). */
 @Component
-class InvoiceRenderer {
+public class InvoiceRenderer {
 
 	private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH)
 		.withZone(ZoneId.of("Australia/Sydney"));
 	private static final float MARGIN = 56;
 	private static final float[] BRAND = { 15 / 255f, 110 / 255f, 140 / 255f };
 
-	byte[] render(Invoice invoice) {
+	public byte[] render(Invoice invoice) {
 		try (PDDocument document = new PDDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			PDPage page = new PDPage(PDRectangle.A4);
 			document.addPage(page);
@@ -50,7 +50,7 @@ class InvoiceRenderer {
 				y -= 64;
 				label(c, regular, MARGIN, y, "Issued");
 				text(c, regular, 10, MARGIN + 90, y, DATE.format(invoice.paidAt()));
-				label(c, regular, MARGIN, y - 16, "Case");
+				label(c, regular, MARGIN, y - 16, invoice.referenceLabel());
 				text(c, regular, 10, MARGIN + 90, y - 16, invoice.caseReference());
 				label(c, regular, MARGIN, y - 32, "Payment ref.");
 				text(c, regular, 10, MARGIN + 90, y - 32, invoice.paymentReference());
@@ -131,10 +131,11 @@ class InvoiceRenderer {
 		return out.toString();
 	}
 
-	record Line(String label, BigDecimal amount) {
+	public record Line(String label, BigDecimal amount) {
 	}
 
-	record Invoice(String number, Instant paidAt, String caseReference, String paymentReference, String patientName,
+	public record Invoice(String number, Instant paidAt, String referenceLabel, String caseReference,
+			String paymentReference, String patientName,
 			String patientEmail, String hospital, List<Line> lines, BigDecimal total) {
 	}
 

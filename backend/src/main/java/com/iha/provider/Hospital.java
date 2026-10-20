@@ -65,6 +65,18 @@ public class Hospital {
 		this.createdAt = Instant.now();
 	}
 
+	public void setRoomTypes(String[] roomTypes) {
+		this.roomTypes = roomTypes;
+	}
+
+	public String[] getRoomTypes() {
+		return roomTypes;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
 	public UUID getId() {
 		return id;
 	}

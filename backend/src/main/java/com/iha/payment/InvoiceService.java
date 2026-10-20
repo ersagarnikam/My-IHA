@@ -65,7 +65,7 @@ public class InvoiceService {
 			lines = List.of(new InvoiceRenderer.Line("Online consultation fee", payment.getAmountAud()));
 		}
 		byte[] pdf = renderer.render(new InvoiceRenderer.Invoice(reference + "-" + payment.getId().toString().substring(0, 6).toUpperCase(),
-				payment.getPaidAt(), reference, payment.getGatewayReference(),
+				payment.getPaidAt(), "Case", reference, payment.getGatewayReference(),
 				patientService.requireCurrent(user).getFullName(), user.email(), hospital, lines, payment.getAmountAud()));
 		audit.record(user.id(), user.email(), "patient", "payment.invoice_downloaded", "payment", paymentId, Map.of());
 		return new Rendered("invoice-" + reference + ".pdf", pdf);

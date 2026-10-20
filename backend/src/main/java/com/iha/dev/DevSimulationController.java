@@ -130,14 +130,14 @@ class DevSimulationController {
 		return Map.of("status", medicalCase.getStatus());
 	}
 
-	/** Doctor: propose three times (next week, Sydney business hours). */
+	/** Doctor: propose three times (next week, Brisbane business hours). */
 	@PostMapping("/consultations/{requestId}/propose-slots")
 	@Transactional
 	public Map<String, Object> proposeSlots(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID requestId) {
 		Patient patient = patientService.requireCurrent(CurrentUser.from(jwt));
 		ConsultationRequest request = consultationRequests.findByIdAndPatientId(requestId, patient.getId())
 			.orElseThrow(() -> ApiException.notFound("Consultation request not found."));
-		ZonedDateTime base = ZonedDateTime.now(ZoneId.of("Australia/Sydney")).plusDays(7).withHour(10).withMinute(0)
+		ZonedDateTime base = ZonedDateTime.now(ZoneId.of("Australia/Brisbane")).plusDays(7).withHour(10).withMinute(0)
 			.withSecond(0).withNano(0);
 		for (int i = 0; i < 3; i++) {
 			Instant start = base.plusDays(i).plusHours(i * 2L).toInstant();

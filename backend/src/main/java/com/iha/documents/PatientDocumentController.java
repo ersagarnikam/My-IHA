@@ -112,7 +112,7 @@ public class PatientDocumentController {
 		return file(stored.content(), stored.document().getMimeType(), stored.document().getFileName(), download);
 	}
 
-	static ResponseEntity<Resource> file(Resource content, String mimeType, String fileName, boolean download) {
+	public static ResponseEntity<Resource> file(Resource content, String mimeType, String fileName, boolean download) {
 		ContentDisposition disposition = (download ? ContentDisposition.attachment() : ContentDisposition.inline())
 			.filename(fileName)
 			.build();

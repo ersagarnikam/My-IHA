@@ -83,6 +83,12 @@ public class ConsultationRequest {
 		selectedSlotId = null;
 	}
 
+	/** Doctor-side cancellation (only before the consultation is paid and scheduled). */
+	public void cancel(String reason) {
+		status = CANCELLED;
+		cancellationReason = reason;
+	}
+
 	void schedule(String zoomLink) {
 		status = SCHEDULED;
 		this.zoomLink = zoomLink;

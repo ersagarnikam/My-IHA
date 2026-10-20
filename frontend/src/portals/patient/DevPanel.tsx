@@ -52,7 +52,7 @@ export function DevChatPanel({ closed, onChanged }: { closed: boolean; onChanged
   )
 }
 
-function DevActions({
+export function DevActions({
   actions,
   onChanged,
 }: {
@@ -64,7 +64,7 @@ function DevActions({
   return (
     <section className="card stack dev-panel">
       <p className="small">
-        <strong>Dev simulation</strong> — stands in for portals that aren't ported yet.
+        <strong>Dev simulation</strong> — stands in for roles whose portals aren't ported yet.
       </p>
       <div className="actions">
         {actions.map((a) => (

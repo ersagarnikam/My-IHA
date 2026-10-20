@@ -155,6 +155,10 @@ public class PaymentService {
 	/** Called by the provider webhook (or the simulator). Idempotent: replays are ignored. */
 	@Transactional
 	public void complete(String intentId, String chargeReference) {
+		if (payments.findByPaymentIntentId(intentId).isEmpty()) {
+			events.publishEvent(new UnmatchedIntentEvent(intentId, chargeReference, true));
+			return;
+		}
 		payments.findByPaymentIntentId(intentId).filter(Payment::isPending).ifPresent(payment -> {
 			payment.complete(chargeReference != null ? chargeReference : intentId);
 			events.publishEvent(new PaymentCompletedEvent(payment.getId(), payment.getPaymentType(),
@@ -167,6 +171,10 @@ public class PaymentService {
 
 	@Transactional
 	public void fail(String intentId) {
+		if (payments.findByPaymentIntentId(intentId).isEmpty()) {
+			events.publishEvent(new UnmatchedIntentEvent(intentId, null, false));
+			return;
+		}
 		payments.findByPaymentIntentId(intentId).filter(Payment::isPending).ifPresent(Payment::fail);
 	}
 

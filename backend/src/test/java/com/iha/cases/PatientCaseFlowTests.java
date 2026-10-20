@@ -83,7 +83,7 @@ class PatientCaseFlowTests {
 			.andReturn().getResponse().getContentAsString();
 		String caseId = JsonPath.read(created, "$.id");
 		String reference = JsonPath.read(created, "$.referenceNumber");
-		assertThat(reference).matches("IHA-" + Year.now().getValue() + "-\\d{5}");
+		assertThat(reference).matches("MTA-" + Year.now().getValue() + "-\\d{5}");
 
 		mvc.perform(get("/api/patient/cases").header("Authorization", bearer(token)))
 			.andExpect(status().isOk())

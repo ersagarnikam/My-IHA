@@ -8,6 +8,11 @@ public interface PaymentGateway {
 	/** Stored in {@code payments.gateway} and sent to the browser to pick the payment UI. */
 	String name();
 
+	/** True for the local simulator, whose payments are completed with a "Pay Now" button. */
+	default boolean simulated() {
+		return false;
+	}
+
 	/** Browser-side key, or null when the provider has none. */
 	String publishableKey();
 

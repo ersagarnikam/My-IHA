@@ -22,6 +22,7 @@ import com.iha.storage.FileType;
 import com.iha.storage.StorageService;
 import com.iha.storage.Uploads;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,10 +51,12 @@ public class CaseService {
 	private final NotificationService notifications;
 	private final StorageService storage;
 	private final AuditService audit;
+	private final ApplicationEventPublisher events;
 
 	public CaseService(CaseRepository cases, CaseDocumentRepository documents, SpecialtyRepository specialties,
 			PatientService patientService, NotificationService notifications, StorageService storage,
-			AuditService audit) {
+			AuditService audit, ApplicationEventPublisher events) {
+		this.events = events;
 		this.cases = cases;
 		this.documents = documents;
 		this.specialties = specialties;
@@ -81,7 +84,7 @@ public class CaseService {
 			throw ApiException.badRequest("documents_required", "Please upload at least one document.");
 		}
 
-		String referenceNumber = "IHA-%d-%05d".formatted(Year.now().getValue(), cases.nextReferenceSequence());
+		String referenceNumber = "MTA-%d-%05d".formatted(Year.now().getValue(), cases.nextReferenceSequence());
 		MedicalCase medicalCase = cases.save(
 				new MedicalCase(patient.getId(), referenceNumber, specialty, other, description.trim()));
 
@@ -108,6 +111,8 @@ public class CaseService {
 			throw ApiException.badRequest("documents_required", "Please choose at least one document.");
 		}
 		List<CaseDocument> saved = storeDocuments(patient, medicalCase, uploads);
+		events.publishEvent(new CaseDocumentsAddedEvent(caseId,
+				saved.stream().map(CaseDocument::getDocumentType).collect(Collectors.toSet())));
 		audit.record(user.id(), user.email(), "patient", "case.documents_added", "case", caseId,
 				Map.of("document_count", saved.size()));
 		return saved;
@@ -152,6 +157,7 @@ public class CaseService {
 		}
 		document.linkToCase(caseId, logicalFileName(medicalCase, document.getDocumentType(),
 				FileType.fromMimeType(document.getMimeType())));
+		events.publishEvent(new CaseDocumentsAddedEvent(caseId, Set.of(document.getDocumentType())));
 		audit.record(user.id(), user.email(), "patient", "documents.linked", "case_document", documentId,
 				Map.of("case_id", caseId.toString()));
 		return document;
@@ -218,7 +224,7 @@ public class CaseService {
 							CaseDocumentRepository.CaseDocumentCount::getTotal));
 	}
 
-	/** Same logical naming as the old app: IHA-2026-00001-lab_report-2.pdf */
+	/** Same logical naming as the old app: MTA-2026-00001-lab_report-2.pdf */
 	String logicalFileName(MedicalCase medicalCase, String documentType, FileType fileType) {
 		long n = documents.countByCaseIdAndDocumentType(medicalCase.getId(), documentType) + 1;
 		return medicalCase.getReferenceNumber() + "-" + documentType + (n > 1 ? "-" + n : "") + fileType.extension();

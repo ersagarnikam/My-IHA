@@ -20,20 +20,33 @@ function stripeFor(publishableKey: string) {
  * the simulated provider in development — a "simulate payment" button that
  * runs the same completion logic as Stripe's webhook.
  */
-export function Checkout({ checkoutPath, onPaid }: { checkoutPath: string; onPaid: () => void }) {
+export function Checkout({
+  checkoutPath,
+  onPaid,
+  body,
+  simulatePath = (intentId) => `/api/patient/payments/simulate/${intentId}`,
+}: {
+  checkoutPath: string
+  onPaid: () => void
+  /** JSON body for the checkout request (e.g. the doctor fee type). */
+  body?: Record<string, string>
+  /** Where the simulated provider's "Pay Now" posts. */
+  simulatePath?: (intentId: string) => string
+}) {
   const t = useT('paymentPage')
   const [checkout, setCheckout] = useState<CheckoutData | null>(null)
   const [error, setError] = useState<unknown>(null)
+  const bodyKey = JSON.stringify(body ?? null)
 
   useEffect(() => {
     let cancelled = false
-    apiPost<CheckoutData>(checkoutPath)
+    apiPost<CheckoutData>(checkoutPath, JSON.parse(bodyKey) ?? undefined)
       .then((data) => !cancelled && setCheckout(data))
       .catch((err) => !cancelled && setError(err))
     return () => {
       cancelled = true
     }
-  }, [checkoutPath])
+  }, [checkoutPath, bodyKey])
 
   if (error)
     return (
@@ -42,7 +55,8 @@ export function Checkout({ checkoutPath, onPaid }: { checkoutPath: string; onPai
       />
     )
   if (!checkout) return <p className="muted">{t('loadingForm')}</p>
-  if (checkout.provider === 'fake') return <SimulatedCheckout checkout={checkout} onPaid={onPaid} />
+  if (checkout.provider === 'fake')
+    return <SimulatedCheckout path={simulatePath(checkout.intentId)} onPaid={onPaid} />
   if (!checkout.publishableKey)
     return <FormError error={new ApiError(500, 'init', t('failedToInit'))} />
   return <StripeCheckout checkout={checkout} onPaid={onPaid} />
@@ -104,7 +118,7 @@ function StripeForm({ onPaid }: { onPaid: () => void }) {
   )
 }
 
-function SimulatedCheckout({ checkout, onPaid }: { checkout: CheckoutData; onPaid: () => void }) {
+function SimulatedCheckout({ path, onPaid }: { path: string; onPaid: () => void }) {
   const t = useT('paymentPage')
   const [error, setError] = useState<unknown>(null)
   const [pending, setPending] = useState(false)
@@ -113,7 +127,7 @@ function SimulatedCheckout({ checkout, onPaid }: { checkout: CheckoutData; onPai
     setPending(true)
     setError(null)
     try {
-      await apiPost(`/api/patient/payments/simulate/${checkout.intentId}`)
+      await apiPost(path)
       onPaid()
     } catch (err) {
       setError(err)

@@ -5,7 +5,7 @@ export type NavItem = { to: string; label: string }
 
 /** Shared shell for every role's area: brand, role nav, account menu. */
 export function PortalLayout({ title, nav }: { title: string; nav: NavItem[] }) {
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
 
   return (
     <div className="portal">
@@ -20,7 +20,7 @@ export function PortalLayout({ title, nav }: { title: string; nav: NavItem[] }) 
         </nav>
         <div className="account">
           <span className="account-email">{user?.email}</span>
-          <button type="button" className="button-link" onClick={logout}>
+          <button type="button" className="button-link" onClick={signOut}>
             Sign out
           </button>
         </div>

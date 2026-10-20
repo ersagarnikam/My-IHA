@@ -5,7 +5,7 @@ import { useToast } from '../../../components/Toasts'
 import { Field, FormError, fieldError, Tabs } from '../../../components/ui'
 import { useT } from '../../../i18n/I18nContext'
 import { ApiError, apiDelete, apiPut } from '../../../lib/api'
-import { drafts, useFormat } from '../../../lib/format'
+import { useFormat } from '../../../lib/format'
 import type { Profile } from '../../../lib/types'
 import { usePatient } from '../PatientContext'
 import { PaymentMethodsTab } from '../payments/PaymentMethodsTab'
@@ -306,7 +306,7 @@ function SecurityTab() {
 
 function DeleteAccountTab() {
   const t = useT('profile.deleteAccount')
-  const { logout } = useAuth()
+  const { signOut } = useAuth()
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<unknown>(null)
   const [pending, setPending] = useState(false)
@@ -316,8 +316,7 @@ function DeleteAccountTab() {
     setError(null)
     try {
       await apiDelete('/api/patient/account', { confirm })
-      drafts.clearAll()
-      logout()
+      signOut()
     } catch (err) {
       setError(err)
       setPending(false)

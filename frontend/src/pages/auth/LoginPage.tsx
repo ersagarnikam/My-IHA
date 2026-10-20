@@ -56,6 +56,8 @@ export function LoginPage() {
       </form>
       <p className="muted">
         {t('newPatient')} <Link to="/register">{t('createAccount')}</Link>
+        <br />
+        {t('areYouDoctor')} <Link to="/register/doctor">{t('registerAsDoctor')}</Link>
       </p>
     </AuthShell>
   )

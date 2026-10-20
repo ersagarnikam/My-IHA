@@ -16,12 +16,17 @@ import {
   type Session,
   type SessionUser,
 } from '../lib/api'
+import { drafts } from '../lib/format'
+import { goHome } from '../lib/site'
 
 type AuthContextValue = {
   user: SessionUser | null
   login: (email: string, password: string) => Promise<SessionUser>
   verify: (email: string, code: string) => Promise<SessionUser>
+  /** Drops the session (e.g. it expired); route guards then send the user to /login. */
   logout: () => void
+  /** The user chose to leave: clears session and wizard drafts, returns to the public website. */
+  signOut: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -52,6 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return next.user
       },
       logout: () => apply(null),
+      signOut: () => {
+        drafts.clearAll()
+        apply(null)
+        goHome(true)
+      },
     }),
     [session, apply],
   )
@@ -68,7 +78,7 @@ export function useAuth() {
 /** Each role has its own area of the app, like the old one-portal-per-role split. */
 export const ROLE_HOME: Record<Role, string> = {
   PATIENT: '/patient/dashboard',
-  DOCTOR: '/doctor',
+  DOCTOR: '/doctor/dashboard',
   HOSPITAL: '/hospital',
   LAWYER: '/lawyer',
   ADMIN: '/admin',

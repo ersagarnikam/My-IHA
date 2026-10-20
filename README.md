@@ -29,9 +29,14 @@ Email isn't wired up yet: in the dev profile, verification and password-reset co
 
 Payments are simulated by default (`iha.payments.provider=fake`): the payment page shows a "Pay Now" button that runs the same completion logic as the Stripe webhook. Set `IHA_PAYMENTS_PROVIDER=stripe` plus the Stripe keys below to take real payments.
 
-**Dev simulation.** The doctor, hospital, lawyer and admin portals aren't ported yet, so in the dev profile `/api/dev/*` (and dashed "Dev simulation" boxes in the patient UI, shown only under `npm run dev`) can publish treatment options, propose consultation times, send the hospital letters and open the support chat. Remove `dev/DevSimulationController` and `DevPanel.tsx` once those portals exist.
+**Demo accounts (dev profile).** The H2 database is in memory, so all data is lost when the API restarts; `dev/DevDataSeeder` recreates demo data on every start (turn off with `iha.dev.seed-demo-data=false`):
 
-The H2 database is in memory, so all data is lost when the API restarts.
+| Account | Password | What's there |
+|---|---|---|
+| `patient@demo.local` | `Demo1234` | Complete profile, two cases |
+| `doctor@demo.local` | `Demo1234` | Approved, fee paid, four affiliated hospitals; one new case invitation and one case in evaluation |
+
+**Dev simulation.** The hospital, lawyer and admin portals aren't ported yet, so in the dev profile `/api/dev/*` (and dashed "Dev simulation" boxes in the UI, shown only under `npm run dev`) stand in for them: publishing treatment options, approving doctors and their plans, assigning cases, sending hospital letters and opening support chats. They also play the patient from the doctor portal (upload requested documents, request and pay for a consultation). Remove `dev/DevSimulationController`, `dev/DoctorDevController` and the `DevPanel.tsx` files once the admin portal exists.
 
 Tests: `./mvnw test` in `backend/` (boots the app, runs every migration on H2, validates entities against the schema, and runs HTTP-level flow tests). `npm run build` in `frontend/` type-checks and builds.
 
@@ -50,6 +55,33 @@ Run with `SPRING_PROFILES_ACTIVE=prod` and set:
 | `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe API keys; point the Stripe webhook at `POST /api/payments/webhook` |
 | `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET` | Zoom Server-to-Server OAuth app for consultation meetings (optional; without it, meetings get no link) |
 
+The web app reads one build-time variable, `VITE_HOME_URL` (see `frontend/.env.example`).
+
+## Website and portal
+
+The public website, **https://medicaltourismaustralia.com**, is the home page. The portal (this app) has no landing page of its own:
+
+- Opening the portal root (`/`) while signed out sends the visitor to the website; signed-in users go straight to their own area (patients to `/patient/dashboard`, other roles to theirs).
+- Signing out (or deleting the account) returns to the website.
+- Sign-in and registration pages show the MTA logo and a "Back to medicaltourismaustralia.com" link.
+- Any portal page can be linked directly. A signed-out visitor is asked to sign in first, then lands on the page the link pointed to.
+
+Change the website address per environment with `VITE_HOME_URL` (default `https://medicaltourismaustralia.com`).
+
+**Links to put on the website** (replace `https://portal.example.com` with wherever the portal is hosted, e.g. a `portal.` subdomain):
+
+| Website button | Link |
+|---|---|
+| Patient login / Sign in | `https://portal.example.com/login` |
+| Get started / Create an account | `https://portal.example.com/register` |
+| Submit your case | `https://portal.example.com/patient/cases/new` |
+| Forgot password | `https://portal.example.com/forgot-password` |
+| Doctor, hospital or visa lawyer login | `https://portal.example.com/login` (everyone signs in on the same page and is sent to their own area by role) |
+
+| Doctor registration | `https://portal.example.com/register/doctor` |
+
+Hospital and visa-lawyer sign-up links will be added when those portals are ported.
+
 ## How the old design maps onto the new one
 
 | Supabase / Next.js | Spring / React |
@@ -63,9 +95,9 @@ Run with `SPRING_PROFILES_ACTIVE=prod` and set:
 | Supabase Realtime | Server-sent events on `GET /api/realtime` (`RealtimeHub`), read with `fetch` so the JWT can be sent. Single-instance only for now |
 | next-intl (en/zh) | The same `messages/en.json` and `zh.json` catalogues with a small translator (`i18n/I18nContext.tsx`) |
 | `hard-delete-expired-patients` Edge Function | `PatientRetentionJob` (daily, 30-day grace period) |
-| 137 incremental migrations | `V1__core_schema.sql` (final shape of all 28 tables), `V2__seed_reference_data.sql`, `V3__patient_portal.sql` |
+| 137 incremental migrations | `V1__core_schema.sql` (final shape of all 28 tables), `V2__seed_reference_data.sql`, `V3__patient_portal.sql`, `V4__doctor_portal.sql` |
 
-Backend packages are by feature: `auth`, `patient`, `cases`, `documents`, `treatment`, `consultation`, `payment`, `visa`, `chat`, `notification`, `realtime`, `dashboard`, `provider` (read-only hospital/doctor/lawyer mappings so far), `specialty`, `audit`, `crypto`, `storage`, `zoom`, `config`, `common`, and `dev` (dev profile only).
+Backend packages are by feature: `auth`, `patient`, `cases`, `documents`, `treatment`, `consultation`, `payment`, `visa`, `chat`, `notification`, `realtime`, `dashboard`, `doctor` (doctor portal), `provider` (hospital/doctor/lawyer entities), `providerchat` (provider ↔ admin support chat), `specialty`, `audit`, `crypto`, `storage`, `zoom`, `config`, `common`, and `dev` (dev profile only).
 
 ## Porting status
 
@@ -80,8 +112,18 @@ Backend packages are by feature: `auth`, `patient`, `cases`, `documents`, `treat
 
 Tests: `backend` has HTTP-level journey tests for all of the above; the UI was also driven end to end in Chrome.
 
+**Doctor portal: ported** (matches the live dev doctor portal).
+- Sign-up at `/register/doctor`, email verification, 4-step registration wizard with document uploads; pending-approval page with resubmission when MTA rejects or asks for more information; registration fee (Stripe or simulated) unlocks the portal.
+- Dashboard (quick actions, metrics, upcoming consultations and treatments, recent cases), My Cases (tabs, search, date filter), case details (patient info, history, documents, accept/decline, start evaluation, tracked document requests, mark completed).
+- Treatment plan builder (draft/submit, affiliated hospitals and room categories, itemised costs, specialists, live total); hospital notified on submission.
+- Consultations: propose up to three times in Brisbane time, cancel, scheduled meeting with Join Zoom (opens 15 minutes before).
+- Support chat with MTA, notifications, account settings (profile, photo, availability, billing with annual renewal, invoices as PDF, password, notification preferences).
+- English only, like the old doctor app. Doctor-facing times are Brisbane time (the patient portal's slot times now say "(Brisbane Time)" too).
+
+Tests: `DoctorPortalFlowTests` (HTTP, whole journey) and `e2e/doctor-journey.mjs` (Chrome).
+
 **Not yet ported:**
-- Doctor, hospital, visa-lawyer and admin portals (registration and approval, assignments, plan authoring, consultation slots, letters, visa processing, provider messages). Their notifications to providers are already written by the patient flows.
+- Hospital, visa-lawyer and admin portals (provider approval, case assignment and plan publishing currently exist only as service methods in `DoctorAdminService` used by dev simulation, letters, visa processing).
 - Real email/SMS delivery (Resend/Twilio): `notification/AlertDispatcher` only logs.
 - Shared realtime for multiple API instances (needs a broker behind `RealtimeHub`).
 - Data migration from the Supabase project.

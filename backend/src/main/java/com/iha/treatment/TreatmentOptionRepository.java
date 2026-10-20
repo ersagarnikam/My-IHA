@@ -17,4 +17,8 @@ public interface TreatmentOptionRepository extends JpaRepository<TreatmentOption
 
 	Optional<TreatmentOption> findFirstByCaseIdAndSelectedTrue(UUID caseId);
 
+	List<TreatmentOption> findByTreatmentPlanIdIn(Collection<UUID> planIds);
+
+	boolean existsByTreatmentPlanId(UUID planId);
+
 }

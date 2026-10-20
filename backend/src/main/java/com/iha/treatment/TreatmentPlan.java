@@ -25,6 +25,9 @@ import jakarta.persistence.Table;
 @Table(name = "treatment_plans")
 public class TreatmentPlan {
 
+	public static final String DRAFT = "draft";
+	public static final String SUBMITTED_TO_IHA = "submitted_to_iha";
+	public static final String IHA_APPROVED = "iha_approved";
 	public static final String PRESENTED_TO_PATIENT = "presented_to_patient";
 	public static final String PATIENT_CONFIRMED = "patient_confirmed";
 	public static final String NOT_SELECTED = "not_selected";
@@ -152,9 +155,60 @@ public class TreatmentPlan {
 		this.updatedAt = createdAt;
 	}
 
+	/** A doctor's new, empty draft. */
+	public static TreatmentPlan draft(UUID caseId, UUID doctorId) {
+		TreatmentPlan plan = new TreatmentPlan(caseId, doctorId, null, null, null, null);
+		plan.status = DRAFT;
+		return plan;
+	}
+
 	@PreUpdate
 	void touch() {
 		updatedAt = Instant.now();
+	}
+
+	public boolean isDraft() {
+		return DRAFT.equals(status);
+	}
+
+	/** Replaces every doctor-authored field (old save_treatment_plan_draft). */
+	public void applyDraft(Draft d) {
+		this.diagnosis = d.diagnosis();
+		this.treatmentType = d.treatmentType();
+		this.procedureName = d.procedureName();
+		this.description = d.description();
+		this.technique = d.technique();
+		this.expectedOutcome = d.expectedOutcome();
+		this.successRate = d.successRate();
+		this.treatmentStartDate = d.treatmentStartDate();
+		this.treatmentEndDate = d.treatmentEndDate();
+		this.treatmentDurationDays = d.treatmentStartDate() != null && d.treatmentEndDate() != null
+				? (int) java.time.temporal.ChronoUnit.DAYS.between(d.treatmentStartDate(), d.treatmentEndDate()) + 1
+				: null;
+		this.recoveryTime = d.recoveryTime();
+		this.estimatedLengthOfStay = d.estimatedLengthOfStay();
+		this.hospitalId = d.hospitalId();
+		this.department = d.department();
+		this.roomCategory = d.roomCategory();
+		this.specialRequirements = d.specialRequirements();
+		this.doctorFeesAud = d.doctorFeesAud();
+		this.hospitalFeesAud = d.hospitalFeesAud();
+		this.costBreakdownJson = d.costBreakdownJson();
+		this.costNotes = d.costNotes();
+		this.patientInstructions = d.patientInstructions();
+		this.aftercare = d.aftercare();
+	}
+
+	/** Whether the plan has what the old submit_treatment_plan required. */
+	public boolean isComplete() {
+		return hospitalId != null && diagnosis != null && diagnosis.length() >= 10 && procedureName != null
+				&& doctorFeesAud != null && doctorFeesAud.signum() > 0 && treatmentStartDate != null
+				&& treatmentEndDate != null && estimatedLengthOfStay != null && treatmentType != null;
+	}
+
+	public void submit() {
+		this.status = SUBMITTED_TO_IHA;
+		this.submittedAt = Instant.now();
 	}
 
 	public void setStatus(String status) {
@@ -263,6 +317,24 @@ public class TreatmentPlan {
 
 	public BigDecimal getHospitalFeesAud() {
 		return hospitalFeesAud;
+	}
+
+
+	public Instant getSubmittedAt() {
+		return submittedAt;
+	}
+
+	public Instant getUpdatedAt() {
+		return updatedAt;
+	}
+
+	/** Doctor-authored fields; {@code costBreakdownJson} is {@code {"items": [{"label", "amount"}]}}. */
+	public record Draft(String diagnosis, String treatmentType, String procedureName, String description,
+			String technique, String expectedOutcome, String successRate, LocalDate treatmentStartDate,
+			LocalDate treatmentEndDate, String recoveryTime, String estimatedLengthOfStay, UUID hospitalId,
+			String department, String roomCategory, String specialRequirements, BigDecimal doctorFeesAud,
+			BigDecimal hospitalFeesAud, String costBreakdownJson, String costNotes, String patientInstructions,
+			List<String> aftercare) {
 	}
 
 }

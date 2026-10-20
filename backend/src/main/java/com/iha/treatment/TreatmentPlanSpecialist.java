@@ -54,6 +54,20 @@ public class TreatmentPlanSpecialist {
 		this.createdAt = Instant.now();
 	}
 
+	public TreatmentPlanSpecialist(UUID treatmentPlanId, String specialistType, String specialistName,
+			BigDecimal costAud, String notes) {
+		this(treatmentPlanId, specialistType, specialistName, costAud);
+		this.notes = notes;
+	}
+
+	public UUID getId() {
+		return id;
+	}
+
+	public Instant getCreatedAt() {
+		return createdAt;
+	}
+
 	public UUID getTreatmentPlanId() {
 		return treatmentPlanId;
 	}

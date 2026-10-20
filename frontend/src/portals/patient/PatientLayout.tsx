@@ -24,7 +24,7 @@ import { Modal } from '../../components/ui'
 import { useT } from '../../i18n/I18nContext'
 import { apiPost } from '../../lib/api'
 import type { Notification } from '../../lib/cases'
-import { drafts, useFormat } from '../../lib/format'
+import { useFormat } from '../../lib/format'
 import { RealtimeProvider, useRealtime } from '../../lib/realtime'
 import type { ChatMessage } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
@@ -230,7 +230,7 @@ function NavLinks({
 
 function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useT('logout')
-  const { logout } = useAuth()
+  const { signOut } = useAuth()
   return (
     <Modal open={open} onClose={onClose} title={t('title')}>
       <p className="muted">{t('body')}</p>
@@ -238,14 +238,7 @@ function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => void })
         <button type="button" className="button-secondary" onClick={onClose}>
           {t('cancel')}
         </button>
-        <button
-          type="button"
-          className="button-danger"
-          onClick={() => {
-            drafts.clearAll()
-            logout()
-          }}
-        >
+        <button type="button" className="button-danger" onClick={signOut}>
           {t('confirm')}
         </button>
       </div>

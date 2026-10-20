@@ -137,14 +137,14 @@ export function ConsultationPaymentPage() {
   )
 }
 
-/** A slot in Sydney time, plus the patient's own time zone when different. */
+/** A slot in Brisbane time, plus the patient's own time zone when different. */
 export function SlotTimes({ start }: { start: string }) {
   const format = useFormat()
   const local = browserTimeZone()
   return (
     <span className="slot-times">
       <strong>{format.dateTime(start, DOCTOR_TIME_ZONE)}</strong>{' '}
-      <span className="muted small">Sydney</span>
+      <span className="muted small">(Brisbane Time)</span>
       {local !== DOCTOR_TIME_ZONE && (
         <span className="muted small block">
           {format.dateTime(start, local)} ({local})
