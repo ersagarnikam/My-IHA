@@ -12,6 +12,7 @@ import java.util.UUID;
 import com.iha.audit.AuditService;
 import com.iha.auth.CurrentUser;
 import com.iha.common.ApiException;
+import com.iha.fees.FeeSettingsService;
 import com.iha.notification.NotificationService;
 import com.iha.payment.InvoiceRenderer;
 import com.iha.payment.PaymentGateway;
@@ -37,19 +38,19 @@ public class DoctorFeeService {
 	private final DoctorAccountService accounts;
 	private final DoctorRepository doctors;
 	private final DoctorFeePaymentRepository payments;
-	private final PlatformFeeSettingRepository settings;
+	private final FeeSettingsService fees;
 	private final PaymentGateway gateway;
 	private final InvoiceRenderer invoices;
 	private final NotificationService notifications;
 	private final AuditService audit;
 
 	DoctorFeeService(DoctorAccountService accounts, DoctorRepository doctors, DoctorFeePaymentRepository payments,
-			PlatformFeeSettingRepository settings, PaymentGateway gateway, InvoiceRenderer invoices,
+			FeeSettingsService fees, PaymentGateway gateway, InvoiceRenderer invoices,
 			NotificationService notifications, AuditService audit) {
 		this.accounts = accounts;
 		this.doctors = doctors;
 		this.payments = payments;
-		this.settings = settings;
+		this.fees = fees;
 		this.gateway = gateway;
 		this.invoices = invoices;
 		this.notifications = notifications;
@@ -58,7 +59,7 @@ public class DoctorFeeService {
 
 	@Transactional(readOnly = true)
 	public Fees fees() {
-		return new Fees(amount(PlatformFeeSetting.DOCTOR_REGISTRATION_FEE), amount(PlatformFeeSetting.DOCTOR_ANNUAL_FEE));
+		return new Fees(fees.amount(FeeSettingsService.DOCTOR_REGISTRATION_FEE), fees.amount(FeeSettingsService.DOCTOR_ANNUAL_FEE));
 	}
 
 	@Transactional(readOnly = true)
@@ -83,7 +84,7 @@ public class DoctorFeeService {
 			}
 			payment = payments.lockPending(doctor.getId(), feeType, null)
 				.orElseGet(() -> payments.save(new DoctorFeePayment(doctor.getId(), feeType,
-						amount(PlatformFeeSetting.DOCTOR_REGISTRATION_FEE), null, gateway.name())));
+						fees.amount(FeeSettingsService.DOCTOR_REGISTRATION_FEE), null, gateway.name())));
 		}
 		else if (DoctorFeePayment.ANNUAL.equals(feeType)) {
 			if (doctor.getRegistrationFeePaidAt() == null) {
@@ -96,7 +97,7 @@ public class DoctorFeeService {
 			String period = due.atZone(BILLING_ZONE).toLocalDate().toString();
 			payment = payments.lockPending(doctor.getId(), feeType, period)
 				.orElseGet(() -> payments.save(new DoctorFeePayment(doctor.getId(), feeType,
-						amount(PlatformFeeSetting.DOCTOR_ANNUAL_FEE), period, gateway.name())));
+						fees.amount(FeeSettingsService.DOCTOR_ANNUAL_FEE), period, gateway.name())));
 		}
 		else {
 			throw ApiException.badRequest("invalid_fee_type", "feeType must be \"registration\" or \"annual\".");
@@ -183,12 +184,6 @@ public class DoctorFeeService {
 		audit.record(user.id(), user.email(), "doctor", "fee.invoice_downloaded", "doctor_fee_payment", paymentId,
 				Map.of());
 		return new Invoice(number + ".pdf", pdf);
-	}
-
-	private BigDecimal amount(String key) {
-		return settings.findByFeeKey(key)
-			.map(PlatformFeeSetting::getAmountAud)
-			.orElseThrow(() -> ApiException.conflict("fee_not_configured", "This fee hasn't been configured."));
 	}
 
 	private static Instant plusYear(Instant from) {

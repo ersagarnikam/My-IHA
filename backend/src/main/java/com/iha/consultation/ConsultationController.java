@@ -74,7 +74,7 @@ public class ConsultationController {
 			return new ConsultationResponse(r.getId(), r.getCaseId(), r.getKind(), view.doctorName(),
 					r.getTreatmentOptionId(), r.getStatus(),
 					r.getZoomLink(), r.getSelectedSlotId(), r.getCancellationReason(), r.getRequestedAt(),
-					r.getUpdatedAt(), ConsultationService.CONSULTATION_FEE_AUD,
+					r.getUpdatedAt(), view.feeAud(),
 					view.slots().stream().map(s -> new SlotResponse(s.getId(), s.getSlotTime(), s.getSlotEndTime())).toList());
 		}
 

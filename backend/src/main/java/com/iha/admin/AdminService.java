@@ -20,6 +20,7 @@ import com.iha.cases.CaseStatus;
 import com.iha.cases.MedicalCase;
 import com.iha.chat.ChatService;
 import com.iha.common.ApiException;
+import com.iha.fees.FeeSettingsService;
 import com.iha.patient.Patient;
 import com.iha.patient.PatientRepository;
 import com.iha.provider.Doctor;
@@ -51,9 +52,6 @@ public class AdminService {
 	/** Cases still looking for a doctor. */
 	static final Set<CaseStatus> NEEDS_DOCTOR = EnumSet.of(CaseStatus.CASE_SUBMITTED, CaseStatus.UNDER_REVIEW);
 
-	/** Suggested MTA service fee when publishing a plan. */
-	static final BigDecimal DEFAULT_COMMISSION_RATE = new BigDecimal("0.10");
-
 	private final DoctorRepository doctors;
 	private final HospitalRepository hospitals;
 	private final DoctorCaseAssignmentRepository assignments;
@@ -66,11 +64,12 @@ public class AdminService {
 	private final ProviderMessageService providerMessages;
 	private final StorageService storage;
 	private final JsonMapper json;
+	private final FeeSettingsService fees;
 
 	AdminService(DoctorRepository doctors, HospitalRepository hospitals, DoctorCaseAssignmentRepository assignments,
 			CaseRepository cases, CaseDocumentRepository documents, PatientRepository patients,
 			TreatmentPlanRepository plans, TreatmentPlanSpecialistRepository specialists, ChatService chat,
-			ProviderMessageService providerMessages, StorageService storage, JsonMapper json) {
+			ProviderMessageService providerMessages, StorageService storage, JsonMapper json, FeeSettingsService fees) {
 		this.doctors = doctors;
 		this.hospitals = hospitals;
 		this.assignments = assignments;
@@ -83,6 +82,7 @@ public class AdminService {
 		this.providerMessages = providerMessages;
 		this.storage = storage;
 		this.json = json;
+		this.fees = fees;
 	}
 
 	// ── Overview ────────────────────────────────────────────────────────────
@@ -209,7 +209,7 @@ public class AdminService {
 		BigDecimal total = total(p, people);
 		return new PlanDetail(p, cases.findById(p.getCaseId()).orElse(null), doctors.findById(p.getDoctorId()).orElse(null),
 				p.getHospitalId() == null ? null : hospitals.findById(p.getHospitalId()).orElse(null), costItems(p),
-				people, total, total.multiply(DEFAULT_COMMISSION_RATE).setScale(0, RoundingMode.HALF_UP));
+				people, total, total.multiply(fees.serviceFeeRate()).setScale(0, RoundingMode.HALF_UP));
 	}
 
 	// ── Helpers ─────────────────────────────────────────────────────────────

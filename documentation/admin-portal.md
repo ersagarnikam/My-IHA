@@ -14,6 +14,7 @@ Nobody can sign up as an admin. On startup `AdminBootstrap` creates the first ad
 | Doctor Approvals | Registrations by status (Pending, More Info Requested, Approved, Rejected), searchable. The detail page of an approved doctor starts with **Performance** (`GET /api/admin/doctors/{id}/performance`): the same figures as the dashboard table, membership fees paid, and every case the doctor was invited to with their answer, plan status and case status. It then shows the professional details and documents (view/download) with **Approve**, **Request more info** and **Reject**; the last two need a reason (≥ 10 characters) that the doctor sees and can answer by resubmitting. Approved doctors then pay the registration fee themselves. |
 | Cases | All cases, with a *Needs a doctor* view. The case page shows the patient's description, documents, invited doctors and their progress (including a skipped initial consultation and its reason), plans and consultations. **Invite a doctor** lists active doctors (approved and fee paid), those with the case's specialty first; inviting moves a submitted case to *under review* and notifies the doctor. |
 | Treatment Plans | Plans by status (To Review, With Patient, Chosen & Paid, Declined). The review page shows the full plan and costs. **Approve and send to patient** takes MTA's service fee (suggested 10% of the plan total) and publishes the plan as a treatment option; **Decline** needs a reason, which the doctor sees on the plan. Both notify the doctor. |
+| Settings | **Platform fees**, grouped by who pays: doctors (registration/onboarding fee, annual membership fee), visa lawyers and hospitals (registration and annual fees — stored now, charged once their portals launch, so they start at $0 and are marked *Not charged yet*), and patients (online consultation fee, suggested MTA service fee %). Edit a value, optionally give a reason, Save. Each fee shows who changed it last; a **change history** lists every change (from, to, who, when, reason). A change applies to payments started afterwards; payments already started keep their amount, and a paid consultation keeps showing what was charged. |
 | Messages | One inbox for patient and provider (doctor, hospital, lawyer) support chats: unread counts, reopen requests, **Open / Close conversation**, replies. Admins don't get live pushes yet; the inbox refreshes every 20 seconds. |
 
 ## Rules enforced by the API
@@ -21,7 +22,8 @@ Nobody can sign up as an admin. On startup `AdminBootstrap` creates the first ad
 - Only `pending` registrations can be reviewed.
 - Only active doctors can be invited (`doctor_not_active`), and a doctor can't be invited to the same case twice.
 - Only submitted plans can be published or declined; the service fee must be ≥ 0. A declined plan's reason is stored on `treatment_plans.rejection_reason` (migration V6).
-- Reviews, invitations and plan decisions are written to the audit log with the acting admin.
+- Fees: 0 or more with at most 2 decimals, at most AUD 1,000,000 or 100%; fees charged by card today (doctor fees, consultation fee) must be more than 0. Unknown fee keys answer 404.
+- Reviews, invitations, plan decisions and fee changes are written to the audit log with the acting admin.
 
 ## Tests
 

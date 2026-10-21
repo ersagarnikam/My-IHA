@@ -325,3 +325,30 @@ export function responseTime(hours: number | null) {
 export function pct(value: number | null) {
   return value === null ? '—' : `${value}%`
 }
+
+// GET /api/admin/settings/fees (backend fees/FeeSettingsService, admin/AdminSettingsController).
+
+export type FeeSetting = {
+  key: string
+  group: 'doctors' | 'lawyers' | 'hospitals' | 'patients'
+  label: string
+  description: string
+  unit: 'aud' | 'percent'
+  charged: boolean
+  amount: number
+  updatedAt: string
+  updatedBy: string | null
+}
+
+export type FeeSettings = {
+  fees: FeeSetting[]
+  history: {
+    id: string
+    key: string
+    oldAmount: number | null
+    newAmount: number
+    reason: string | null
+    changedBy: string | null
+    changedAt: string
+  }[]
+}

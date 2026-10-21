@@ -27,6 +27,8 @@ Base URL: `http://localhost:8080` in development (the web app proxies `/api`). A
 
 Passwords: at least 8 characters with an uppercase letter and a number.
 
+`GET /api/fees` (any signed-in user): `{consultationFeeAud, doctorRegistrationFeeAud, doctorAnnualFeeAud}`.
+
 ## Patient (`PATIENT` role)
 
 ### Profile and account
@@ -189,6 +191,8 @@ See the [admin portal](admin-portal.md) guide.
 | GET | `/api/admin/plans/{id}` | Full plan with costs and the suggested service fee. |
 | POST | `/api/admin/plans/{id}/publish` | `{mtaCommissionAud}` → published as a treatment option. |
 | POST | `/api/admin/plans/{id}/reject` | `{reason}` (≥ 10 characters). |
+| GET | `/api/admin/settings/fees` | `{fees, history}`: every configurable fee (key, group, label, description, unit `aud`/`percent`, `charged`, amount, last changed by/at) and the last 50 changes. |
+| PUT | `/api/admin/settings/fees/{key}` | `{amount, reason?}`; `invalid_amount`; 404 for an unknown key. |
 | GET | `/api/admin/chats` | Patient and provider threads with unread counts and reopen requests. |
 | GET | `/api/admin/chats/{kind}/{id}` | One thread (`kind` = `patient` or `provider`); marks the other side's messages read. |
 | POST | `/api/admin/chats/{kind}/{id}/open` · `/close` | Open or close the conversation. |

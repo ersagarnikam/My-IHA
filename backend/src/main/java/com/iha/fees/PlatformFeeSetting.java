@@ -1,4 +1,4 @@
-package com.iha.doctor;
+package com.iha.fees;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -9,13 +9,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/** Admin-configured platform fees (seeded in V2). */
+/** One admin-configured platform fee (seeded in V2 and V7); see {@link FeeSettingsService} for the catalogue. */
 @Entity
 @Table(name = "platform_fee_settings")
 public class PlatformFeeSetting {
-
-	public static final String DOCTOR_REGISTRATION_FEE = "doctor_registration_fee";
-	public static final String DOCTOR_ANNUAL_FEE = "doctor_annual_fee";
 
 	@Id
 	private UUID id;
@@ -29,7 +26,16 @@ public class PlatformFeeSetting {
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
 
+	@Column(name = "updated_by")
+	private String updatedBy;
+
 	protected PlatformFeeSetting() {
+	}
+
+	void change(BigDecimal amount, String by) {
+		this.amountAud = amount;
+		this.updatedBy = by;
+		this.updatedAt = Instant.now();
 	}
 
 	public String getFeeKey() {
@@ -38,6 +44,14 @@ public class PlatformFeeSetting {
 
 	public BigDecimal getAmountAud() {
 		return amountAud;
+	}
+
+	public Instant getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public String getUpdatedBy() {
+		return updatedBy;
 	}
 
 }

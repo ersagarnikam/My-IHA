@@ -122,7 +122,7 @@ sequenceDiagram
 ```
 
 - `PaymentGateway` has two implementations: **Stripe** (production) and **Fake** (development default: the payment page shows a "Pay Now" button that runs exactly the same completion code as the webhook).
-- Patient payments: treatment (`full_payment`) and consultation fee (AUD 200). Doctor payments: registration fee and annual renewal (`platform_fee_settings`).
+- Patient payments: treatment (`full_payment`) and consultation fee. Doctor payments: registration fee and annual renewal. All fee amounts are admin-configurable (`platform_fee_settings`, read through `FeeSettingsService` when a charge is created).
 - PDF invoices are drawn with PDFBox.
 
 ## Files

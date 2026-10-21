@@ -15,8 +15,8 @@ import com.iha.cases.MedicalCase;
 import com.iha.common.ApiException;
 import com.iha.consultation.ConsultationRequest;
 import com.iha.consultation.ConsultationRequestRepository;
-import com.iha.consultation.ConsultationService;
 import com.iha.consultation.ConsultationSlotSelectedEvent;
+import com.iha.fees.FeeSettingsService;
 import com.iha.patient.Patient;
 import com.iha.patient.PatientService;
 import com.iha.treatment.TreatmentOptionRepository;
@@ -45,13 +45,14 @@ public class PaymentService {
 	private final TreatmentOptionRepository options;
 	private final TreatmentOptionViews optionViews;
 	private final ConsultationRequestRepository consultations;
+	private final FeeSettingsService fees;
 	private final AuditService audit;
 	private final ApplicationEventPublisher events;
 
 	PaymentService(PaymentRepository payments, PaymentMethodRepository methods, PaymentGateway gateway,
 			PatientService patientService, CaseService caseService, TreatmentOptionRepository options,
-			TreatmentOptionViews optionViews, ConsultationRequestRepository consultations, AuditService audit,
-			ApplicationEventPublisher events) {
+			TreatmentOptionViews optionViews, ConsultationRequestRepository consultations, FeeSettingsService fees,
+			AuditService audit, ApplicationEventPublisher events) {
 		this.payments = payments;
 		this.methods = methods;
 		this.gateway = gateway;
@@ -60,6 +61,7 @@ public class PaymentService {
 		this.options = options;
 		this.optionViews = optionViews;
 		this.consultations = consultations;
+		this.fees = fees;
 		this.audit = audit;
 		this.events = events;
 	}
@@ -125,7 +127,11 @@ public class PaymentService {
 		}
 		Payment payment = payments.findFirstByConsultationRequestIdAndStatus(requestId, Payment.PENDING)
 			.orElseGet(() -> payments.save(Payment.pendingConsultation(request.getCaseId(), patient.getId(), requestId,
-					ConsultationService.CONSULTATION_FEE_AUD, gateway.name())));
+					// After a failed attempt, keep the price the patient was shown.
+					payments.findFirstByConsultationRequestIdOrderByCreatedAtDesc(requestId)
+						.map(Payment::getAmountAud)
+						.orElseGet(fees::consultationFeeAud),
+					gateway.name())));
 		return checkout(user, patient, payment, Map.of("consultation_request_id", requestId.toString(), "case_id",
 				request.getCaseId().toString()), "Online consultation fee");
 	}

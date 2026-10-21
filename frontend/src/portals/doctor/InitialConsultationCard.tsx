@@ -15,7 +15,13 @@ import type { CaseDetail, DoctorConsultation } from './types'
  * plan stays locked until it has taken place (or the doctor records why it
  * wasn't needed).
  */
-export function InitialConsultationCard({ detail, onChanged }: { detail: CaseDetail; onChanged: () => void }) {
+export function InitialConsultationCard({
+  detail,
+  onChanged,
+}: {
+  detail: CaseDetail
+  onChanged: () => void
+}) {
   const info = detail.initialConsultation
   const a = detail.assignment
   if (!info || a.status !== 'accepted' || !a.evaluationStartedAt) return null
@@ -38,7 +44,11 @@ export function InitialConsultationCard({ detail, onChanged }: { detail: CaseDet
         </p>
       ) : (
         info.consultationId && (
-          <Progress key={info.state} consultationId={info.consultationId} held={info.state === 'held'} />
+          <Progress
+            key={info.state}
+            consultationId={info.consultationId}
+            held={info.state === 'held'}
+          />
         )
       )}
     </section>
@@ -61,21 +71,25 @@ function StateBadge({ state }: { state: string }) {
 
 function ProposeInitial({ caseId, onChanged }: { caseId: string; onChanged: () => void }) {
   const toast = useToast()
+  const fees = useApi<{ consultationFeeAud: number }>('/api/fees')
   const [skipOpen, setSkipOpen] = useState(false)
   return (
     <>
       <p className="muted" style={{ margin: 0 }}>
-        Before preparing the treatment plan, talk with the patient on Zoom about their condition, history and
-        expectations. Offer up to three times; the patient chooses one and pays the AUD 200 consultation fee, and
-        the Zoom meeting is created automatically. You can submit the treatment plan once the consultation has
-        taken place.
+        Before preparing the treatment plan, talk with the patient on Zoom about their condition,
+        history and expectations. Offer up to three times; the patient chooses one and pays the{' '}
+        {fees.data ? `AUD ${fees.data.consultationFeeAud.toLocaleString('en-AU')}` : ''}{' '}
+        consultation fee, and the Zoom meeting is created automatically. You can submit the
+        treatment plan once the consultation has taken place.
       </p>
       <SlotProposalForm
         title="Propose consultation times"
         description="Times are in Brisbane Time (AEST)."
         submitLabel="Send times to patient"
         onSubmit={async (rows) => {
-          await apiPost<DoctorConsultation>(`/api/doctor/cases/${caseId}/initial-consultation`, { slots: rows })
+          await apiPost<DoctorConsultation>(`/api/doctor/cases/${caseId}/initial-consultation`, {
+            slots: rows,
+          })
           toast({ title: 'Consultation times sent to the patient.', tone: 'good' })
           onChanged()
         }}
@@ -88,7 +102,12 @@ function ProposeInitial({ caseId, onChanged }: { caseId: string; onChanged: () =
       >
         Not needed for this case? Skip with a reason
       </button>
-      <SkipModal caseId={caseId} open={skipOpen} onClose={() => setSkipOpen(false)} onSkipped={onChanged} />
+      <SkipModal
+        caseId={caseId}
+        open={skipOpen}
+        onClose={() => setSkipOpen(false)}
+        onSkipped={onChanged}
+      />
     </>
   )
 }
@@ -103,8 +122,8 @@ function Progress({ consultationId, held }: { consultationId: string; held: bool
       {held ? (
         <p className="dr-banner info" style={{ margin: 0 }}>
           <CheckCircle2 size={14} style={{ verticalAlign: '-2px', marginRight: 6 }} />
-          Consultation held{slot ? ` on ${formatSlot(slot.slotTime, slot.slotEndTime)}` : ''}. You can now submit
-          the treatment plan.
+          Consultation held{slot ? ` on ${formatSlot(slot.slotTime, slot.slotEndTime)}` : ''}. You
+          can now submit the treatment plan.
         </p>
       ) : c.status === 'scheduled' && slot ? (
         <>
@@ -115,8 +134,8 @@ function Progress({ consultationId, held }: { consultationId: string; held: bool
         </>
       ) : c.status === 'slot_selected' && slot ? (
         <p style={{ margin: 0 }}>
-          The patient chose <strong>{formatSlot(slot.slotTime, slot.slotEndTime)}</strong> and is paying the
-          consultation fee.
+          The patient chose <strong>{formatSlot(slot.slotTime, slot.slotEndTime)}</strong> and is
+          paying the consultation fee.
         </p>
       ) : (
         <>
@@ -128,7 +147,11 @@ function Progress({ consultationId, held }: { consultationId: string; held: bool
           ))}
         </>
       )}
-      <Link className="button-secondary dash-small-button" style={{ alignSelf: 'flex-start' }} to={`/doctor/consultations/${c.id}`}>
+      <Link
+        className="button-secondary dash-small-button"
+        style={{ alignSelf: 'flex-start' }}
+        to={`/doctor/consultations/${c.id}`}
+      >
         Open consultation
       </Link>
     </>
@@ -171,8 +194,9 @@ function SkipModal({
     <Modal open={open} onClose={() => !pending && onClose()} title="Skip the initial consultation">
       <div className="stack">
         <p className="muted">
-          The initial consultation is an important step. Skip it only when it really isn't needed — for example,
-          you already spoke with the patient, or the documents answer every question. MTA will see your reason.
+          The initial consultation is an important step. Skip it only when it really isn't needed —
+          for example, you already spoke with the patient, or the documents answer every question.
+          MTA will see your reason.
         </p>
         <textarea
           rows={3}
@@ -187,7 +211,12 @@ function SkipModal({
           <button type="button" className="button-secondary" onClick={onClose} disabled={pending}>
             Cancel
           </button>
-          <button type="button" className="button-danger" disabled={tooShort || pending} onClick={skip}>
+          <button
+            type="button"
+            className="button-danger"
+            disabled={tooShort || pending}
+            onClick={skip}
+          >
             {pending ? 'Saving…' : 'Skip consultation'}
           </button>
         </div>

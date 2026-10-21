@@ -20,7 +20,10 @@ import com.iha.notification.NotificationService;
 import com.iha.patient.Patient;
 import com.iha.patient.PatientRepository;
 import com.iha.patient.PatientService;
+import com.iha.fees.FeeSettingsService;
+import com.iha.payment.Payment;
 import com.iha.payment.PaymentCompletedEvent;
+import com.iha.payment.PaymentRepository;
 import com.iha.provider.Doctor;
 import com.iha.provider.DoctorRepository;
 import com.iha.treatment.PatientTreatmentService;
@@ -45,8 +48,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ConsultationService {
 
-	public static final BigDecimal CONSULTATION_FEE_AUD = new BigDecimal("200.00");
-
 	private static final Logger log = LoggerFactory.getLogger(ConsultationService.class);
 	private static final Set<String> AWAITING_SLOT = Set.of(ConsultationRequest.SLOTS_PROPOSED,
 			ConsultationRequest.SLOT_SELECTED);
@@ -65,12 +66,14 @@ public class ConsultationService {
 	private final ZoomClient zoom;
 	private final AuditService audit;
 	private final ApplicationEventPublisher events;
+	private final FeeSettingsService fees;
+	private final PaymentRepository payments;
 
 	ConsultationService(ConsultationRequestRepository requests, ConsultationSlotRepository slots,
 			PatientService patientService, PatientRepository patients, CaseService caseService, CaseRepository cases,
 			PatientTreatmentService treatments, TreatmentOptionRepository options, TreatmentPlanRepository plans,
 			DoctorRepository doctors, NotificationService notifications, ZoomClient zoom, AuditService audit,
-			ApplicationEventPublisher events) {
+			ApplicationEventPublisher events, FeeSettingsService fees, PaymentRepository payments) {
 		this.requests = requests;
 		this.slots = slots;
 		this.patientService = patientService;
@@ -85,6 +88,8 @@ public class ConsultationService {
 		this.zoom = zoom;
 		this.audit = audit;
 		this.events = events;
+		this.fees = fees;
+		this.payments = payments;
 	}
 
 	@Transactional(readOnly = true)
@@ -150,7 +155,7 @@ public class ConsultationService {
 		request.selectSlot(slotId);
 		statusChanged(request, previous, true);
 		events.publishEvent(new ConsultationSlotSelectedEvent(request.getCaseId(), patient.getId(), request.getId(),
-				CONSULTATION_FEE_AUD));
+				fees.consultationFeeAud()));
 		audit.record(user.id(), user.email(), "patient", "consultation.slot_selected", "consultation_request",
 				request.getId(), Map.of("slot_id", slotId.toString()));
 		return withSlots(List.of(request)).get(0);
@@ -292,13 +297,20 @@ public class ConsultationService {
 				: slots.findByConsultationRequestIdInOrderBySlotTimeAsc(list.stream().map(ConsultationRequest::getId).toList())
 					.stream()
 					.collect(Collectors.groupingBy(ConsultationSlot::getConsultationRequestId));
+		Map<UUID, BigDecimal> charged = list.isEmpty() ? Map.of()
+				: payments.findByConsultationRequestIdInOrderByCreatedAtDesc(list.stream().map(ConsultationRequest::getId).toList())
+					.stream()
+					.collect(Collectors.toMap(Payment::getConsultationRequestId, Payment::getAmountAud, (newest, older) -> newest));
+		BigDecimal currentFee = list.isEmpty() ? null : fees.consultationFeeAud();
 		return list.stream()
 			.map(r -> new RequestView(r, slotsByRequest.getOrDefault(r.getId(), List.of()),
-					doctorOf(r).map(Doctor::getFullName).orElse(null)))
+					doctorOf(r).map(Doctor::getFullName).orElse(null), charged.getOrDefault(r.getId(), currentFee)))
 			.toList();
 	}
 
-	public record RequestView(ConsultationRequest request, List<ConsultationSlot> slots, String doctorName) {
+	/** {@code feeAud}: what was charged once a payment exists, otherwise the current consultation fee. */
+	public record RequestView(ConsultationRequest request, List<ConsultationSlot> slots, String doctorName,
+			BigDecimal feeAud) {
 	}
 
 }

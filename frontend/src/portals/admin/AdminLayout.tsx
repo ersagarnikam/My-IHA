@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   MessageSquare,
+  Settings,
   Stethoscope,
   X,
   type LucideIcon,
@@ -40,6 +41,7 @@ const NAV: { to: string; label: string; icon: LucideIcon; count?: (o: Overview) 
     count: (o) => o.plansToReview,
   },
   { to: '/admin/messages', label: 'Messages', icon: MessageSquare, count: (o) => o.chatsWaiting },
+  { to: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
 export type AdminOutletContext = { refreshCounts: () => void }

@@ -1,4 +1,4 @@
-package com.iha.doctor;
+package com.iha.fees;
 
 import java.util.Optional;
 import java.util.UUID;

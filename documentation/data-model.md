@@ -40,7 +40,8 @@ erDiagram
 | `app_users` | Every login: email, BCrypt hash, role, verified flag. |
 | `email_verification_codes` | 6-digit codes for email verification and password reset (hashed, expiring, attempt-limited). |
 | `specialties` | Medical specialties (English/Chinese labels, sort order). |
-| `platform_fee_settings` | `doctor_registration_fee` (AUD 5,000) and `doctor_annual_fee` (AUD 2,000). |
+| `platform_fee_settings` | Admin-editable fees, one row per key (`fees/FeeSettingsService` holds the catalogue): `doctor_registration_fee` (default AUD 5,000), `doctor_annual_fee` (2,000), `consultation_fee` (200), `mta_service_fee_pct` (10, a percentage), `lawyer_*` and `hospital_*` registration/annual fees (0, not charged yet). `updated_by` records the last admin. |
+| `platform_fee_changes` | History of fee changes: key, old and new amount, reason, who, when (V7). |
 | `patients` | Patient profile: personal details, encrypted DOB and medical background, emergency contact, avatar, alert preferences, Stripe customer, deletion schedule. |
 | `doctors` | Doctor profile: registration details, encrypted DOB and licence, specialties, languages, working days, availability (JSON), registration documents (JSON), approval status, fee dates, alert preferences. |
 | `doctor_hospital_affiliations` | Hospitals a doctor works with (plan hospitals come from here). |

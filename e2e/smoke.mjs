@@ -84,6 +84,7 @@ const portals = [
       '/admin/plans',
       `/admin/plans/${adminPlan.id}`,
       '/admin/messages',
+      '/admin/settings',
     ],
   },
 ]

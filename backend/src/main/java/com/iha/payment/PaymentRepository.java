@@ -22,6 +22,10 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<Payment> findFirstByConsultationRequestIdAndStatus(UUID consultationRequestId, String status);
 
+	Optional<Payment> findFirstByConsultationRequestIdOrderByCreatedAtDesc(UUID consultationRequestId);
+
+	List<Payment> findByConsultationRequestIdInOrderByCreatedAtDesc(Collection<UUID> consultationRequestIds);
+
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<Payment> findByPaymentIntentId(String paymentIntentId);
 
