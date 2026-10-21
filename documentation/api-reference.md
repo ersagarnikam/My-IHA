@@ -173,9 +173,11 @@ See the [admin portal](admin-portal.md) guide.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/admin/overview` | Counts for the dashboard and sidebar badges, plus the latest cases. |
+| GET | `/api/admin/overview` | Counts for the sidebar badges, plus the latest cases. |
+| GET | `/api/admin/insights` | Dashboard figures: platform totals, money (12 months, by month), case pipeline, per-doctor stats, doctors by status, specialty coverage, stale invitations, fee alerts, upcoming consultations. |
 | GET | `/api/admin/doctors` | All doctor registrations. |
 | GET | `/api/admin/doctors/{id}` | Registration detail with documents and review messages. |
+| GET | `/api/admin/doctors/{id}/performance` | One doctor's stats, membership fees paid and the cases they were invited to. |
 | GET | `/api/admin/doctors/{id}/documents/{index}` | A registration document (`?download=true` to download). |
 | POST | `/api/admin/doctors/{id}/review` | `{outcome: approved|rejected|more_info_requested, reason}`; reason required unless approving; `not_pending` otherwise. |
 | GET | `/api/admin/cases` | All cases with patient, specialty and assigned doctors. |

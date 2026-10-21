@@ -145,10 +145,16 @@ function ThreadPane({ kind, id, onChanged }: { kind: string; id: string; onChang
     <div className="stack" style={{ height: '100%' }}>
       <div className="row-between">
         <div>
-          <strong>{t.name}</strong> <span className="muted small">· {ACCOUNT_LABEL[t.accountType]}</span>
+          <strong>{t.name}</strong>{' '}
+          <span className="muted small">· {ACCOUNT_LABEL[t.accountType]}</span>
         </div>
         {t.status === 'open' ? (
-          <button type="button" className="button-secondary" disabled={pending} onClick={() => act('close')}>
+          <button
+            type="button"
+            className="button-secondary"
+            disabled={pending}
+            onClick={() => act('close')}
+          >
             Close conversation
           </button>
         ) : (
@@ -177,7 +183,11 @@ function ThreadPane({ kind, id, onChanged }: { kind: string; id: string; onChang
           rows={2}
           maxLength={5000}
           value={draft}
-          placeholder={t.status === 'open' ? 'Write a reply…' : 'Sending a message keeps the conversation closed for them — open it so they can reply.'}
+          placeholder={
+            t.status === 'open'
+              ? 'Write a reply…'
+              : 'Sending a message keeps the conversation closed for them — open it so they can reply.'
+          }
           onChange={(e) => setDraft(e.target.value)}
         />
         <button type="submit" disabled={pending || !draft.trim()}>

@@ -10,7 +10,14 @@ import { BackHeader, formatDate, PillTabs, SearchBox, usePaged } from '../doctor
 import { specialtyLabel } from '../doctor/types'
 import type { AdminOutletContext } from './AdminLayout'
 import { Fact } from './DoctorPages'
-import { ASSIGNMENT_STATUS, Pill, PLAN_STATUS, type Candidate, type CaseDetail, type CaseRow } from './types'
+import {
+  ASSIGNMENT_STATUS,
+  Pill,
+  PLAN_STATUS,
+  type Candidate,
+  type CaseDetail,
+  type CaseRow,
+} from './types'
 
 type Tab = 'needs_doctor' | 'in_progress' | 'completed' | 'all'
 
@@ -35,7 +42,10 @@ export function AdminCasesPage() {
       (tab === 'in_progress' && !c.needsDoctor && !DONE.includes(c.status)) ||
       (tab === 'completed' && DONE.includes(c.status))
     return (
-      inTab && (!q || c.referenceNumber.toLowerCase().includes(q) || (c.patientName ?? '').toLowerCase().includes(q))
+      inTab &&
+      (!q ||
+        c.referenceNumber.toLowerCase().includes(q) ||
+        (c.patientName ?? '').toLowerCase().includes(q))
     )
   })
   const paged = usePaged(rows)
@@ -55,7 +65,11 @@ export function AdminCasesPage() {
       />
       <section className="dr-card">
         <div className="dr-toolbar">
-          <SearchBox value={query} onChange={setQuery} placeholder="Search by patient name or case ID" />
+          <SearchBox
+            value={query}
+            onChange={setQuery}
+            placeholder="Search by patient name or case ID"
+          />
         </div>
         <CasesTable rows={paged.rows} empty="No cases here." />
         {paged.footer}
@@ -92,7 +106,9 @@ export function CasesTable({ rows, empty }: { rows: CaseRow[]; empty: string }) 
               <td>{c.patientName}</td>
               <td>{specialtyLabel(c)}</td>
               <td className="small">
-                {c.doctorNames.length > 0 ? c.doctorNames.join(', ') : c.needsDoctor ? (
+                {c.doctorNames.length > 0 ? (
+                  c.doctorNames.join(', ')
+                ) : c.needsDoctor ? (
                   <span className="badge badge-sm badge-warn">Needs a doctor</span>
                 ) : (
                   '—'
@@ -125,7 +141,11 @@ export function AdminCaseDetailPage() {
 
   return (
     <div className="dr-page">
-      <BackHeader to="/admin/cases" title={`Case ${c.referenceNumber}`} subtitle={`Submitted ${formatDate(c.createdAt)}`} />
+      <BackHeader
+        to="/admin/cases"
+        title={`Case ${c.referenceNumber}`}
+        subtitle={`Submitted ${formatDate(c.createdAt)}`}
+      />
 
       <section className="dr-card row-between">
         <span>
@@ -176,7 +196,12 @@ export function AdminCaseDetailPage() {
                       {format.bytes(d.fileSizeBytes)} · {formatDate(d.uploadedAt)}
                     </p>
                   </div>
-                  <button type="button" className="dr-icon-button" aria-label={`View ${d.fileName}`} onClick={() => openFile(docPath(d.id))}>
+                  <button
+                    type="button"
+                    className="dr-icon-button"
+                    aria-label={`View ${d.fileName}`}
+                    onClick={() => openFile(docPath(d.id))}
+                  >
                     <Eye size={16} />
                   </button>
                   <button
@@ -219,7 +244,9 @@ export function AdminCaseDetailPage() {
                       <Pill map={ASSIGNMENT_STATUS} value={a.status} />
                       <br />
                       <span className="muted small">Invited {formatDate(a.invitedAt)}</span>
-                      {a.declineReason && <span className="muted small"> — “{a.declineReason}”</span>}
+                      {a.declineReason && (
+                        <span className="muted small"> — “{a.declineReason}”</span>
+                      )}
                     </td>
                     <td className="small">
                       {a.planSubmittedAt
@@ -232,7 +259,9 @@ export function AdminCaseDetailPage() {
                       {a.consultationSkippedReason && (
                         <>
                           <br />
-                          <span className="muted">Consultation skipped: {a.consultationSkippedReason}</span>
+                          <span className="muted">
+                            Consultation skipped: {a.consultationSkippedReason}
+                          </span>
                         </>
                       )}
                     </td>
@@ -257,7 +286,13 @@ export function AdminCaseDetailPage() {
   )
 }
 
-function AssignDoctor({ caseId, onAssigned }: { caseId: string; onAssigned: (d: CaseDetail) => void }) {
+function AssignDoctor({
+  caseId,
+  onAssigned,
+}: {
+  caseId: string
+  onAssigned: (d: CaseDetail) => void
+}) {
   const toast = useToast()
   const { refreshCounts } = useOutletContext<AdminOutletContext>()
   const candidates = useApi<Candidate[]>(`/api/admin/cases/${caseId}/candidates`)
@@ -270,7 +305,9 @@ function AssignDoctor({ caseId, onAssigned }: { caseId: string; onAssigned: (d: 
     setPending(true)
     setError(null)
     try {
-      const updated = await apiPost<CaseDetail>(`/api/admin/cases/${caseId}/assignments`, { doctorId })
+      const updated = await apiPost<CaseDetail>(`/api/admin/cases/${caseId}/assignments`, {
+        doctorId,
+      })
       toast({ title: 'Doctor invited. They have been notified.', tone: 'good' })
       setDoctorId('')
       onAssigned(updated)
@@ -295,7 +332,12 @@ function AssignDoctor({ caseId, onAssigned }: { caseId: string; onAssigned: (d: 
         </p>
       ) : (
         <div className="row-start" style={{ alignItems: 'center' }}>
-          <select value={doctorId} onChange={(e) => setDoctorId(e.target.value)} aria-label="Doctor" style={{ maxWidth: '28rem' }}>
+          <select
+            value={doctorId}
+            onChange={(e) => setDoctorId(e.target.value)}
+            aria-label="Doctor"
+            style={{ maxWidth: '28rem' }}
+          >
             <option value="">Choose a doctor…</option>
             {list.map((d) => (
               <option key={d.id} value={d.id}>
@@ -310,8 +352,8 @@ function AssignDoctor({ caseId, onAssigned }: { caseId: string; onAssigned: (d: 
         </div>
       )}
       <p className="muted small" style={{ margin: 0 }}>
-        Several doctors can be invited; each evaluates the case and proposes their own plan. Only approved doctors who
-        have paid the registration fee are listed.
+        Several doctors can be invited; each evaluates the case and proposes their own plan. Only
+        approved doctors who have paid the registration fee are listed.
       </p>
       <FormError error={error} />
     </div>

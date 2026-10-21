@@ -2,13 +2,24 @@ import { useState } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router'
 import { Download, Eye, FileText } from 'lucide-react'
 import { useToast } from '../../components/Toasts'
-import { ErrorState, FormError, Loading, Modal } from '../../components/ui'
+import { ErrorState, FormError, Loading, Modal, StatusBadge } from '../../components/ui'
 import { apiPost, openFile } from '../../lib/api'
 import { useFormat } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { BackHeader, formatDate, PillTabs, SearchBox, usePaged } from '../doctor/shared'
 import type { AdminOutletContext } from './AdminLayout'
-import { DOCTOR_STATUS, Pill, type DoctorDetail, type DoctorRow } from './types'
+import {
+  ASSIGNMENT_STATUS,
+  DOCTOR_STATUS,
+  FEE_STATUS,
+  Pill,
+  PLAN_STATUS,
+  pct,
+  responseTime,
+  type DoctorDetail,
+  type DoctorPerformance,
+  type DoctorRow,
+} from './types'
 
 type Tab = 'pending' | 'more_info_requested' | 'approved' | 'rejected' | 'all'
 
@@ -81,7 +92,13 @@ export function AdminDoctorsPage() {
                   <td>
                     <Pill map={DOCTOR_STATUS} value={d.status} />
                   </td>
-                  <td className="small">{d.registrationFeePaidAt ? 'Paid' : d.status === 'approved' ? 'Awaiting payment' : '—'}</td>
+                  <td className="small">
+                    {d.registrationFeePaidAt
+                      ? 'Paid'
+                      : d.status === 'approved'
+                        ? 'Awaiting payment'
+                        : '—'}
+                  </td>
                   <td>
                     <Link className="button dr-view" to={`/admin/doctors/${d.id}`}>
                       {d.status === 'pending' ? 'Review' : 'View'}
@@ -114,7 +131,10 @@ export function AdminDoctorDetailPage() {
   async function approve() {
     try {
       await apiPost(`/api/admin/doctors/${doc.id}/review`, { outcome: 'approved' })
-      toast({ title: `${doc.fullName} approved. They'll be asked to pay the registration fee.`, tone: 'good' })
+      toast({
+        title: `${doc.fullName} approved. They'll be asked to pay the registration fee.`,
+        tone: 'good',
+      })
       void detail.reload()
       refreshCounts()
     } catch {
@@ -133,7 +153,10 @@ export function AdminDoctorDetailPage() {
           <Pill map={DOCTOR_STATUS} value={doc.status} />{' '}
           <span className="muted small">Registered {formatDate(doc.createdAt)}</span>
           {doc.registrationFeePaidAt && (
-            <span className="muted small"> · Registration fee paid {formatDate(doc.registrationFeePaidAt)}</span>
+            <span className="muted small">
+              {' '}
+              · Registration fee paid {formatDate(doc.registrationFeePaidAt)}
+            </span>
           )}
         </div>
         {reviewable && (
@@ -141,7 +164,11 @@ export function AdminDoctorDetailPage() {
             <button type="button" onClick={approve}>
               Approve
             </button>
-            <button type="button" className="button-secondary" onClick={() => setDialog('more_info_requested')}>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => setDialog('more_info_requested')}
+            >
               Request more info
             </button>
             <button type="button" className="button-danger" onClick={() => setDialog('rejected')}>
@@ -153,16 +180,23 @@ export function AdminDoctorDetailPage() {
 
       {(d.moreInfoMessage || d.rejectionReason) && (
         <div className={`dr-banner${d.rejectionReason ? ' bad' : ''}`}>
-          {d.rejectionReason ? `Rejected: ${d.rejectionReason}` : `More information requested: ${d.moreInfoMessage}`}
+          {d.rejectionReason
+            ? `Rejected: ${d.rejectionReason}`
+            : `More information requested: ${d.moreInfoMessage}`}
         </div>
       )}
+
+      {doc.status === 'approved' && <PerformanceSection doctorId={doc.id} />}
 
       <section className="dr-card stack">
         <h2 className="dr-subtitle">Professional details</h2>
         <div className="dr-kv">
           <Fact label="Specialties" value={doc.specialties.join(', ')} />
           <Fact label="Qualifications" value={d.qualifications} />
-          <Fact label="Experience" value={d.yearsOfExperience != null ? `${d.yearsOfExperience} years` : null} />
+          <Fact
+            label="Experience"
+            value={d.yearsOfExperience != null ? `${d.yearsOfExperience} years` : null}
+          />
           <Fact label="AHPRA number" value={d.licenseNumber} />
           <Fact label="Department" value={d.department} />
           <Fact label="Role" value={d.role ? capitalize(d.role) : null} />
@@ -190,7 +224,12 @@ export function AdminDoctorDetailPage() {
                   {CATEGORY[f.category] ?? f.category} · {format.bytes(f.fileSizeBytes)}
                 </p>
               </div>
-              <button type="button" className="dr-icon-button" aria-label={`View ${f.fileName}`} onClick={() => openFile(docPath(f.index))}>
+              <button
+                type="button"
+                className="dr-icon-button"
+                aria-label={`View ${f.fileName}`}
+                onClick={() => openFile(docPath(f.index))}
+              >
                 <Eye size={16} />
               </button>
               <button
@@ -219,13 +258,121 @@ export function AdminDoctorDetailPage() {
         onClose={() => setDialog(null)}
         onConfirm={async (reason) => {
           await apiPost(`/api/admin/doctors/${doc.id}/review`, { outcome: dialog, reason })
-          toast({ title: dialog === 'rejected' ? 'Registration rejected.' : 'Request sent to the doctor.', tone: 'good' })
+          toast({
+            title: dialog === 'rejected' ? 'Registration rejected.' : 'Request sent to the doctor.',
+            tone: 'good',
+          })
           setDialog(null)
           void detail.reload()
           refreshCounts()
         }}
       />
     </div>
+  )
+}
+
+const wholeDollars = new Intl.NumberFormat('en-AU', {
+  style: 'currency',
+  currency: 'AUD',
+  maximumFractionDigits: 0,
+})
+
+/** Workload, responsiveness, outcomes and every case the doctor was invited to. */
+function PerformanceSection({ doctorId }: { doctorId: string }) {
+  const perf = useApi<DoctorPerformance>(`/api/admin/doctors/${doctorId}/performance`)
+  const format = useFormat()
+  if (perf.error) return <ErrorState error={perf.error} onRetry={perf.reload} />
+  if (!perf.data) return <Loading />
+  const { stats: s, cases } = perf.data
+  const tiles: [string, string | number, string?][] = [
+    ['Active cases', s.activeCases, 'Accepted cases still in progress'],
+    ['Invites waiting', s.pendingInvitations, 'Invitations not answered yet'],
+    [
+      'Accepts',
+      pct(s.invitationAcceptancePct),
+      `Of ${s.totalInvitations} invitations, accepted ÷ answered`,
+    ],
+    ['Avg. response', responseTime(s.avgResponseHours), 'Time from invitation to answer'],
+    ['Plans sent', s.plansSubmitted],
+    ['Plans chosen', pct(s.planChosenPct), 'Patients who chose this plan ÷ plans decided'],
+    ['Patients treated', s.patientsTreated],
+    [
+      'Fees earned',
+      wholeDollars.format(s.doctorFeesEarnedAud),
+      'Doctor fees on plans patients have paid for',
+    ],
+  ]
+  return (
+    <section className="dr-card stack">
+      <div className="row-between">
+        <h2 className="dr-subtitle">Performance</h2>
+        <span className="small muted">
+          <Pill map={FEE_STATUS} value={s.feeStatus} />{' '}
+          {s.annualFeeNextDueAt && `Membership renews ${formatDate(s.annualFeeNextDueAt)} · `}
+          {wholeDollars.format(perf.data.membershipFeesPaidAud)} fees paid
+          {s.lastActivityAt && ` · last active ${format.relative(s.lastActivityAt)}`}
+        </span>
+      </div>
+      <div className="admin-perf">
+        {tiles.map(([label, value, hint]) => (
+          <div key={label} title={hint}>
+            <p className="dr-fact-label">{label}</p>
+            <p className="admin-perf-value">{value}</p>
+          </div>
+        ))}
+      </div>
+      <h3 className="dr-subtitle small-title">Cases ({cases.length})</h3>
+      {cases.length === 0 ? (
+        <p className="muted">Not invited to any case yet.</p>
+      ) : (
+        <div className="dr-table-wrap">
+          <table className="dr-table">
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Specialty</th>
+                <th>Invited</th>
+                <th>Doctor's answer</th>
+                <th>Plan</th>
+                <th>Case status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cases.map((c) => (
+                <tr key={c.caseId}>
+                  <td className="strong">{c.referenceNumber ?? '—'}</td>
+                  <td>{c.specialty ?? '—'}</td>
+                  <td>{formatDate(c.invitedAt)}</td>
+                  <td>
+                    <Pill map={ASSIGNMENT_STATUS} value={c.assignmentStatus} />
+                    {c.declineReason && <div className="muted small">{c.declineReason}</div>}
+                    {c.consultationSkippedReason && (
+                      <div className="muted small">
+                        Skipped consultation: {c.consultationSkippedReason}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {c.planStatus ? (
+                      <Pill map={PLAN_STATUS} value={c.planStatus} />
+                    ) : (
+                      <span className="muted">—</span>
+                    )}
+                  </td>
+                  <td>{c.caseStatus ? <StatusBadge status={c.caseStatus} small /> : '—'}</td>
+                  <td>
+                    <Link className="button dr-view" to={`/admin/cases/${c.caseId}`}>
+                      View
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -239,11 +386,21 @@ const CATEGORY: Record<string, string> = {
   other: 'Other certificate',
 }
 
-export function Fact({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
+export function Fact({
+  label,
+  value,
+  className,
+}: {
+  label: string
+  value: React.ReactNode
+  className?: string
+}) {
   return (
     <div className={className}>
       <p className="dr-fact-label">{label}</p>
-      <p className="dr-fact-value prewrap">{value === null || value === undefined || value === '' ? '—' : value}</p>
+      <p className="dr-fact-value prewrap">
+        {value === null || value === undefined || value === '' ? '—' : value}
+      </p>
     </div>
   )
 }
@@ -276,8 +433,15 @@ export function ReasonDialog({
     <Modal open={open} onClose={() => !pending && onClose()} title={title}>
       <div className="stack">
         <p className="muted">{description}</p>
-        <textarea rows={4} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} />
-        {reason && tooShort && <p className="field-error">Please write at least {minLength} characters.</p>}
+        <textarea
+          rows={4}
+          maxLength={1000}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+        />
+        {reason && tooShort && (
+          <p className="field-error">Please write at least {minLength} characters.</p>
+        )}
         <FormError error={error} />
         <div className="row-end">
           <button type="button" className="button-secondary" onClick={onClose} disabled={pending}>

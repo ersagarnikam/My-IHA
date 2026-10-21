@@ -247,6 +247,32 @@ class AdminPortalFlowTests {
 		perform(get("/api/admin/overview"), adminToken)
 			.andExpect(jsonPath("$.totalCases").isNumber())
 			.andExpect(jsonPath("$.recentCases.length()").value(6));
+
+		// ── Dashboard insights and doctor performance ─────────────────────
+		perform(get("/api/admin/insights"), patientToken).andExpect(status().isForbidden());
+		String doctorStats = "$.doctors[?(@.id == '%s')]".formatted(doctorId);
+		perform(get("/api/admin/insights"), adminToken)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.pipeline.length()").value(7))
+			.andExpect(jsonPath("$.platform.activeDoctors").isNumber())
+			.andExpect(jsonPath("$.money.monthly.length()").value(12))
+			.andExpect(jsonPath(doctorStats + ".activeCases").value(2))
+			.andExpect(jsonPath(doctorStats + ".totalInvitations").value(2))
+			.andExpect(jsonPath(doctorStats + ".invitationAcceptancePct").value(100))
+			.andExpect(jsonPath(doctorStats + ".plansSubmitted").value(2))
+			.andExpect(jsonPath(doctorStats + ".planChosenPct").value(0))
+			.andExpect(jsonPath(doctorStats + ".feeStatus").value("paid"))
+			.andExpect(jsonPath("$.specialties[?(@.specialty == 'Cardiology')].activeDoctors").isNotEmpty());
+		perform(get("/api/admin/doctors/" + doctorId + "/performance"), adminToken)
+			.andExpect(jsonPath("$.stats.fullName").value("Dr. Ken Ito"))
+			.andExpect(jsonPath("$.membershipFeesPaidAud").value(org.hamcrest.Matchers.greaterThan(0.0)))
+			.andExpect(jsonPath("$.cases.length()").value(2))
+			.andExpect(jsonPath("$.cases[?(@.caseId == '%s')].planStatus".formatted(caseA)).value("presented_to_patient"))
+			.andExpect(jsonPath("$.cases[?(@.caseId == '%s')].planStatus".formatted(caseB)).value("rejected_by_iha"))
+			.andExpect(jsonPath("$.cases[?(@.caseId == '%s')].consultationSkippedReason".formatted(caseA))
+				.value("Spoke with the patient by phone already."));
+		perform(get("/api/admin/doctors/" + UUID.randomUUID() + "/performance"), adminToken)
+			.andExpect(status().isNotFound());
 	}
 
 	private String admin() throws Exception {

@@ -21,9 +21,24 @@ import type { Overview } from './types'
 
 const NAV: { to: string; label: string; icon: LucideIcon; count?: (o: Overview) => number }[] = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/admin/doctors', label: 'Doctor Approvals', icon: Stethoscope, count: (o) => o.pendingDoctors },
-  { to: '/admin/cases', label: 'Cases', icon: BriefcaseMedical, count: (o) => o.casesNeedingDoctor },
-  { to: '/admin/plans', label: 'Treatment Plans', icon: ClipboardCheck, count: (o) => o.plansToReview },
+  {
+    to: '/admin/doctors',
+    label: 'Doctor Approvals',
+    icon: Stethoscope,
+    count: (o) => o.pendingDoctors,
+  },
+  {
+    to: '/admin/cases',
+    label: 'Cases',
+    icon: BriefcaseMedical,
+    count: (o) => o.casesNeedingDoctor,
+  },
+  {
+    to: '/admin/plans',
+    label: 'Treatment Plans',
+    icon: ClipboardCheck,
+    count: (o) => o.plansToReview,
+  },
   { to: '/admin/messages', label: 'Messages', icon: MessageSquare, count: (o) => o.chatsWaiting },
 ]
 
@@ -55,7 +70,9 @@ export function AdminLayout() {
                 {isCollapsed && badge > 0 && <span className="nav-dot" />}
               </span>
               {!isCollapsed && <span className="nav-label">{label}</span>}
-              {!isCollapsed && badge > 0 && <span className="count-badge nav-count">{badge > 99 ? '99+' : badge}</span>}
+              {!isCollapsed && badge > 0 && (
+                <span className="count-badge nav-count">{badge > 99 ? '99+' : badge}</span>
+              )}
             </NavLink>
           )
         })}
@@ -100,7 +117,12 @@ export function AdminLayout() {
           <aside className="sidebar mobile">
             <div className="sidebar-head">
               <img src="/logo.png" alt="MTA" className="sidebar-logo" />
-              <button type="button" className="ghost-button" aria-label="Close navigation" onClick={() => setMobileOpen(false)}>
+              <button
+                type="button"
+                className="ghost-button"
+                aria-label="Close navigation"
+                onClick={() => setMobileOpen(false)}
+              >
                 <X size={16} />
               </button>
             </div>
@@ -131,13 +153,20 @@ export function AdminLayout() {
                 <p className="topbar-role">Coordinator</p>
               </div>
             </div>
-            <button type="button" className="ghost-button" aria-label="Sign out" onClick={() => setConfirmLogout(true)}>
+            <button
+              type="button"
+              className="ghost-button"
+              aria-label="Sign out"
+              onClick={() => setConfirmLogout(true)}
+            >
               <LogOut size={16} />
             </button>
           </div>
         </header>
         <main className="portal-main">
-          <Outlet context={{ refreshCounts: () => void overview.reload() } satisfies AdminOutletContext} />
+          <Outlet
+            context={{ refreshCounts: () => void overview.reload() } satisfies AdminOutletContext}
+          />
         </main>
       </div>
       <LogoutDialog open={confirmLogout} onClose={() => setConfirmLogout(false)} />

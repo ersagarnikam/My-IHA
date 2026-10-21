@@ -10,7 +10,12 @@ import type { AdminOutletContext } from './AdminLayout'
 import { Fact, ReasonDialog } from './DoctorPages'
 import { Pill, PLAN_STATUS, type PlanDetail, type PlanRow } from './types'
 
-type Tab = 'submitted_to_iha' | 'presented_to_patient' | 'patient_confirmed' | 'rejected_by_iha' | 'all'
+type Tab =
+  | 'submitted_to_iha'
+  | 'presented_to_patient'
+  | 'patient_confirmed'
+  | 'rejected_by_iha'
+  | 'all'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'submitted_to_iha', label: 'To Review' },
@@ -108,7 +113,11 @@ export function AdminPlanDetailPage() {
     setPending(true)
     setError(null)
     try {
-      plan.setData(await apiPost<PlanDetail>(`/api/admin/plans/${p.id}/publish`, { mtaCommissionAud: feeNumber }))
+      plan.setData(
+        await apiPost<PlanDetail>(`/api/admin/plans/${p.id}/publish`, {
+          mtaCommissionAud: feeNumber,
+        }),
+      )
       toast({ title: 'Published. The patient can now see this treatment option.', tone: 'good' })
       refreshCounts()
     } catch (err) {
@@ -142,7 +151,10 @@ export function AdminPlanDetailPage() {
         <h2 className="dr-subtitle">Diagnosis &amp; treatment</h2>
         <div className="dr-kv">
           <Fact label="Diagnosis" value={p.diagnosis} className="full" />
-          <Fact label="Treatment type" value={p.treatmentType ? TREATMENT_TYPE_LABELS[p.treatmentType] : null} />
+          <Fact
+            label="Treatment type"
+            value={p.treatmentType ? TREATMENT_TYPE_LABELS[p.treatmentType] : null}
+          />
           <Fact label="Technique" value={p.technique} />
           <Fact label="Success rate" value={p.successRate} />
           <Fact label="Description" value={p.description} className="full" />
@@ -153,12 +165,24 @@ export function AdminPlanDetailPage() {
       <section className="dr-card stack">
         <h2 className="dr-subtitle">Timeline &amp; hospital</h2>
         <div className="dr-kv">
-          <Fact label="Dates" value={`${formatDate(p.treatmentStartDate)} – ${formatDate(p.treatmentEndDate)}`} />
-          <Fact label="Duration" value={p.treatmentDurationDays ? `${p.treatmentDurationDays} days` : null} />
+          <Fact
+            label="Dates"
+            value={`${formatDate(p.treatmentStartDate)} – ${formatDate(p.treatmentEndDate)}`}
+          />
+          <Fact
+            label="Duration"
+            value={p.treatmentDurationDays ? `${p.treatmentDurationDays} days` : null}
+          />
           <Fact label="Hospital stay" value={p.estimatedLengthOfStay} />
           <Fact label="Recovery" value={p.recoveryTime} />
-          <Fact label="Hospital" value={p.hospitalName ? `${p.hospitalName}, ${p.hospitalCity}` : null} />
-          <Fact label="Department / room" value={[p.department, p.roomCategory].filter(Boolean).join(' · ')} />
+          <Fact
+            label="Hospital"
+            value={p.hospitalName ? `${p.hospitalName}, ${p.hospitalCity}` : null}
+          />
+          <Fact
+            label="Department / room"
+            value={[p.department, p.roomCategory].filter(Boolean).join(' · ')}
+          />
           <Fact label="Special requirements" value={p.specialRequirements} className="full" />
         </div>
       </section>
@@ -189,13 +213,21 @@ export function AdminPlanDetailPage() {
             </tr>
           </tbody>
         </table>
-        {p.costNotes && <p className="muted small" style={{ margin: 0 }}>Notes: {p.costNotes}</p>}
+        {p.costNotes && (
+          <p className="muted small" style={{ margin: 0 }}>
+            Notes: {p.costNotes}
+          </p>
+        )}
       </section>
 
       {(p.patientInstructions || p.aftercare.length > 0) && (
         <section className="dr-card stack">
           <h2 className="dr-subtitle">Doctor notes</h2>
-          {p.patientInstructions && <p className="prewrap" style={{ margin: 0 }}>{p.patientInstructions}</p>}
+          {p.patientInstructions && (
+            <p className="prewrap" style={{ margin: 0 }}>
+              {p.patientInstructions}
+            </p>
+          )}
           {p.aftercare.length > 0 && (
             <ul style={{ margin: 0 }}>
               {p.aftercare.map((a, i) => (
@@ -211,15 +243,29 @@ export function AdminPlanDetailPage() {
           <h2 className="dr-subtitle">Decision</h2>
           <label className="field" style={{ maxWidth: '20rem' }}>
             <span className="field-label">MTA service fee (AUD)</span>
-            <input type="number" min={0} step="1" value={fee} onChange={(e) => setCommission(e.target.value)} />
-            <span className="field-hint">Suggested: 10% of the plan total. The patient sees it as "IHA Service Fee".</span>
+            <input
+              type="number"
+              min={0}
+              step="1"
+              value={fee}
+              onChange={(e) => setCommission(e.target.value)}
+            />
+            <span className="field-hint">
+              Suggested: 10% of the plan total. The patient sees it as "IHA Service Fee".
+            </span>
           </label>
           <p style={{ margin: 0 }}>
-            Patient pays <strong>{money(p.totalAud + (Number.isFinite(feeNumber) ? feeNumber : 0))}</strong> in total.
+            Patient pays{' '}
+            <strong>{money(p.totalAud + (Number.isFinite(feeNumber) ? feeNumber : 0))}</strong> in
+            total.
           </p>
           <FormError error={error} />
           <div className="dr-actions">
-            <button type="button" disabled={pending || !(feeNumber >= 0) || fee === ''} onClick={publish}>
+            <button
+              type="button"
+              disabled={pending || !(feeNumber >= 0) || fee === ''}
+              onClick={publish}
+            >
               {pending ? 'Publishing…' : 'Approve and send to patient'}
             </button>
             <button type="button" className="button-danger" onClick={() => setDeclineOpen(true)}>

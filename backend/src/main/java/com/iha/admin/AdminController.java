@@ -47,11 +47,14 @@ public class AdminController {
 	private final AdminService admin;
 	private final DoctorAdminService doctorAdmin;
 	private final DoctorAccountService doctorAccounts;
+	private final AdminInsightsService insights;
 
-	AdminController(AdminService admin, DoctorAdminService doctorAdmin, DoctorAccountService doctorAccounts) {
+	AdminController(AdminService admin, DoctorAdminService doctorAdmin, DoctorAccountService doctorAccounts,
+			AdminInsightsService insights) {
 		this.admin = admin;
 		this.doctorAdmin = doctorAdmin;
 		this.doctorAccounts = doctorAccounts;
+		this.insights = insights;
 	}
 
 	@GetMapping("/overview")
@@ -59,6 +62,12 @@ public class AdminController {
 		AdminService.Overview o = admin.overview();
 		return new OverviewResponse(o.pendingDoctors(), o.casesNeedingDoctor(), o.plansToReview(), o.chatsWaiting(),
 				o.totalCases(), o.recentCases().stream().map(CaseRowResponse::of).toList());
+	}
+
+	/** Dashboard figures: money, pipeline, doctor performance, coverage, what needs a nudge. */
+	@GetMapping("/insights")
+	public AdminInsightsService.Insights insights() {
+		return insights.insights();
 	}
 
 	// ── Doctors ─────────────────────────────────────────────────────────────
@@ -81,6 +90,12 @@ public class AdminController {
 					.mapToObj(i -> new DocumentResponse(i, docs.get(i).fileName(), docs.get(i).category(),
 							docs.get(i).mimeType(), docs.get(i).fileSizeBytes()))
 					.toList());
+	}
+
+	/** Workload, responsiveness, plan outcomes, earnings and the doctor's cases. */
+	@GetMapping("/doctors/{doctorId}/performance")
+	public AdminInsightsService.DoctorPerformance doctorPerformance(@PathVariable UUID doctorId) {
+		return insights.doctorPerformance(doctorId);
 	}
 
 	@GetMapping("/doctors/{doctorId}/documents/{index}")

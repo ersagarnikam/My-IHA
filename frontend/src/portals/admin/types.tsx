@@ -48,7 +48,13 @@ export type DoctorDetail = {
   rejectionReason: string | null
   moreInfoMessage: string | null
   hospitals: string[]
-  documents: { index: number; fileName: string; category: string; mimeType: string; fileSizeBytes: number }[]
+  documents: {
+    index: number
+    fileName: string
+    category: string
+    mimeType: string
+    fileSizeBytes: number
+  }[]
 }
 
 export type Assignment = {
@@ -82,7 +88,14 @@ export type CaseDetail = {
     countryOfResidence: string | null
     phone: string | null
   } | null
-  documents: { id: string; documentType: string; fileName: string; mimeType: string; fileSizeBytes: number; uploadedAt: string }[]
+  documents: {
+    id: string
+    documentType: string
+    fileName: string
+    mimeType: string
+    fileSizeBytes: number
+    uploadedAt: string
+  }[]
   assignments: Assignment[]
 }
 
@@ -137,7 +150,12 @@ export type PlanDetail = {
   hospitalFeesAud: number | null
   costItems: { label: string; amount: number }[]
   costNotes: string | null
-  specialists: { specialistType: string; specialistName: string | null; costAud: number; notes: string | null }[]
+  specialists: {
+    specialistType: string
+    specialistName: string | null
+    costAud: number
+    notes: string | null
+  }[]
   patientInstructions: string | null
   aftercare: string[]
   totalAud: number
@@ -195,4 +213,115 @@ export const ASSIGNMENT_STATUS: Record<string, [string, string]> = {
 export function Pill({ map, value }: { map: Record<string, [string, string]>; value: string }) {
   const [label, tone] = map[value] ?? [value, 'badge-muted']
   return <span className={`badge badge-sm ${tone}`}>{label}</span>
+}
+
+// GET /api/admin/insights (backend admin/AdminInsightsService).
+
+export type FeeStatus = 'unpaid' | 'overdue' | 'due_soon' | 'paid'
+
+export type DoctorStats = {
+  id: string
+  fullName: string
+  specialties: string[]
+  status: DoctorRow['status']
+  active: boolean
+  yearsOfExperience: number | null
+  activeCases: number
+  pendingInvitations: number
+  totalInvitations: number
+  invitationAcceptancePct: number | null
+  avgResponseHours: number | null
+  plansSubmitted: number
+  planChosenPct: number | null
+  patientsTreated: number
+  doctorFeesEarnedAud: number
+  lastActivityAt: string | null
+  feeStatus: FeeStatus
+  annualFeeNextDueAt: string | null
+}
+
+export type Insights = {
+  platform: {
+    activeDoctors: number
+    doctorsAwaitingFee: number
+    patients: number
+    totalCases: number
+    casesInProgress: number
+    casesCompleted: number
+    newCasesThisMonth: number
+  }
+  attention: {
+    pendingDoctors: number
+    casesNeedingDoctor: number
+    plansToReview: number
+    chatsWaiting: number
+  }
+  money: {
+    treatmentPaymentsAud: number
+    consultationFeesAud: number
+    mtaServiceFeesAud: number
+    doctorMembershipFeesAud: number
+    monthly: { month: string; patientPaymentsAud: number; doctorFeesAud: number }[]
+  }
+  pipeline: { key: string; label: string; count: number }[]
+  doctorsByStatus: Record<string, number>
+  doctors: DoctorStats[]
+  specialties: { specialty: string; activeDoctors: number; openCases: number }[]
+  waitingInvitations: {
+    doctorId: string
+    doctorName: string | null
+    caseId: string
+    referenceNumber: string | null
+    invitedAt: string
+  }[]
+  feeAlerts: {
+    doctorId: string
+    fullName: string
+    status: FeeStatus
+    annualFeeNextDueAt: string | null
+  }[]
+  upcomingConsultations: {
+    id: string
+    kind: 'initial' | 'option'
+    caseId: string
+    referenceNumber: string | null
+    patientName: string | null
+    doctorName: string | null
+    startsAt: string
+    endsAt: string
+  }[]
+}
+
+export type DoctorPerformance = {
+  stats: DoctorStats
+  membershipFeesPaidAud: number
+  cases: {
+    caseId: string
+    referenceNumber: string | null
+    specialty: string | null
+    caseStatus: CaseStatus | null
+    assignmentStatus: string
+    declineReason: string | null
+    planStatus: string | null
+    invitedAt: string
+    respondedAt: string | null
+    consultationSkippedReason: string | null
+  }[]
+}
+
+export const FEE_STATUS: Record<FeeStatus, [string, string]> = {
+  paid: ['Paid', 'badge-good'],
+  due_soon: ['Due soon', 'badge-warn'],
+  overdue: ['Overdue', 'badge-bad'],
+  unpaid: ['Registration fee unpaid', 'badge-orange'],
+}
+
+/** "3.5 h", "2 d" — average time to answer an invitation. */
+export function responseTime(hours: number | null) {
+  if (hours === null) return '—'
+  return hours < 48 ? `${hours} h` : `${Math.round(hours / 24)} d`
+}
+
+export function pct(value: number | null) {
+  return value === null ? '—' : `${value}%`
 }
