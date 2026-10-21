@@ -82,7 +82,7 @@ class FeeSettingsTests {
 			perform(put("/api/admin/settings/fees/doctor_annual_fee").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"amount\":1}"), doctor).andExpect(status().isForbidden());
 			perform(get("/api/admin/settings/fees"), admin)
-				.andExpect(jsonPath("$.fees.length()").value(8))
+				.andExpect(jsonPath("$.fees.length()").value(10))
 				.andExpect(jsonPath("$.fees[0].key").value("doctor_registration_fee"))
 				.andExpect(jsonPath("$.fees[0].amount").value(5000.0))
 				.andExpect(jsonPath("$.fees[0].charged").value(true))

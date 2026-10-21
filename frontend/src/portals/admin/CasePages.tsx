@@ -10,10 +10,12 @@ import { BackHeader, formatDate, PillTabs, SearchBox, usePaged } from '../doctor
 import { specialtyLabel } from '../doctor/types'
 import type { AdminOutletContext } from './AdminLayout'
 import { Fact } from './DoctorPages'
+import { PaymentsTable } from './PaymentPages'
 import {
   ASSIGNMENT_STATUS,
   Pill,
   PLAN_STATUS,
+  type AdminPayment,
   type Candidate,
   type CaseDetail,
   type CaseRow,
@@ -282,7 +284,22 @@ export function AdminCaseDetailPage() {
         )}
         {!DONE.includes(c.status) && <AssignDoctor caseId={c.id} onAssigned={detail.setData} />}
       </section>
+
+      <CasePayments caseId={c.id} />
     </div>
+  )
+}
+
+/** The case's payments, with a way into refunds. */
+function CasePayments({ caseId }: { caseId: string }) {
+  const payments = useApi<AdminPayment[]>(`/api/admin/payments?caseId=${caseId}`)
+  if (payments.error) return <ErrorState error={payments.error} onRetry={payments.reload} />
+  if (!payments.data) return null
+  return (
+    <section className="dr-card stack">
+      <h2 className="dr-subtitle">Payments</h2>
+      <PaymentsTable rows={payments.data} empty="No payments on this case yet." compact />
+    </section>
   )
 }
 

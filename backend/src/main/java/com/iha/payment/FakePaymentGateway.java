@@ -62,6 +62,18 @@ class FakePaymentGateway implements PaymentGateway {
 		throw notSupported();
 	}
 
+	/** Simulated refunds succeed at once. */
+	@Override
+	public Refund refund(String intentId, long amountCents, Map<String, String> metadata) {
+		return new Refund("re_fake_" + UUID.randomUUID(), "succeeded");
+	}
+
+	/** No real fee: refunds use the card fee estimate from the fee settings. */
+	@Override
+	public Long processingFeeCents(String intentId) {
+		return null;
+	}
+
 	@Override
 	public WebhookEvent parseWebhook(String payload, String signatureHeader) {
 		throw ApiException.badRequest("webhook_not_supported", "The simulated payment provider has no webhooks.");

@@ -55,7 +55,8 @@ erDiagram
 | `treatment_options` | A plan as offered to the patient, with MTA's commission; `selected` when chosen. |
 | `consultation_requests`, `consultation_slots` | Paid online consultations and the proposed times. |
 | `payments`, `payment_methods` | Patient payments (treatment, consultation fee) and saved cards. |
-| `doctor_fee_payments` | Doctor registration and annual fees. |
+| `doctor_fee_payments` | Doctor registration and annual fees (status `pending`, `completed`, `failed`, `refunded`). |
+| `payment_refunds` | Admin refunds of either kind of payment (`payment_kind` `patient`/`doctor`): amount, card fee deducted (`fee_source` `stripe`, `estimate`, `waived` or `none`), amount back to the card, reason and note, provider refund id and status (`pending`, `succeeded`, `failed`), who and when (V8). A payment refunded in full gets status `refunded`. |
 | `visa_submissions`, `visa_documents`, `visa_document_requests`, `visa_case_notes` | Visa application, its documents (patient, hospital letters, approved visa), lawyer requests and notes. |
 | `chat_threads`, `chat_messages` | Patient ↔ coordinator chat. |
 | `provider_message_threads`, `provider_messages` | Doctor/hospital/lawyer ↔ admin chat (one thread per provider account). |

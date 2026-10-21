@@ -44,7 +44,7 @@ public class InvoiceRenderer {
 				text(c, bold, 22, MARGIN, y, "MTA");
 				text(c, regular, 10, MARGIN, y - 16, "Medical Tourism Australia");
 				c.setNonStrokingColor(0f, 0f, 0f);
-				textRight(c, bold, 18, right, y, "INVOICE");
+				textRight(c, bold, 18, right, y, invoice.title());
 				textRight(c, regular, 10, right, y - 16, "No. " + invoice.number());
 
 				y -= 64;
@@ -81,11 +81,11 @@ public class InvoiceRenderer {
 				c.lineTo(right, y + 8);
 				c.stroke();
 				y -= 12;
-				text(c, bold, 12, MARGIN + 8, y, "Total paid");
+				text(c, bold, 12, MARGIN + 8, y, invoice.totalLabel());
 				textRight(c, bold, 12, right - 8, y, money(invoice.total()));
 
 				c.setNonStrokingColor(0.4f, 0.45f, 0.5f);
-				text(c, regular, 9, MARGIN, MARGIN, "Thank you. This invoice was generated electronically and is valid without a signature.");
+				text(c, regular, 9, MARGIN, MARGIN, invoice.footer());
 			}
 			document.save(out);
 			return out.toByteArray();
@@ -135,8 +135,17 @@ public class InvoiceRenderer {
 	}
 
 	public record Invoice(String number, Instant paidAt, String referenceLabel, String caseReference,
-			String paymentReference, String patientName,
-			String patientEmail, String hospital, List<Line> lines, BigDecimal total) {
+			String paymentReference, String patientName, String patientEmail, String hospital, List<Line> lines,
+			BigDecimal total, String title, String totalLabel, String footer) {
+
+		public Invoice(String number, Instant paidAt, String referenceLabel, String caseReference,
+				String paymentReference, String patientName, String patientEmail, String hospital, List<Line> lines,
+				BigDecimal total) {
+			this(number, paidAt, referenceLabel, caseReference, paymentReference, patientName, patientEmail, hospital,
+					lines, total, "INVOICE", "Total paid",
+					"Thank you. This invoice was generated electronically and is valid without a signature.");
+		}
+
 	}
 
 }

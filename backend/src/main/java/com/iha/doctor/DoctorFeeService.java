@@ -173,7 +173,7 @@ public class DoctorFeeService {
 	public Invoice invoice(CurrentUser user, UUID paymentId) {
 		Doctor doctor = accounts.requireCurrent(user);
 		DoctorFeePayment payment = payments.findByIdAndDoctorId(paymentId, doctor.getId())
-			.filter(p -> DoctorFeePayment.COMPLETED.equals(p.getStatus()))
+			.filter(p -> p.getPaidAt() != null)
 			.orElseThrow(() -> ApiException.notFound("Invoice not found."));
 		String label = DoctorFeePayment.REGISTRATION.equals(payment.getFeeType()) ? "Doctor registration fee"
 				: "Doctor annual renewal fee";

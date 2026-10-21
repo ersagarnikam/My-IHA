@@ -21,6 +21,8 @@ public class Payment {
 	public static final String COMPLETED = "completed";
 	public static final String FAILED = "failed";
 
+	public static final String REFUNDED = "refunded";
+
 	@Id
 	private UUID id;
 
@@ -99,6 +101,13 @@ public class Payment {
 
 	void fail() {
 		status = FAILED;
+	}
+
+	/** Fully refunded; {@code false} moves it back to completed (a refund failed after all). */
+	public void setRefunded(boolean refunded) {
+		if (paidAt != null) {
+			status = refunded ? REFUNDED : COMPLETED;
+		}
 	}
 
 	public boolean isPending() {

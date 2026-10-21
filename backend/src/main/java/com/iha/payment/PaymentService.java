@@ -200,6 +200,10 @@ public class PaymentService {
 	@Transactional
 	public void handleWebhook(String payload, String signature) {
 		PaymentGateway.WebhookEvent event = gateway.parseWebhook(payload, signature);
+		if (event.refundId() != null) {
+			events.publishEvent(new RefundStatusEvent(event.refundId(), event.refundStatus()));
+			return;
+		}
 		if (event.intentId() == null) {
 			return;
 		}

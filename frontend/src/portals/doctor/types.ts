@@ -231,10 +231,12 @@ export type FeePayment = {
   feeType: 'registration' | 'annual'
   amountAud: number
   billingPeriod: string | null
-  status: 'pending' | 'completed' | 'failed'
+  status: 'pending' | 'completed' | 'failed' | 'refunded'
   gatewayReference: string | null
   paidAt: string | null
   createdAt: string
+  /** Refunded to the card in total (after card processing fees). */
+  refundedAud: number
 }
 
 export type Billing = {
@@ -339,7 +341,8 @@ export function caseBadge(row: {
   if (a.status === 'cancelled') return ['Case Closed', 'muted']
   if (row.planStatus === 'rejected_by_iha') return ['Declined', 'bad']
   if (a.status === 'invited') return ['New', 'info']
-  if (a.planSubmittedAt && row.caseStatus === 'evaluation') return ['Treatment Plan Submitted', 'orange']
+  if (a.planSubmittedAt && row.caseStatus === 'evaluation')
+    return ['Treatment Plan Submitted', 'orange']
   return CASE_LABELS[row.caseStatus]
 }
 

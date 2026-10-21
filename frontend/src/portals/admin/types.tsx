@@ -352,3 +352,71 @@ export type FeeSettings = {
     changedAt: string
   }[]
 }
+
+// /api/admin/payments (backend admin/AdminPaymentController, refund/RefundService).
+
+export type AdminPayment = {
+  kind: 'patient' | 'doctor'
+  id: string
+  type: 'treatment' | 'consultation' | 'registration' | 'annual'
+  payerName: string | null
+  payerId: string
+  caseId: string | null
+  caseReference: string | null
+  amountAud: number
+  status: 'completed' | 'refunded' | 'failed' | 'pending'
+  gateway: string
+  gatewayReference: string | null
+  paidAt: string
+  /** Refunded so far before card fees; refundedToCardAud after them. */
+  refundedAud: number
+  refundedToCardAud: number
+  refundCount: number
+}
+
+export type RefundQuote = {
+  amountAud: number
+  refundedAud: number
+  refundedToCardAud: number
+  refundableAud: number
+  feeAud: number
+  feeSource: 'stripe' | 'estimate'
+  feeDeductedAud: number
+  feeRemainingAud: number
+}
+
+export type AdminRefund = {
+  id: string
+  amountAud: number
+  feeDeductedAud: number
+  refundedAud: number
+  feeSource: 'stripe' | 'estimate' | 'waived' | 'none'
+  reason: string
+  note: string | null
+  status: 'pending' | 'succeeded' | 'failed'
+  gatewayRefundId: string | null
+  createdBy: string | null
+  createdAt: string
+}
+
+export type AdminPaymentDetail = {
+  payment: AdminPayment
+  quote: RefundQuote
+  refunds: AdminRefund[]
+  reasons: Record<string, string>
+}
+
+export const PAYMENT_TYPE: Record<AdminPayment['type'], string> = {
+  treatment: 'Treatment',
+  consultation: 'Consultation fee',
+  registration: 'Doctor registration fee',
+  annual: 'Doctor annual fee',
+}
+
+/** completed with a refund shows as partly refunded. */
+export function paymentStatus(p: Pick<AdminPayment, 'status' | 'refundedAud'>): [string, string] {
+  if (p.status === 'refunded') return ['Refunded', 'badge-muted']
+  if (p.status === 'completed' && p.refundedAud > 0) return ['Partly refunded', 'badge-warn']
+  if (p.status === 'completed') return ['Paid', 'badge-good']
+  return [p.status, 'badge-muted']
+}

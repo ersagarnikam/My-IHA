@@ -32,6 +32,12 @@ public interface PaymentGateway {
 
 	void detachCard(String paymentMethodId);
 
+	/** Refunds part or all of a completed payment back to the card. */
+	Refund refund(String intentId, long amountCents, Map<String, String> metadata);
+
+	/** The provider's processing fee on a completed payment in cents, or null when it can't report one. */
+	Long processingFeeCents(String intentId);
+
 	/** Verifies the signature and extracts what the API needs; throws on a bad signature. */
 	WebhookEvent parseWebhook(String payload, String signatureHeader);
 
@@ -41,11 +47,24 @@ public interface PaymentGateway {
 	record Card(String paymentMethodId, String brand, String last4, int expMonth, int expYear) {
 	}
 
-	/** @param chargeReference the provider's charge id (shown as the payment reference) */
-	record WebhookEvent(String type, String intentId, String chargeReference) {
+	/** @param status pending, succeeded or failed */
+	record Refund(String id, String status) {
+	}
+
+	/**
+	 * @param chargeReference the provider's charge id (shown as the payment reference)
+	 * @param refundId set for refund events, with {@code refundStatus}
+	 */
+	record WebhookEvent(String type, String intentId, String chargeReference, String refundId, String refundStatus) {
 
 		public static final String SUCCEEDED = "payment_intent.succeeded";
 		public static final String FAILED = "payment_intent.payment_failed";
+		public static final String REFUND_UPDATED = "refund.updated";
+		public static final String REFUND_FAILED = "refund.failed";
+
+		public WebhookEvent(String type, String intentId, String chargeReference) {
+			this(type, intentId, chargeReference, null, null);
+		}
 
 	}
 

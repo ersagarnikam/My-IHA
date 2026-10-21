@@ -21,6 +21,8 @@ public class DoctorFeePayment {
 	public static final String COMPLETED = "completed";
 	public static final String FAILED = "failed";
 
+	public static final String REFUNDED = "refunded";
+
 	@Id
 	private UUID id;
 
@@ -81,6 +83,13 @@ public class DoctorFeePayment {
 		this.status = COMPLETED;
 		this.gatewayReference = reference;
 		this.paidAt = Instant.now();
+	}
+
+	/** Fully refunded; {@code false} moves it back to completed (a refund failed after all). */
+	public void setRefunded(boolean refunded) {
+		if (paidAt != null) {
+			status = refunded ? REFUNDED : COMPLETED;
+		}
 	}
 
 	void fail() {

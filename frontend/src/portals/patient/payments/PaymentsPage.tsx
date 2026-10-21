@@ -8,7 +8,18 @@ import type { PaymentRow } from '../../../lib/types'
 import { useApi } from '../../../lib/useApi'
 
 const PAGE_SIZE = 10
-const TONE = { completed: 'good', pending: 'warn', failed: 'bad', refunded: 'muted' } as const
+const TONE = {
+  completed: 'good',
+  pending: 'warn',
+  failed: 'bad',
+  refunded: 'muted',
+  partially_refunded: 'warn',
+} as const
+
+/** A completed payment with a refund shows as partly refunded. */
+function displayStatus(p: PaymentRow): keyof typeof TONE {
+  return p.status === 'completed' && p.refundedAud > 0 ? 'partially_refunded' : p.status
+}
 
 export function PaymentsPage() {
   const t = useT('payments')
@@ -45,6 +56,15 @@ export function PaymentsPage() {
         `/api/patient/payments/${p.id}/invoice${download ? '?download=true' : ''}`,
         download ? `invoice-${p.caseReference}.pdf` : undefined,
       )
+    } catch (err) {
+      setError(err)
+    }
+  }
+
+  async function creditNote(refundId: string) {
+    setError(null)
+    try {
+      await openFile(`/api/patient/refunds/${refundId}/credit-note`)
     } catch (err) {
       setError(err)
     }
@@ -93,12 +113,21 @@ export function PaymentsPage() {
                       <Link to={`/patient/cases/${p.caseId}`}>{p.caseReference}</Link>
                     </td>
                     <td>{t(`paymentTypeLabels.${p.paymentType}`)}</td>
-                    <td className="num">{format.money(p.amountAud)}</td>
+                    <td className="num">
+                      {format.money(p.amountAud)}
+                      {p.refundedAud > 0 && (
+                        <div className="muted small">
+                          {t('refundedAmount', { amount: format.money(p.refundedAud) })}
+                        </div>
+                      )}
+                    </td>
                     <td>
-                      <Badge tone={TONE[p.status]}>{t(`statusLabels.${p.status}`)}</Badge>
+                      <Badge tone={TONE[displayStatus(p)]}>
+                        {t(`statusLabels.${displayStatus(p)}`)}
+                      </Badge>
                     </td>
                     <td className="actions">
-                      {p.status === 'completed' && (
+                      {(p.status === 'completed' || p.status === 'refunded') && (
                         <>
                           <button
                             type="button"
@@ -116,6 +145,17 @@ export function PaymentsPage() {
                           </button>
                         </>
                       )}
+                      {p.refunds.map((r, i) => (
+                        <button
+                          key={r.id}
+                          type="button"
+                          className="button-link"
+                          onClick={() => creditNote(r.id)}
+                        >
+                          {t('creditNote')}
+                          {p.refunds.length > 1 ? ` ${i + 1}` : ''}
+                        </button>
+                      ))}
                       {p.status === 'pending' && <Link to={payLink(p)}>{t('payNow')}</Link>}
                       {p.status === 'failed' && <Link to={payLink(p)}>{t('retry')}</Link>}
                     </td>

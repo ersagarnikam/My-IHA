@@ -49,7 +49,7 @@ While a doctor evaluates the case, they propose up to three times for a Zoom con
 Request one about an option → the doctor proposes up to three times (shown in Brisbane time plus the patient's own time zone) → pick a time → pay the AUD 200 fee → the consultation is scheduled with a Zoom link (the join button opens 15 minutes before).
 
 ### Payments
-Stripe Payment Element with saved cards (or a simulated Pay Now in development). Payment history with PDF invoices.
+Stripe Payment Element with saved cards (or a simulated Pay Now in development). Payment history with PDF invoices. Refunds issued by MTA show on the payment (*Partly refunded* / *Refunded*, the amount returned) with a credit note PDF per refund; the patient is notified, including any card processing fee kept.
 
 ### Visa & Travel
 Once the treatment is paid and the hospital's invitation and appointment letters arrive, the 8-step visa wizard collects personal, passport, travel, financial and companion details with document uploads; the API validates the whole form. Afterwards: application detail, lawyer document requests, approved-visa download and a travel guide.

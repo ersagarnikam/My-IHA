@@ -31,6 +31,8 @@ public class FeeSettingsService {
 	public static final String HOSPITAL_ANNUAL_FEE = "hospital_annual_fee";
 	public static final String CONSULTATION_FEE = "consultation_fee";
 	public static final String MTA_SERVICE_FEE_PCT = "mta_service_fee_pct";
+	public static final String CARD_FEE_PCT = "card_fee_pct";
+	public static final String CARD_FEE_FIXED_AUD = "card_fee_fixed_aud";
 
 	static final BigDecimal MAX_AUD = new BigDecimal("1000000");
 	static final BigDecimal MAX_PCT = new BigDecimal("100");
@@ -59,6 +61,12 @@ public class FeeSettingsService {
 		define(MTA_SERVICE_FEE_PCT, "patients", "Suggested MTA service fee",
 				"Percentage of the plan total suggested when publishing a treatment plan; admin can change it per plan.",
 				Unit.PERCENT, true);
+		define(CARD_FEE_PCT, "refunds", "Card processing fee (percentage)",
+				"Deducted from refunds when the payment provider can't report the real fee (e.g. the simulated provider). "
+						+ "With Stripe the actual fee on the payment is used.",
+				Unit.PERCENT, true, false);
+		define(CARD_FEE_FIXED_AUD, "refunds", "Card processing fee (fixed per payment)",
+				"Added to the percentage above for the same estimate.", Unit.AUD, true, false);
 	}
 
 	private final PlatformFeeSettingRepository settings;
@@ -119,7 +127,7 @@ public class FeeSettingsService {
 					? "A percentage can't be more than 100." : "That amount is too large.");
 		}
 		// A charged AUD fee of 0 would create zero-value card payments.
-		if (definition.charged() && definition.unit() == Unit.AUD && amount.signum() == 0) {
+		if (definition.mustBePositive() && amount.signum() == 0) {
 			throw ApiException.badRequest("invalid_amount", "This fee is charged by card, so it must be more than 0.");
 		}
 		BigDecimal newAmount = amount.setScale(2, RoundingMode.HALF_UP);
@@ -141,14 +149,21 @@ public class FeeSettingsService {
 	}
 
 	private static void define(String key, String group, String label, String description, Unit unit, boolean charged) {
-		CATALOGUE.put(key, new Definition(key, group, label, description, unit, charged));
+		define(key, group, label, description, unit, charged, charged && unit == Unit.AUD);
+	}
+
+	private static void define(String key, String group, String label, String description, Unit unit, boolean charged,
+			boolean mustBePositive) {
+		CATALOGUE.put(key, new Definition(key, group, label, description, unit, charged, mustBePositive));
 	}
 
 	enum Unit {
 		AUD, PERCENT
 	}
 
-	record Definition(String key, String group, String label, String description, Unit unit, boolean charged) {
+	/** {@code mustBePositive}: fees charged by card can't be 0 (zero-value card payments). */
+	record Definition(String key, String group, String label, String description, Unit unit, boolean charged,
+			boolean mustBePositive) {
 	}
 
 	/** {@code unit}: aud or percent. {@code charged}: false while the fee's portal doesn't exist yet. */

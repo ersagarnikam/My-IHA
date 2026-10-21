@@ -5,10 +5,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +41,8 @@ import com.iha.provider.Doctor;
 import com.iha.provider.DoctorCaseAssignment;
 import com.iha.provider.DoctorCaseAssignmentRepository;
 import com.iha.provider.DoctorRepository;
+import com.iha.refund.PaymentRefund;
+import com.iha.refund.RefundService;
 import com.iha.treatment.TreatmentOption;
 import com.iha.treatment.TreatmentOptionRepository;
 import com.iha.treatment.TreatmentPlan;
@@ -93,12 +97,13 @@ public class AdminInsightsService {
 	private final ConsultationRequestRepository consultations;
 	private final ConsultationSlotRepository slots;
 	private final ConsultationService consultationService;
+	private final RefundService refunds;
 
 	AdminInsightsService(AdminService admin, DoctorRepository doctors, DoctorCaseAssignmentRepository assignments,
 			CaseRepository cases, PatientRepository patients, TreatmentPlanRepository plans,
 			TreatmentOptionRepository options, PaymentRepository payments, DoctorFeePaymentRepository feePayments,
 			ConsultationRequestRepository consultations, ConsultationSlotRepository slots,
-			ConsultationService consultationService) {
+			ConsultationService consultationService, RefundService refunds) {
 		this.admin = admin;
 		this.doctors = doctors;
 		this.assignments = assignments;
@@ -111,6 +116,7 @@ public class AdminInsightsService {
 		this.consultations = consultations;
 		this.slots = slots;
 		this.consultationService = consultationService;
+		this.refunds = refunds;
 	}
 
 	@Transactional(readOnly = true)
@@ -129,14 +135,16 @@ public class AdminInsightsService {
 		Platform platform = new Platform(activeDoctors, awaitingFee, patients.count(), s.cases().size(), inProgress,
 				completed, newThisMonth);
 
-		// ── Money (completed payments, last 12 months) ──────────────────────
+		// ── Money (paid payments less refunds, last 12 months) ───────────────
 		Instant yearAgo = now.minus(Duration.ofDays(365));
-		List<Payment> paid = payments.findAll().stream()
-			.filter(p -> p.isCompleted() && p.getPaidAt() != null)
-			.toList();
-		List<DoctorFeePayment> feesPaid = feePayments.findAll().stream()
-			.filter(p -> DoctorFeePayment.COMPLETED.equals(p.getStatus()) && p.getPaidAt() != null)
-			.toList();
+		List<Payment> paid = payments.findAll().stream().filter(p -> p.getPaidAt() != null).toList();
+		List<DoctorFeePayment> feesPaid = feePayments.findAll().stream().filter(p -> p.getPaidAt() != null).toList();
+		Map<UUID, BigDecimal> refundedToCard = new HashMap<>();
+		List<UUID> paidIds = new ArrayList<>(paid.stream().map(Payment::getId).toList());
+		paidIds.addAll(feesPaid.stream().map(DoctorFeePayment::getId).toList());
+		refunds.refundsByPayment(paidIds).forEach((id, list) -> refundedToCard.put(id, list.stream()
+			.map(PaymentRefund::getRefundedAud)
+			.reduce(BigDecimal.ZERO, BigDecimal::add)));
 		Map<UUID, TreatmentOption> optionById = byId(options.findAll(), TreatmentOption::getId);
 		BigDecimal treatmentYear = BigDecimal.ZERO;
 		BigDecimal consultationYear = BigDecimal.ZERO;
@@ -147,32 +155,35 @@ public class AdminInsightsService {
 			monthly.put(thisMonth.minusMonths(i), new BigDecimal[] { BigDecimal.ZERO, BigDecimal.ZERO });
 		}
 		for (Payment p : paid) {
+			BigDecimal kept = p.getAmountAud().subtract(refundedToCard.getOrDefault(p.getId(), BigDecimal.ZERO));
 			BigDecimal[] month = monthly.get(YearMonth.from(p.getPaidAt().atZone(ZONE)));
 			if (month != null) {
-				month[0] = month[0].add(p.getAmountAud());
+				month[0] = month[0].add(kept);
 			}
 			if (!p.getPaidAt().isAfter(yearAgo)) {
 				continue;
 			}
 			if (Payment.CONSULTATION_FEE.equals(p.getPaymentType())) {
-				consultationYear = consultationYear.add(p.getAmountAud());
+				consultationYear = consultationYear.add(kept);
 			}
 			else {
-				treatmentYear = treatmentYear.add(p.getAmountAud());
+				treatmentYear = treatmentYear.add(kept);
 				TreatmentOption option = p.getTreatmentOptionId() == null ? null : optionById.get(p.getTreatmentOptionId());
-				if (option != null) {
+				// A fully refunded treatment earns MTA no service fee.
+				if (option != null && !Payment.REFUNDED.equals(p.getStatus())) {
 					serviceFeesYear = serviceFeesYear.add(nz(option.getMtaCommissionAud()));
 				}
 			}
 		}
 		BigDecimal membershipYear = BigDecimal.ZERO;
 		for (DoctorFeePayment p : feesPaid) {
+			BigDecimal kept = p.getAmountAud().subtract(refundedToCard.getOrDefault(p.getId(), BigDecimal.ZERO));
 			BigDecimal[] month = monthly.get(YearMonth.from(p.getPaidAt().atZone(ZONE)));
 			if (month != null) {
-				month[1] = month[1].add(p.getAmountAud());
+				month[1] = month[1].add(kept);
 			}
 			if (p.getPaidAt().isAfter(yearAgo)) {
-				membershipYear = membershipYear.add(p.getAmountAud());
+				membershipYear = membershipYear.add(kept);
 			}
 		}
 		Money money = new Money(treatmentYear, consultationYear, serviceFeesYear, membershipYear,
@@ -414,7 +425,7 @@ public class AdminInsightsService {
 	public record Attention(long pendingDoctors, long casesNeedingDoctor, long plansToReview, long chatsWaiting) {
 	}
 
-	/** Completed payments in the last 12 months; {@code monthly} covers the last 12 calendar months. */
+	/** Payments in the last 12 months less what was refunded to the card; {@code monthly} covers 12 calendar months. */
 	public record Money(BigDecimal treatmentPaymentsAud, BigDecimal consultationFeesAud, BigDecimal mtaServiceFeesAud,
 			BigDecimal doctorMembershipFeesAud, List<MonthAmount> monthly) {
 	}

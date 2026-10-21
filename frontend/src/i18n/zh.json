@@ -422,8 +422,11 @@
       "completed": "成功",
       "pending": "待处理",
       "failed": "失败",
-      "refunded": "已退款"
+      "refunded": "已退款",
+      "partially_refunded": "部分退款"
     },
+    "refundedAmount": "已退款 {amount}",
+    "creditNote": "退款凭证",
     "viewInvoice": "查看发票",
     "download": "下载",
     "payNow": "立即付款",

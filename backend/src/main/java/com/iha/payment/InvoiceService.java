@@ -46,7 +46,7 @@ public class InvoiceService {
 	@Transactional(readOnly = true)
 	public Rendered invoice(CurrentUser user, UUID paymentId) {
 		Payment payment = payments.requireOwned(user, paymentId);
-		if (!payment.isCompleted()) {
+		if (payment.getPaidAt() == null) {
 			throw ApiException.conflict("payment_not_completed", "An invoice is available once the payment completes.");
 		}
 		String reference = cases.findById(payment.getCaseId()).map(MedicalCase::getReferenceNumber).orElse("");

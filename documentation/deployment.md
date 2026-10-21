@@ -35,7 +35,7 @@ PostgreSQL 14+. Flyway applies the migrations on startup; the entities are then 
 ## Stripe
 
 1. Create the API keys (test mode first) and set the three `STRIPE_*` variables.
-2. Add a webhook endpoint `https://<api-host>/api/payments/webhook` for `payment_intent.succeeded` and `payment_intent.payment_failed`; copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
+2. Add a webhook endpoint `https://<api-host>/api/payments/webhook` for `payment_intent.succeeded`, `payment_intent.payment_failed`, `refund.updated` and `refund.failed` (the last two settle refunds Stripe processes asynchronously); copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
 3. The same webhook completes patient payments and doctor fees.
 
 To try Stripe locally: `IHA_PAYMENTS_PROVIDER=stripe` plus test keys, and forward events with the Stripe CLI (`stripe listen --forward-to localhost:8080/api/payments/webhook`).

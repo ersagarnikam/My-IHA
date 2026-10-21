@@ -7,6 +7,8 @@ import com.iha.common.ApiException;
 import com.stripe.StripeClient;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
+import com.stripe.model.BalanceTransaction;
+import com.stripe.model.Charge;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.StripeObject;
@@ -15,8 +17,10 @@ import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.CustomerSessionCreateParams;
 import com.stripe.param.CustomerUpdateParams;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.PaymentIntentRetrieveParams;
 import com.stripe.param.PaymentMethodAttachParams;
 import com.stripe.param.PaymentMethodUpdateParams;
+import com.stripe.param.RefundCreateParams;
 
 import org.springframework.http.HttpStatus;
 
@@ -148,6 +152,38 @@ class StripePaymentGateway implements PaymentGateway {
 	}
 
 	@Override
+	public Refund refund(String intentId, long amountCents, Map<String, String> metadata) {
+		return call(() -> {
+			com.stripe.model.Refund refund = stripe.v1()
+				.refunds()
+				.create(RefundCreateParams.builder()
+					.setPaymentIntent(intentId)
+					.setAmount(amountCents)
+					.setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)
+					.putAllMetadata(metadata)
+					.build());
+			return new Refund(refund.getId(), refundStatus(refund.getStatus()));
+		});
+	}
+
+	/** The fee Stripe kept on the payment's charge (from its balance transaction). */
+	@Override
+	public Long processingFeeCents(String intentId) {
+		try {
+			PaymentIntent intent = stripe.v1()
+				.paymentIntents()
+				.retrieve(intentId,
+						PaymentIntentRetrieveParams.builder().addExpand("latest_charge.balance_transaction").build());
+			Charge charge = intent.getLatestChargeObject();
+			BalanceTransaction balance = charge == null ? null : charge.getBalanceTransactionObject();
+			return balance == null ? null : balance.getFee();
+		}
+		catch (StripeException ex) {
+			return null;
+		}
+	}
+
+	@Override
 	public WebhookEvent parseWebhook(String payload, String signatureHeader) {
 		if (config.webhookSecret() == null || config.webhookSecret().isBlank()) {
 			throw new IllegalStateException("iha.payments.stripe.webhook-secret is not set");
@@ -160,10 +196,23 @@ class StripePaymentGateway implements PaymentGateway {
 			throw ApiException.badRequest("invalid_signature", "Invalid Stripe signature.");
 		}
 		StripeObject object = event.getDataObjectDeserializer().getObject().orElse(null);
+		if (object instanceof com.stripe.model.Refund refund) {
+			return new WebhookEvent(event.getType(), refund.getPaymentIntent(), null, refund.getId(),
+					refundStatus(refund.getStatus()));
+		}
 		if (!(object instanceof PaymentIntent intent)) {
 			return new WebhookEvent(event.getType(), null, null);
 		}
 		return new WebhookEvent(event.getType(), intent.getId(), intent.getLatestCharge());
+	}
+
+	/** Stripe: pending, requires_action, succeeded, failed, canceled. */
+	private static String refundStatus(String stripeStatus) {
+		return switch (stripeStatus == null ? "" : stripeStatus) {
+			case "succeeded" -> "succeeded";
+			case "failed", "canceled" -> "failed";
+			default -> "pending";
+		};
 	}
 
 	private static <T> T call(StripeCall<T> call) {

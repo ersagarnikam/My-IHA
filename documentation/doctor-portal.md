@@ -130,7 +130,7 @@ Support chat with the MTA coordinator ("Chat with your MTA coordinator"). MTA op
 | Profile | Personal Details (name, email, phone, date of birth, gender, photo) and Professional Details (specializations, qualification, experience, licence, department, role, languages, hospital affiliations, bio) — each with Edit. |
 | Availability | Per-day toggle and hours (30-minute steps); "Not Working On this Day" when off. |
 | Billing | Annual renewal fee and next due date; *Pay now* when due. |
-| Invoices | Paid registration/annual fees with PDF invoices. |
+| Invoices | Paid registration/annual fees with PDF invoices; refunds by MTA show as *Partly refunded* / *Refunded* with the amount returned. |
 | Security | Change password. |
 | Notifications | Email and SMS notification toggles. |
 

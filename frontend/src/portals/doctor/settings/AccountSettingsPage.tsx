@@ -111,7 +111,10 @@ function ProfileTab() {
             <KV label="Full Name" value={doctor.fullName} />
             <KV label="Email" value={doctor.contactEmail} />
             <KV label="Phone Number" value={doctor.contactPhone} />
-            <KV label="Date of Birth" value={doctor.dateOfBirth ? formatDate(doctor.dateOfBirth) : null} />
+            <KV
+              label="Date of Birth"
+              value={doctor.dateOfBirth ? formatDate(doctor.dateOfBirth) : null}
+            />
             <KV label="Gender" value={doctor.gender ? GENDER_LABELS[doctor.gender] : null} />
           </div>
         )}
@@ -121,7 +124,11 @@ function ProfileTab() {
         <div className="row-between">
           <h2 className="dr-subtitle">Professional Details</h2>
           {editing !== 'professional' && (
-            <button type="button" className="button-link" onClick={() => setEditing('professional')}>
+            <button
+              type="button"
+              className="button-link"
+              onClick={() => setEditing('professional')}
+            >
               <Pencil size={14} /> Edit
             </button>
           )}
@@ -136,7 +143,11 @@ function ProfileTab() {
             <KV label="License Number" value={doctor.licenseNumber} />
             <KV label="Department" value={doctor.department} />
             <KV label="Role" value={doctor.role ? ROLE_LABELS[doctor.role] : null} />
-            <KV label="Languages Spoken" value={doctor.languagesSpoken.join(', ')} className="full" />
+            <KV
+              label="Languages Spoken"
+              value={doctor.languagesSpoken.join(', ')}
+              className="full"
+            />
             <KV label="Hospital Affiliations" value={hospitalNames} className="full" />
             <KV label="Bio" value={doctor.bio} className="full" />
           </div>
@@ -150,7 +161,9 @@ function KV({ label, value, className }: { label: string; value: ReactNode; clas
   return (
     <div className={className}>
       <p className="dr-fact-label">{label}</p>
-      <p className="dr-fact-value prewrap">{value === null || value === undefined || value === '' ? '—' : value}</p>
+      <p className="dr-fact-value prewrap">
+        {value === null || value === undefined || value === '' ? '—' : value}
+      </p>
     </div>
   )
 }
@@ -172,14 +185,21 @@ function PhotoButton() {
       setVersion((v) => v + 1)
       toast({ title: 'Profile photo updated.', tone: 'good' })
     } catch (err) {
-      toast({ title: err instanceof ApiError ? err.message : 'Could not upload the photo.', tone: 'bad' })
+      toast({
+        title: err instanceof ApiError ? err.message : 'Could not upload the photo.',
+        tone: 'bad',
+      })
     } finally {
       setPending(false)
     }
   }
 
   return (
-    <label className="avatar-upload" title="Change photo" style={{ cursor: 'pointer', position: 'relative' }}>
+    <label
+      className="avatar-upload"
+      title="Change photo"
+      style={{ cursor: 'pointer', position: 'relative' }}
+    >
       {photo ? (
         <img src={photo} alt="" className="avatar" style={{ width: 44, height: 44 }} />
       ) : (
@@ -272,7 +292,13 @@ function PersonalForm({ onDone }: { onDone: () => void }) {
   )
 }
 
-function ProfessionalForm({ hospitals, onDone }: { hospitals: HospitalChoice[]; onDone: () => void }) {
+function ProfessionalForm({
+  hospitals,
+  onDone,
+}: {
+  hospitals: HospitalChoice[]
+  onDone: () => void
+}) {
   const doctor = useDoctor()
   const toast = useToast()
   const specialties = useApi<Specialty[]>('/api/specialties')
@@ -332,7 +358,9 @@ function ProfessionalForm({ hospitals, onDone }: { hospitals: HospitalChoice[]; 
             </label>
           ))}
         </div>
-        {fieldError(error, 'specialties') && <span className="field-error">{fieldError(error, 'specialties')}</span>}
+        {fieldError(error, 'specialties') && (
+          <span className="field-error">{fieldError(error, 'specialties')}</span>
+        )}
       </div>
       <div className="dr-grid-2">
         <Field label="Qualification" error={fieldError(error, 'qualifications')}>
@@ -348,7 +376,11 @@ function ProfessionalForm({ hospitals, onDone }: { hospitals: HospitalChoice[]; 
             required
           />
         </Field>
-        <Field label="License Number" error={fieldError(error, 'licenseNumber')} hint="e.g. MED0001234567">
+        <Field
+          label="License Number"
+          error={fieldError(error, 'licenseNumber')}
+          hint="e.g. MED0001234567"
+        >
           <input name="licenseNumber" defaultValue={doctor.licenseNumber ?? ''} required />
         </Field>
         <Field label="Department" error={fieldError(error, 'department')}>
@@ -418,7 +450,10 @@ function ProfessionalForm({ hospitals, onDone }: { hospitals: HospitalChoice[]; 
 const HOURS = Array.from({ length: 48 }, (_, i) => {
   const h = Math.floor(i / 2)
   const m = i % 2 ? '30' : '00'
-  return { value: `${String(h).padStart(2, '0')}:${m}`, label: `${String(h % 12 || 12).padStart(2, '0')}:${m} ${h < 12 ? 'AM' : 'PM'}` }
+  return {
+    value: `${String(h).padStart(2, '0')}:${m}`,
+    label: `${String(h % 12 || 12).padStart(2, '0')}:${m} ${h < 12 ? 'AM' : 'PM'}`,
+  }
 })
 
 function AvailabilityTab() {
@@ -528,7 +563,9 @@ function BillingTab() {
         <div>
           <strong>Annual renewal fee — {money(b.annualFeeAud)}</strong>
           <p className="muted small" style={{ margin: 0 }}>
-            {b.annualFeeNextDueAt ? `Next due ${formatDate(b.annualFeeNextDueAt)}` : 'No renewal date set yet.'}
+            {b.annualFeeNextDueAt
+              ? `Next due ${formatDate(b.annualFeeNextDueAt)}`
+              : 'No renewal date set yet.'}
           </p>
         </div>
         {b.annualFeeDue && !paying && (
@@ -558,7 +595,7 @@ function InvoicesTab() {
   const billing = useApi<Billing>('/api/doctor/billing')
   if (billing.error) return <ErrorState error={billing.error} onRetry={billing.reload} />
   if (!billing.data) return <Loading />
-  const paid = billing.data.payments.filter((p) => p.status === 'completed')
+  const paid = billing.data.payments.filter((p) => p.paidAt !== null)
   if (paid.length === 0)
     return (
       <Empty title="No invoices yet">
@@ -586,9 +623,20 @@ function InvoicesTab() {
               <tr key={p.id}>
                 <td>{formatDate(p.paidAt)}</td>
                 <td>{p.feeType === 'registration' ? 'Registration Fee' : 'Annual Renewal Fee'}</td>
-                <td>{money(p.amountAud)}</td>
                 <td>
-                  <span className="badge badge-sm badge-good">Paid</span>
+                  {money(p.amountAud)}
+                  {p.refundedAud > 0 && (
+                    <div className="muted small">{money(p.refundedAud)} refunded</div>
+                  )}
+                </td>
+                <td>
+                  {p.status === 'refunded' ? (
+                    <span className="badge badge-sm badge-muted">Refunded</span>
+                  ) : p.refundedAud > 0 ? (
+                    <span className="badge badge-sm badge-warn">Partly refunded</span>
+                  ) : (
+                    <span className="badge badge-sm badge-good">Paid</span>
+                  )}
                 </td>
                 <td>
                   <button
@@ -596,8 +644,11 @@ function InvoicesTab() {
                     className="dr-icon-button"
                     aria-label="Download invoice"
                     onClick={() =>
-                      openFile(`/api/doctor/billing/payments/${p.id}/invoice`, `MTA-invoice-${p.id.slice(0, 8)}.pdf`).catch(
-                        () => toast({ title: 'Could not download the invoice.', tone: 'bad' }),
+                      openFile(
+                        `/api/doctor/billing/payments/${p.id}/invoice`,
+                        `MTA-invoice-${p.id.slice(0, 8)}.pdf`,
+                      ).catch(() =>
+                        toast({ title: 'Could not download the invoice.', tone: 'bad' }),
                       )
                     }
                   >
@@ -656,7 +707,13 @@ function SecurityTab() {
           error={fieldError(error, 'newPassword')}
           hint="At least 8 characters, with an uppercase letter and a number."
         >
-          <input name="newPassword" type="password" autoComplete="new-password" required minLength={8} />
+          <input
+            name="newPassword"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+          />
         </Field>
         <Field label="Confirm new password">
           <input name="confirmPassword" type="password" autoComplete="new-password" required />
@@ -677,7 +734,9 @@ function NotificationsTab() {
   const toast = useToast()
   const [pending, setPending] = useState(false)
 
-  async function save(patch: Partial<{ emailNotificationsEnabled: boolean; smsNotificationsEnabled: boolean }>) {
+  async function save(
+    patch: Partial<{ emailNotificationsEnabled: boolean; smsNotificationsEnabled: boolean }>,
+  ) {
     setPending(true)
     try {
       doctor.update(
@@ -735,7 +794,12 @@ function Toggle({
         <strong className="block">{title}</strong>
         <span className="muted small">{description}</span>
       </span>
-      <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
     </label>
   )
 }

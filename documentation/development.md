@@ -103,6 +103,7 @@ Spring Boot tests that boot the whole API on H2, run every migration, validate t
 | `PatientJourneyTests` | Onboarding through treatment options, consultation, payment, invoice and visa submission; chat, notifications, password change and account deletion. |
 | `DoctorPortalFlowTests` | Doctor sign-up, registration, approval gate, fee, case through to submitted plan, document requests, consultation slots, chat, settings. |
 | `AdminPortalFlowTests` | Admin access, doctor approval, case assignment, plan publish/decline, patient and provider chats. |
+| `RefundTests` | Admin refunds: validation, partial and full refunds with the card fee deducted once, credit notes, waived fees, a refunded consultation cancelled, doctor fee refunds, dashboard net of refunds. |
 | `FeeSettingsTests` | Admin fee settings: access, validation, history and audit, and that doctor billing, consultation fees and the suggested MTA service fee follow the settings. |
 | `SecurityAndAuthTests` | Every role against every API prefix, forged and altered tokens, sign-in without revealing accounts, the wrong-code limit, password reset, other patients' records and invoices, unknown ids on admin routes, the seeded demo accounts. |
 

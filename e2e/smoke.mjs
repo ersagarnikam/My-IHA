@@ -40,6 +40,7 @@ const consultations = await api('/api/doctor/consultations', doctor.accessToken)
 const adminDoctor = first(await api('/api/admin/doctors', admin.accessToken), 'doctors')
 const adminCase = first(await api('/api/admin/cases', admin.accessToken), 'cases')
 const adminPlan = first(await api('/api/admin/plans', admin.accessToken), 'plans')
+const adminPayment = first(await api('/api/admin/payments', admin.accessToken), 'payments')
 
 const portals = [
   {
@@ -84,6 +85,8 @@ const portals = [
       '/admin/plans',
       `/admin/plans/${adminPlan.id}`,
       '/admin/messages',
+      '/admin/payments',
+      `/admin/payments/${adminPayment.kind}/${adminPayment.id}`,
       '/admin/settings',
     ],
   },

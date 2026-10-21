@@ -127,6 +127,16 @@ export type PaymentRow = {
   gatewayReference: string | null
   paidAt: string | null
   createdAt: string
+  /** Refunded to the card in total (after card processing fees). */
+  refundedAud: number
+  refunds: {
+    id: string
+    amountAud: number
+    feeDeductedAud: number
+    refundedAud: number
+    status: 'pending' | 'succeeded' | 'failed'
+    createdAt: string
+  }[]
 }
 
 export type SavedCard = {

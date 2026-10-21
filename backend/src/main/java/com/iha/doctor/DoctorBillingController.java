@@ -3,9 +3,12 @@ package com.iha.doctor;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.iha.auth.CurrentUser;
+import com.iha.refund.PaymentRefund;
+import com.iha.refund.RefundService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
@@ -31,9 +34,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class DoctorBillingController {
 
 	private final DoctorFeeService fees;
+	private final RefundService refunds;
 
-	DoctorBillingController(DoctorFeeService fees) {
+	DoctorBillingController(DoctorFeeService fees, RefundService refunds) {
 		this.fees = fees;
+		this.refunds = refunds;
 	}
 
 	@GetMapping
@@ -41,7 +46,7 @@ public class DoctorBillingController {
 		DoctorFeeService.Billing b = fees.billing(CurrentUser.from(jwt));
 		return new BillingResponse(b.fees().registrationFeeAud(), b.fees().annualFeeAud(), b.registrationFeePaidAt(),
 				b.annualFeeNextDueAt(), b.annualFeeDue(), b.provider(), b.publishableKey(),
-				b.payments().stream().map(FeePaymentResponse::of).toList());
+				feePayments(b.payments()));
 	}
 
 	/** The current fee amounts (shown during registration, before a doctor row exists). */
@@ -81,12 +86,23 @@ public class DoctorBillingController {
 	public record CheckoutRequest(@NotBlank String feeType) {
 	}
 
-	public record FeePaymentResponse(UUID id, String feeType, BigDecimal amountAud, String billingPeriod,
-			String status, String gatewayReference, Instant paidAt, Instant createdAt) {
+	private List<FeePaymentResponse> feePayments(List<DoctorFeePayment> list) {
+		Map<UUID, List<PaymentRefund>> refunded = refunds
+			.refundsByPayment(list.stream().map(DoctorFeePayment::getId).toList());
+		return list.stream()
+			.map(p -> FeePaymentResponse.of(p, refunded.getOrDefault(p.getId(), List.of()).stream()
+				.map(PaymentRefund::getRefundedAud)
+				.reduce(BigDecimal.ZERO, BigDecimal::add)))
+			.toList();
+	}
 
-		static FeePaymentResponse of(DoctorFeePayment p) {
+	/** {@code refundedAud}: refunded to the card in total (after card processing fees). */
+	public record FeePaymentResponse(UUID id, String feeType, BigDecimal amountAud, String billingPeriod,
+			String status, String gatewayReference, Instant paidAt, Instant createdAt, BigDecimal refundedAud) {
+
+		static FeePaymentResponse of(DoctorFeePayment p, BigDecimal refundedAud) {
 			return new FeePaymentResponse(p.getId(), p.getFeeType(), p.getAmountAud(), p.getBillingPeriod(),
-					p.getStatus(), p.getGatewayReference(), p.getPaidAt(), p.getCreatedAt());
+					p.getStatus(), p.getGatewayReference(), p.getPaidAt(), p.getCreatedAt(), refundedAud);
 		}
 
 	}

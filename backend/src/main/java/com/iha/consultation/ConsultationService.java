@@ -2,6 +2,7 @@ package com.iha.consultation;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +27,7 @@ import com.iha.payment.PaymentCompletedEvent;
 import com.iha.payment.PaymentRepository;
 import com.iha.provider.Doctor;
 import com.iha.provider.DoctorRepository;
+import com.iha.refund.PaymentRefundedEvent;
 import com.iha.treatment.PatientTreatmentService;
 import com.iha.treatment.TreatmentOption;
 import com.iha.treatment.TreatmentOptionRepository;
@@ -162,6 +164,35 @@ public class ConsultationService {
 	}
 
 	/** Old webhook {@code handleConsultationPaymentSucceeded}: slot_selected → scheduled, with a Zoom meeting. */
+	/** A fully refunded consultation that hasn't taken place is cancelled; patient and doctor are told. */
+	@EventListener
+	void onPaymentRefunded(PaymentRefundedEvent event) {
+		if (!event.fullyRefunded() || event.consultationRequestId() == null) {
+			return;
+		}
+		requests.findById(event.consultationRequestId()).ifPresent(request -> {
+			if (ConsultationRequest.CANCELLED.equals(request.getStatus())) {
+				return;
+			}
+			Instant start = request.getSelectedSlotId() == null ? null
+					: slots.findById(request.getSelectedSlotId()).map(ConsultationSlot::getSlotTime).orElse(null);
+			if (request.hasTakenPlace(start)) {
+				return;
+			}
+			String previous = request.getStatus();
+			request.cancel("Refunded by MTA: " + event.reasonLabel());
+			requests.saveAndFlush(request);
+			statusChanged(request, previous, true);
+			doctorOf(request).filter(d -> d.getUserId() != null).ifPresent(d -> {
+				String ref = cases.findById(request.getCaseId()).map(MedicalCase::getReferenceNumber).orElse("a case");
+				notifications.notifyWithAlert(d.getUserId(), "consultation_cancelled", "Consultation cancelled by MTA",
+						"MTA refunded the patient's consultation fee for case " + ref + " (" + event.reasonLabel()
+								+ "), so the consultation is cancelled.",
+						request.getCaseId());
+			});
+		});
+	}
+
 	@EventListener
 	void onPaymentCompleted(PaymentCompletedEvent event) {
 		if (event.consultationRequestId() == null) {

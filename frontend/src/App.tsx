@@ -53,6 +53,7 @@ import { AdminCaseDetailPage, AdminCasesPage } from './portals/admin/CasePages'
 import { AdminDashboardPage } from './portals/admin/DashboardPage'
 import { AdminDoctorDetailPage, AdminDoctorsPage } from './portals/admin/DoctorPages'
 import { AdminMessagesPage } from './portals/admin/MessagesPage'
+import { AdminPaymentDetailPage, AdminPaymentsPage } from './portals/admin/PaymentPages'
 import { AdminPlanDetailPage, AdminPlansPage } from './portals/admin/PlanPages'
 import { AdminSettingsPage } from './portals/admin/SettingsPage'
 import { TreatmentPlanPage } from './portals/doctor/TreatmentPlanPage'
@@ -241,6 +242,8 @@ const router = createBrowserRouter([
               { path: 'plans', element: <AdminPlansPage /> },
               { path: 'plans/:planId', element: <AdminPlanDetailPage /> },
               { path: 'messages', element: <AdminMessagesPage /> },
+              { path: 'payments', element: <AdminPaymentsPage /> },
+              { path: 'payments/:kind/:paymentId', element: <AdminPaymentDetailPage /> },
               { path: 'settings', element: <AdminSettingsPage /> },
             ],
           },

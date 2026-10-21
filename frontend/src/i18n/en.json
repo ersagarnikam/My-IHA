@@ -422,8 +422,11 @@
       "completed": "Success",
       "pending": "Pending",
       "failed": "Failed",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "partially_refunded": "Partly refunded"
     },
+    "refundedAmount": "{amount} refunded",
+    "creditNote": "Credit Note",
     "viewInvoice": "View Invoice",
     "download": "Download",
     "payNow": "Pay Now",

@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import com.iha.auth.CurrentUser;
 import com.iha.cases.CaseRepository;
 import com.iha.cases.MedicalCase;
+import com.iha.refund.PaymentRefund;
+import com.iha.refund.RefundService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
@@ -36,11 +38,14 @@ public class PaymentController {
 	private final PaymentService payments;
 	private final InvoiceService invoices;
 	private final CaseRepository cases;
+	private final RefundService refunds;
 
-	public PaymentController(PaymentService payments, InvoiceService invoices, CaseRepository cases) {
+	public PaymentController(PaymentService payments, InvoiceService invoices, CaseRepository cases,
+			RefundService refunds) {
 		this.payments = payments;
 		this.invoices = invoices;
 		this.cases = cases;
+		this.refunds = refunds;
 	}
 
 	@GetMapping("/api/patient/payments/config")
@@ -54,7 +59,10 @@ public class PaymentController {
 		Map<UUID, String> references = cases.findAllById(list.stream().map(Payment::getCaseId).distinct().toList())
 			.stream()
 			.collect(Collectors.toMap(MedicalCase::getId, MedicalCase::getReferenceNumber));
-		return list.stream().map(p -> PaymentResponse.of(p, references.get(p.getCaseId()))).toList();
+		Map<UUID, List<PaymentRefund>> refunded = refunds.refundsByPayment(list.stream().map(Payment::getId).toList());
+		return list.stream()
+			.map(p -> PaymentResponse.of(p, references.get(p.getCaseId()), refunded.getOrDefault(p.getId(), List.of())))
+			.toList();
 	}
 
 	@PostMapping("/api/patient/cases/{caseId}/checkout")
@@ -135,14 +143,27 @@ public class PaymentController {
 
 	}
 
+	/** {@code refundedAud}: what went back to the card in total (after card processing fees). */
 	public record PaymentResponse(UUID id, UUID caseId, String caseReference, String paymentType,
 			UUID consultationRequestId, BigDecimal amountAud, String status, String gatewayReference, Instant paidAt,
-			Instant createdAt) {
+			Instant createdAt, BigDecimal refundedAud, List<RefundResponse> refunds) {
 
-		public static PaymentResponse of(Payment p, String caseReference) {
+		public static PaymentResponse of(Payment p, String caseReference, List<PaymentRefund> refunds) {
 			return new PaymentResponse(p.getId(), p.getCaseId(), caseReference, p.getPaymentType(),
 					p.getConsultationRequestId(), p.getAmountAud(), p.getStatus(), p.getGatewayReference(),
-					p.getPaidAt(), p.getCreatedAt());
+					p.getPaidAt(), p.getCreatedAt(),
+					refunds.stream().map(PaymentRefund::getRefundedAud).reduce(BigDecimal.ZERO, BigDecimal::add),
+					refunds.stream().map(RefundResponse::of).toList());
+		}
+
+	}
+
+	public record RefundResponse(UUID id, BigDecimal amountAud, BigDecimal feeDeductedAud, BigDecimal refundedAud,
+			String status, Instant createdAt) {
+
+		public static RefundResponse of(PaymentRefund r) {
+			return new RefundResponse(r.getId(), r.getAmountAud(), r.getFeeDeductedAud(), r.getRefundedAud(),
+					r.getStatus(), r.getCreatedAt());
 		}
 
 	}

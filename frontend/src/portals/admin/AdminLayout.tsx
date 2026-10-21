@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
+  CreditCard,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -41,6 +42,7 @@ const NAV: { to: string; label: string; icon: LucideIcon; count?: (o: Overview) 
     count: (o) => o.plansToReview,
   },
   { to: '/admin/messages', label: 'Messages', icon: MessageSquare, count: (o) => o.chatsWaiting },
+  { to: '/admin/payments', label: 'Payments', icon: CreditCard },
   { to: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
