@@ -48,6 +48,16 @@ export type DoctorProfile = {
   annualFeeNextDueAt: string | null
   /** IANA zone the doctor works in (consultation times are entered and shown in it). */
   timeZone: string
+  /** Professional indemnity and telehealth declaration; needed to offer consultation times. */
+  indemnity: {
+    insurer: string
+    policyNumber: string
+    expiresOn: string
+    coversOverseas: boolean
+    telehealthGuidelinesAck: boolean
+    declaredAt: string
+  } | null
+  indemnityStatus: 'missing' | 'expired' | 'valid'
   documents: RegistrationDocument[]
 }
 

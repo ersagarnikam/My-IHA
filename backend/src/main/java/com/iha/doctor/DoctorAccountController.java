@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import com.iha.auth.CurrentUser;
+import com.iha.common.AustralianTimeZones;
 import com.iha.common.validation.PhoneNumber;
 import com.iha.common.validation.StrongPassword;
 import com.iha.provider.Doctor;
@@ -115,6 +116,12 @@ public class DoctorAccountController {
 		return profile(accounts.updateTimeZone(CurrentUser.from(jwt), r.timeZone()));
 	}
 
+	@PutMapping("/api/doctor/profile/indemnity")
+	public ProfileResponse declareIndemnity(@AuthenticationPrincipal Jwt jwt, @RequestBody IndemnityRequest r) {
+		return profile(accounts.declareIndemnity(CurrentUser.from(jwt), new DoctorAccountService.IndemnityInput(
+				r.insurer(), r.policyNumber(), r.expiresOn(), r.coversOverseas(), r.telehealthGuidelinesAck())));
+	}
+
 	@PutMapping("/api/doctor/profile/notification-preferences")
 	public ProfileResponse updateNotifications(@AuthenticationPrincipal Jwt jwt,
 			@RequestBody NotificationPreferencesRequest r) {
@@ -140,7 +147,8 @@ public class DoctorAccountController {
 				d.getLicenseNumber(), d.getPhotoUrl() != null, d.getBio(), list(d.getLanguagesSpoken()),
 				d.getDepartment(), d.getRole(), list(d.getWorkingDays()), accounts.hospitalIds(d),
 				accounts.availability(d), d.isEmailNotificationsEnabled(), d.isSmsNotificationsEnabled(),
-				d.getRegistrationFeePaidAt(), d.getAnnualFeeNextDueAt(), d.getTimeZone(),
+				d.getRegistrationFeePaidAt(), d.getAnnualFeeNextDueAt(), d.getTimeZone(), d.getIndemnity(),
+				Doctor.Indemnity.status(d.getIndemnity(), LocalDate.now(AustralianTimeZones.zone(d.getTimeZone()))),
 				IntStream.range(0, docs.size())
 					.mapToObj(i -> new DocumentResponse(i, docs.get(i).fileName(), docs.get(i).category(),
 							docs.get(i).mimeType(), docs.get(i).fileSizeBytes()))
@@ -235,7 +243,11 @@ public class DoctorAccountController {
 			String role, List<String> workingDays, List<UUID> hospitalIds,
 			List<DoctorAccountService.AvailabilityDay> availability, boolean emailNotificationsEnabled,
 			boolean smsNotificationsEnabled, Instant registrationFeePaidAt, Instant annualFeeNextDueAt, String timeZone,
-			List<DocumentResponse> documents) {
+			Doctor.Indemnity indemnity, String indemnityStatus, List<DocumentResponse> documents) {
+	}
+
+	public record IndemnityRequest(String insurer, String policyNumber, LocalDate expiresOn, boolean coversOverseas,
+			boolean telehealthGuidelinesAck) {
 	}
 
 	public record HospitalResponse(UUID id, String name, String city, String country, List<String> roomTypes) {

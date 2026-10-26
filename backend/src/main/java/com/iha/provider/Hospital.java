@@ -1,6 +1,7 @@
 package com.iha.provider;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import com.iha.common.AustralianTimeZones;
@@ -55,6 +56,14 @@ public class Hospital {
 
 	@Column(name = "accreditation_body")
 	private String accreditationBody;
+
+	/** NSQHS accreditation certificate expiry, as declared by the hospital. */
+	@Column(name = "accreditation_expires_on")
+	private LocalDate accreditationExpiresOn;
+
+	/** State private-hospital licence expiry, as declared by the hospital. */
+	@Column(name = "licence_expires_on")
+	private LocalDate licenceExpiresOn;
 
 	private String address;
 
@@ -169,6 +178,8 @@ public class Hospital {
 		this.roomTypes = d.roomTypes();
 		this.licenseNumber = d.licenseNumber();
 		this.accreditationBody = d.accreditationBody();
+		this.accreditationExpiresOn = d.accreditationExpiresOn();
+		this.licenceExpiresOn = d.licenceExpiresOn();
 	}
 
 	public void review(String status, String reason) {
@@ -212,6 +223,14 @@ public class Hospital {
 
 	public String getLicenseNumber() {
 		return licenseNumber;
+	}
+
+	public LocalDate getAccreditationExpiresOn() {
+		return accreditationExpiresOn;
+	}
+
+	public LocalDate getLicenceExpiresOn() {
+		return licenceExpiresOn;
 	}
 
 	public String getAbnNumber() {
@@ -295,7 +314,8 @@ public class Hospital {
 	}
 
 	public record Details(String registrationType, String[] specialties, Integer bedCount, String[] roomTypes,
-			String licenseNumber, String accreditationBody) {
+			String licenseNumber, String accreditationBody, LocalDate accreditationExpiresOn,
+			LocalDate licenceExpiresOn) {
 	}
 
 }

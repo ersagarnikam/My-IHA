@@ -110,6 +110,7 @@ public class DoctorConsultationService {
 					.flatMap(o -> plans.findById(o.getTreatmentPlanId()))
 					.map(TreatmentPlan::getTreatmentStartDate)
 					.orElse(null);
+		requireIndemnity(doctor);
 		List<Instant[]> times = parseSlots(input, treatmentStart, AustralianTimeZones.zone(doctor.getTimeZone()));
 		slots.deleteByRequest(requestId);
 		times.forEach(t -> slots.save(new ConsultationSlot(requestId, t[0], t[1])));
@@ -147,6 +148,7 @@ public class DoctorConsultationService {
 			throw ApiException.conflict("initial_consultation_exists",
 					"An initial consultation is already under way for this case.");
 		}
+		requireIndemnity(doctor);
 		List<Instant[]> times = parseSlots(input, null, AustralianTimeZones.zone(doctor.getTimeZone()));
 		ConsultationRequest request = requests.save(
 				ConsultationRequest.initial(caseId, medicalCase.getPatientId(), doctor.getId()));
@@ -224,6 +226,19 @@ public class DoctorConsultationService {
 	}
 
 	/** 1 to 3 wall-clock slots in {@code zone}: in the future, ending after they start, not after the treatment start. */
+	/** Zoom consultations need a current indemnity and telehealth declaration. */
+	private static void requireIndemnity(Doctor doctor) {
+		switch (Doctor.Indemnity.status(doctor.getIndemnity(),
+				LocalDate.now(AustralianTimeZones.zone(doctor.getTimeZone())))) {
+			case "missing" -> throw ApiException.conflict("indemnity_declaration_required",
+					"Declare your professional indemnity cover in Settings before offering consultation times.");
+			case "expired" -> throw ApiException.conflict("indemnity_expired",
+					"Your professional indemnity cover has expired. Update it in Settings before offering consultation times.");
+			default -> {
+			}
+		}
+	}
+
 	private List<Instant[]> parseSlots(List<SlotInput> input, LocalDate treatmentStart, ZoneId zone) {
 		if (input == null || input.isEmpty() || input.size() > 3) {
 			throw ApiException.badRequest("invalid_slot_count", "Propose between 1 and 3 time slots.");

@@ -22,6 +22,8 @@ import com.iha.treatment.TreatmentOption;
 import com.iha.treatment.TreatmentOptionRepository;
 import com.iha.treatment.TreatmentPlan;
 import com.iha.treatment.TreatmentPlanRepository;
+import com.iha.verification.ProviderVerification;
+import com.iha.verification.VerificationService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,10 +47,12 @@ public class DoctorAdminService {
 	private final TreatmentOptionRepository options;
 	private final NotificationService notifications;
 	private final AuditService audit;
+	private final VerificationService verification;
 
 	DoctorAdminService(DoctorRepository doctors, DoctorCaseAssignmentRepository assignments, CaseRepository cases,
 			CaseStatusService caseStatus, TreatmentPlanRepository plans, TreatmentOptionRepository options,
-			NotificationService notifications, AuditService audit) {
+			NotificationService notifications, AuditService audit, VerificationService verification) {
+		this.verification = verification;
 		this.doctors = doctors;
 		this.assignments = assignments;
 		this.cases = cases;
@@ -73,6 +77,9 @@ public class DoctorAdminService {
 		Doctor doctor = doctors.findById(doctorId).orElseThrow(() -> ApiException.notFound("Doctor not found."));
 		if (!Doctor.PENDING.equals(doctor.getStatus())) {
 			throw ApiException.conflict("not_pending", "This registration isn't awaiting review.");
+		}
+		if (Doctor.APPROVED.equals(outcome)) {
+			verification.requirePassing(ProviderVerification.DOCTOR, doctorId);
 		}
 		doctor.review(outcome, reason);
 		if (doctor.getUserId() != null) {

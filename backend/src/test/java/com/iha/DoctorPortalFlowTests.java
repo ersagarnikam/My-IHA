@@ -14,6 +14,8 @@ import com.iha.provider.Hospital;
 import com.iha.provider.HospitalRepository;
 import com.iha.providerchat.ProviderAccount;
 import com.iha.providerchat.ProviderMessageService;
+import com.iha.verification.ProviderVerification;
+import com.iha.verification.VerificationService;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,6 +37,7 @@ import org.springframework.test.web.servlet.request.AbstractMockHttpServletReque
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -79,6 +82,9 @@ class DoctorPortalFlowTests {
 
 	@Autowired
 	DoctorAdminService admin;
+
+	@Autowired
+	VerificationService verification;
 
 	@Autowired
 	ProviderMessageService providerMessages;
@@ -135,6 +141,9 @@ class DoctorPortalFlowTests {
 			.andExpect(jsonPath("$.status").value("pending"))
 			.andExpect(jsonPath("$.documents.length()").value(2))
 			.andExpect(jsonPath("$.documents[0].fileName").value("license-v2.pdf"));
+		assertThatThrownBy(() -> admin.review(doctor.getId(), Doctor.APPROVED, null))
+			.hasMessageContaining("AHPRA");
+		verification.recordDemoChecks(ProviderVerification.DOCTOR, doctor.getId());
 		admin.review(doctor.getId(), Doctor.APPROVED, null);
 
 		// Registration fee (simulated provider) unlocks the portal.
@@ -266,6 +275,22 @@ class DoctorPortalFlowTests {
 			.content("{\"reason\":\"no\"}"), doctorToken)
 			.andExpect(jsonPath("$.code").value("reason_required"));
 		LocalDate consultDay = LocalDate.now(ZoneId.of("Australia/Brisbane")).plusDays(2);
+		// Zoom consultations need the indemnity and telehealth declaration.
+		String slot = "{\"slots\":[{\"date\":\"%s\",\"startTime\":\"11:00\",\"endTime\":\"11:30\"}]}".formatted(consultDay);
+		perform(post("/api/doctor/cases/" + caseId + "/initial-consultation").contentType(MediaType.APPLICATION_JSON)
+			.content(slot), doctorToken)
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value("indemnity_declaration_required"));
+		perform(get("/api/doctor/account"), doctorToken).andExpect(jsonPath("$.doctor.indemnityStatus").value("missing"));
+		perform(put("/api/doctor/profile/indemnity").contentType(MediaType.APPLICATION_JSON).content("""
+				{"insurer":"Avant","policyNumber":"AV-123456","expiresOn":"%s","coversOverseas":false,
+				 "telehealthGuidelinesAck":true}""".formatted(consultDay.plusYears(1))), doctorToken)
+			.andExpect(jsonPath("$.code").value("overseas_cover_required"));
+		perform(put("/api/doctor/profile/indemnity").contentType(MediaType.APPLICATION_JSON).content("""
+				{"insurer":"Avant","policyNumber":"AV-123456","expiresOn":"%s","coversOverseas":true,
+				 "telehealthGuidelinesAck":true}""".formatted(consultDay.plusYears(1))), doctorToken)
+			.andExpect(jsonPath("$.indemnityStatus").value("valid"))
+			.andExpect(jsonPath("$.indemnity.insurer").value("Avant"));
 		String initial = perform(post("/api/doctor/cases/" + caseId + "/initial-consultation")
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("{\"slots\":[{\"date\":\"%s\",\"startTime\":\"11:00\",\"endTime\":\"11:30\"}]}".formatted(consultDay)),
@@ -461,6 +486,7 @@ class DoctorPortalFlowTests {
 			.file(new MockMultipartFile("degreeCertificate", "degree.pdf", "application/pdf", PDF)), token)
 			.andExpect(status().isCreated());
 		Doctor doctor = doctors.findAll().stream().filter(d -> email.equals(d.getContactEmail())).findFirst().orElseThrow();
+		verification.recordDemoChecks(ProviderVerification.DOCTOR, doctor.getId());
 		admin.review(doctor.getId(), Doctor.APPROVED, null);
 		String intent = JsonPath.read(perform(post("/api/doctor/billing/checkout").contentType(MediaType.APPLICATION_JSON)
 			.content("{\"feeType\":\"registration\"}"), token).andReturn().getResponse().getContentAsString(), "$.intentId");

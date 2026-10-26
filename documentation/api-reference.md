@@ -168,6 +168,7 @@ Required to submit: hospital, diagnosis (≥10 chars), treatment type, procedure
 | PUT | `/api/doctor/profile/personal` | `{fullName, contactPhone, dateOfBirth, gender}`. |
 | PUT | `/api/doctor/profile/professional` | Specialties, qualifications, experience, licence, bio, languages, department, role, hospitalIds. |
 | PUT | `/api/doctor/profile/availability` | Seven `{day, enabled, start_time, end_time}` entries, Monday–Sunday. |
+| PUT | `/api/doctor/profile/indemnity` | `{insurer, policyNumber, expiresOn, coversOverseas, telehealthGuidelinesAck}` → profile (with `indemnity`, `indemnityStatus` missing/expired/valid). `insurer_required`, `policy_number_required`, `invalid_indemnity_expiry`, `overseas_cover_required`, `telehealth_ack_required`. Proposing consultation times without it: `409 indemnity_declaration_required` / `indemnity_expired`. |
 | PUT | `/api/doctor/profile/time-zone` | `{timeZone}` — one of the Australian zones (`invalid_time_zone` otherwise). Registration also takes `timeZone`; the profile returns it. |
 | PUT | `/api/doctor/profile/notification-preferences` | `{emailNotificationsEnabled, smsNotificationsEnabled}`. |
 | PUT / GET | `/api/doctor/profile/photo` | Upload (*multipart* `file`) / download. |
@@ -216,6 +217,7 @@ See the [admin portal](admin-portal.md) guide.
 | GET | `/api/admin/doctors/{id}/performance` | One doctor's stats, membership fees paid and the cases they were invited to. |
 | GET | `/api/admin/doctors/{id}/documents/{index}` | A registration document (`?download=true` to download). |
 | POST | `/api/admin/doctors/{id}/review` | `{outcome: approved|rejected|more_info_requested, reason}`; reason required unless approving; `not_pending` otherwise. |
+| GET / POST | `/api/admin/verifications/{doctor\|hospital}/{id}` | Register checks: `{required: [{checkType, label, passing, current}], allPassing, history, registerUrl}`. POST `{checkType: ahpra\|accreditation\|licence, outcome: verified\|verified_with_conditions\|failed, validUntil, details}` records one (`invalid_check`, `invalid_outcome`, `valid_until_required`, `details_required`). Approving a doctor or hospital without passing checks: `409 verification_required`. Hospital registration/details take `accreditationExpiresOn` and `licenceExpiresOn` (`invalid_accreditation_expiry`, `invalid_licence_expiry`). `GET /api/admin/insights` adds `complianceAlerts`. |
 | GET | `/api/admin/hospitals` | Hospitals registered through the portal, with status, affiliated doctors and plans. |
 | GET | `/api/admin/hospitals/{id}` | Registration detail with documents and review messages. |
 | GET | `/api/admin/hospitals/{id}/documents/{index}` | A registration document (`?download=true`). |

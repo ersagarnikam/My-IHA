@@ -1,5 +1,6 @@
 package com.iha;
 
+import java.time.LocalDate;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
@@ -127,6 +128,20 @@ class HospitalPortalFlowTests {
 			.file(new MockMultipartFile("otherDocuments", "accreditation.pdf", "application/pdf", PDF)), token)
 			.andExpect(jsonPath("$.status").value("pending"))
 			.andExpect(jsonPath("$.documents.length()").value(3));
+		// Approval needs passing accreditation and licence checks.
+		review(admin, hospitalId, "approved", null).andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value("verification_required"));
+		check(admin, hospitalId, "accreditation", "verified_with_conditions", "2099-01-01", null)
+			.andExpect(jsonPath("$.code").value("details_required"));
+		check(admin, hospitalId, "ahpra", "verified", "2099-01-01", null).andExpect(jsonPath("$.code").value("invalid_check"));
+		check(admin, hospitalId, "accreditation", "verified", "2099-01-01", "ACHS certificate seen")
+			.andExpect(jsonPath("$.allPassing").value(false));
+		check(admin, hospitalId, "licence", "failed", null, "Licence not on the NSW register")
+			.andExpect(jsonPath("$.allPassing").value(false));
+		review(admin, hospitalId, "approved", null).andExpect(jsonPath("$.code").value("verification_required"));
+		check(admin, hospitalId, "licence", "verified", "2099-01-01", null)
+			.andExpect(jsonPath("$.allPassing").value(true))
+			.andExpect(jsonPath("$.history.length()").value(3));
 		review(admin, hospitalId, "approved", null).andExpect(jsonPath("$.status").value("approved"));
 		review(admin, hospitalId, "approved", null).andExpect(jsonPath("$.code").value("not_pending"));
 		perform(get("/api/notifications"), token).andExpect(jsonPath("$[0].title").value("Registration approved"));
@@ -147,7 +162,14 @@ class HospitalPortalFlowTests {
 			.andExpect(jsonPath("$.code").value("invalid_abn"));
 		perform(put("/api/hospital/profile/details").contentType(MediaType.APPLICATION_JSON).content("""
 				{"registrationType":"single_specialty","specialties":["Cardiology"],"bedCount":80,"roomTypes":["ICU"],
-				 "licenseNumber":"LIC-2","accreditationBody":"ACHS"}"""), token)
+				 "licenseNumber":"LIC-2","accreditationBody":"ACHS","accreditationExpiresOn":"2020-01-01",
+				 "licenceExpiresOn":"2099-01-01"}"""), token)
+			.andExpect(jsonPath("$.code").value("invalid_accreditation_expiry"));
+		perform(put("/api/hospital/profile/details").contentType(MediaType.APPLICATION_JSON).content("""
+				{"registrationType":"single_specialty","specialties":["Cardiology"],"bedCount":80,"roomTypes":["ICU"],
+				 "licenseNumber":"LIC-2","accreditationBody":"ACHS","accreditationExpiresOn":"2099-01-01",
+				 "licenceExpiresOn":"2099-06-30"}"""), token)
+			.andExpect(jsonPath("$.licenceExpiresOn").value("2099-06-30"))
 			.andExpect(jsonPath("$.registrationType").value("single_specialty"))
 			.andExpect(jsonPath("$.bedCount").value(80));
 		perform(put("/api/hospital/profile/notification-preferences").contentType(MediaType.APPLICATION_JSON)
@@ -271,8 +293,18 @@ class HospitalPortalFlowTests {
 			.param("roomTypes", "Standard")
 			.param("roomTypes", "Private")
 			.param("licenseNumber", "LIC-TEST-1")
-			.param("accreditationBody", "ACHS");
+			.param("accreditationBody", "ACHS")
+			.param("accreditationExpiresOn", LocalDate.now().plusYears(2).toString())
+			.param("licenceExpiresOn", LocalDate.now().plusYears(1).toString());
 		return b;
+	}
+
+	private ResultActions check(String admin, String hospitalId, String checkType, String outcome, String validUntil,
+			String details) throws Exception {
+		String body = "{\"checkType\":\"%s\",\"outcome\":\"%s\",\"validUntil\":%s,\"details\":%s}".formatted(checkType,
+				outcome, validUntil == null ? "null" : "\"" + validUntil + "\"", details == null ? "null" : "\"" + details + "\"");
+		return perform(post("/api/admin/verifications/hospital/" + hospitalId).contentType(MediaType.APPLICATION_JSON)
+			.content(body), admin);
 	}
 
 	private ResultActions review(String admin, String hospitalId, String outcome, String reason) throws Exception {

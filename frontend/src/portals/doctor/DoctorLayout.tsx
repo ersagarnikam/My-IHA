@@ -152,6 +152,14 @@ function Shell() {
           </div>
         </header>
         <main className="portal-main">
+          {doctor.active && doctor.indemnityStatus !== 'valid' && (
+            <div className="dr-banner bad dr-indemnity-banner">
+              {doctor.indemnityStatus === 'expired'
+                ? 'Your professional indemnity cover has expired.'
+                : 'Declare your professional indemnity cover before offering consultation times.'}{' '}
+              <NavLink to="/doctor/account-settings?tab=indemnity">Update in Settings</NavLink>
+            </div>
+          )}
           <Outlet
             context={{ refreshMessagesUnread: messagesUnread.reload } satisfies DoctorOutletContext}
           />

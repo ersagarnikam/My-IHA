@@ -127,6 +127,26 @@ class AdminPortalFlowTests {
 		perform(post("/api/admin/doctors/" + doctorId + "/review").contentType(MediaType.APPLICATION_JSON)
 			.content("{\"outcome\":\"more_info_requested\"}"), adminToken)
 			.andExpect(jsonPath("$.code").value("reason_required"));
+		// Approval needs a passing AHPRA register check.
+		perform(post("/api/admin/doctors/" + doctorId + "/review").contentType(MediaType.APPLICATION_JSON)
+			.content("{\"outcome\":\"approved\"}"), adminToken)
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value("verification_required"));
+		perform(get("/api/admin/verifications/doctor/" + doctorId), adminToken)
+			.andExpect(jsonPath("$.required[0].checkType").value("ahpra"))
+			.andExpect(jsonPath("$.required[0].current").doesNotExist())
+			.andExpect(jsonPath("$.registerUrl").isString());
+		perform(post("/api/admin/verifications/doctor/" + doctorId).contentType(MediaType.APPLICATION_JSON)
+			.content("{\"checkType\":\"ahpra\",\"outcome\":\"verified\"}"), adminToken)
+			.andExpect(jsonPath("$.code").value("valid_until_required"));
+		perform(post("/api/admin/verifications/doctor/" + doctorId).contentType(MediaType.APPLICATION_JSON)
+			.content("{\"checkType\":\"ahpra\",\"outcome\":\"verified\",\"validUntil\":\"2099-09-30\",\"details\":\"MED0005555555, general and specialist\"}"),
+				adminToken)
+			.andExpect(jsonPath("$.allPassing").value(true))
+			.andExpect(jsonPath("$.required[0].current.checkedBy").isString());
+		perform(post("/api/admin/verifications/doctor/" + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON)
+			.content("{\"checkType\":\"ahpra\",\"outcome\":\"failed\"}"), adminToken)
+			.andExpect(status().isNotFound());
 		perform(post("/api/admin/doctors/" + doctorId + "/review").contentType(MediaType.APPLICATION_JSON)
 			.content("{\"outcome\":\"approved\"}"), adminToken)
 			.andExpect(jsonPath("$.status").value("approved"));

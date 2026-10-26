@@ -48,6 +48,15 @@ export type DoctorDetail = {
   workingDays: string[]
   rejectionReason: string | null
   moreInfoMessage: string | null
+  indemnity: {
+    insurer: string
+    policyNumber: string
+    expiresOn: string
+    coversOverseas: boolean
+    telehealthGuidelinesAck: boolean
+    declaredAt: string
+  } | null
+  indemnityStatus: 'missing' | 'expired' | 'valid'
   hospitals: string[]
   documents: {
     index: number
@@ -280,6 +289,15 @@ export type Insights = {
     fullName: string
     status: FeeStatus
     annualFeeNextDueAt: string | null
+  }[]
+  complianceAlerts: {
+    providerType: 'doctor' | 'hospital'
+    providerId: string
+    name: string
+    item: string
+    label: string
+    status: 'missing' | 'failed' | 'expired' | 'expiring'
+    date: string | null
   }[]
   upcomingConsultations: {
     id: string

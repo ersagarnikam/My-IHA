@@ -31,6 +31,15 @@ const click = async (t) => {
   const exact = page.locator(`::-p-xpath(//*[self::button or self::a][normalize-space()="${t}"])`)
   await exact.setTimeout(8000).map((el) => (el.click(), true)).wait()
 }
+/** Date inputs follow the OS locale; set the value natively (see journey.mjs). */
+const setDate = async (selector, iso) => {
+  const handle = await page.locator(selector).waitHandle()
+  await handle.evaluate((el, v) => {
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+    set.call(el, v)
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+  }, iso)
+}
 const waitText = (t, timeout = 10000) =>
   page.waitForFunction((s) => document.body.innerText.includes(s), { timeout }, t)
 
@@ -73,6 +82,14 @@ try {
   await click('Review')
   await waitText('Degree certificate')
   await shot('doctor-review')
+  // Approval needs a passing AHPRA register check.
+  await click('Record check')
+  await waitText('Record AHPRA registration check')
+  await setDate('dialog input[type=date]', '2027-09-30')
+  await page.locator('dialog textarea').fill('MED0001234567: general and specialist registration, no conditions')
+  await click('Save check')
+  await waitText('valid until')
+  await shot('doctor-checked')
   await click('Approve')
   await waitText('Awaiting payment', 10000).catch(() => {})
   await waitText('Approved')

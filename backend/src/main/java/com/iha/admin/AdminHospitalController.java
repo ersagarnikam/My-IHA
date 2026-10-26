@@ -1,6 +1,7 @@
 package com.iha.admin;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -59,7 +60,8 @@ public class AdminHospitalController {
 		List<HospitalAccountService.RegistrationDocument> docs = accounts.documents(h);
 		return new HospitalDetail(row(h), h.getRegistrationNumber(), h.getAbnNumber(), h.getPhone(), h.getAddress(),
 				h.getZipCode(), h.getRegistrationType(), h.getBedCount(), list(h.getRoomTypes()), h.getLicenseNumber(),
-				h.getAccreditationBody(), h.getRejectionReason(), h.getMoreInfoMessage(),
+				h.getAccreditationBody(), h.getAccreditationExpiresOn(), h.getLicenceExpiresOn(), h.getRejectionReason(),
+				h.getMoreInfoMessage(),
 				IntStream.range(0, docs.size())
 					.mapToObj(i -> new DocumentResponse(i, docs.get(i).fileName(), docs.get(i).category(),
 							docs.get(i).mimeType(), docs.get(i).fileSizeBytes()))
@@ -113,7 +115,8 @@ public class AdminHospitalController {
 
 	public record HospitalDetail(HospitalRow hospital, String registrationNumber, String abnNumber, String phone,
 			String address, String zipCode, String registrationType, Integer bedCount, List<String> roomTypes,
-			String licenseNumber, String accreditationBody, String rejectionReason, String moreInfoMessage,
+			String licenseNumber, String accreditationBody, LocalDate accreditationExpiresOn, LocalDate licenceExpiresOn,
+			String rejectionReason, String moreInfoMessage,
 			List<DocumentResponse> documents) {
 	}
 

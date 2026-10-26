@@ -191,6 +191,8 @@ type Values = {
   roomTypes: string[]
   licenseNumber: string
   accreditationBody: string
+  accreditationExpiresOn: string
+  licenceExpiresOn: string
 }
 
 type Files = {
@@ -211,6 +213,8 @@ const STEP_FIELDS: string[][] = [
     'roomTypes',
     'licenseNumber',
     'accreditationBody',
+    'accreditationExpiresOn',
+    'licenceExpiresOn',
   ],
   ['hospitalLicense', 'registrationCertificate', 'otherDocuments'],
 ]
@@ -223,6 +227,8 @@ const CODE_STEP: Record<string, [number, string]> = {
   invalid_hospital_type: [2, 'registrationType'],
   invalid_bed_count: [2, 'bedCount'],
   room_types_required: [2, 'roomTypes'],
+  invalid_accreditation_expiry: [2, 'accreditationExpiresOn'],
+  invalid_licence_expiry: [2, 'licenceExpiresOn'],
   documents_required: [3, 'hospitalLicense'],
 }
 
@@ -257,6 +263,8 @@ function initialValues(h: HospitalProfile | null): Values {
     roomTypes: h?.roomTypes ?? [],
     licenseNumber: h?.licenseNumber ?? '',
     accreditationBody: h?.accreditationBody ?? '',
+    accreditationExpiresOn: h?.accreditationExpiresOn ?? '',
+    licenceExpiresOn: h?.licenceExpiresOn ?? '',
   }
 }
 
@@ -284,6 +292,11 @@ function stepErrors(step: number, v: Values, f: Files, resubmit: boolean, agreed
     if (!IDENTIFIER.test(v.licenseNumber.trim()))
       e.licenseNumber = 'License number must be 4–20 letters, numbers or hyphens'
     if (!v.accreditationBody.trim()) e.accreditationBody = 'Accreditation body is required'
+    const today = new Date().toISOString().slice(0, 10)
+    if (!v.accreditationExpiresOn || v.accreditationExpiresOn < today)
+      e.accreditationExpiresOn = 'Enter the expiry date of a current accreditation certificate'
+    if (!v.licenceExpiresOn || v.licenceExpiresOn < today)
+      e.licenceExpiresOn = 'Enter the expiry date of a current hospital licence'
   }
   if (step === 3) {
     if (!resubmit && !f.hospitalLicense) e.hospitalLicense = 'Upload the hospital license'
@@ -367,6 +380,8 @@ export function HospitalRegistrationForm({
       'bedCount',
       'licenseNumber',
       'accreditationBody',
+      'accreditationExpiresOn',
+      'licenceExpiresOn',
     ] as const) {
       form.set(key, values[key].trim())
     }
@@ -595,6 +610,22 @@ export function HospitalRegistrationForm({
               onChange={(e) => set('accreditationBody', e.target.value)}
             />
           </Field>
+          <div className="dr-grid-2">
+            <Field label="Accreditation certificate expires" error={err('accreditationExpiresOn')}>
+              <input
+                type="date"
+                value={values.accreditationExpiresOn}
+                onChange={(e) => set('accreditationExpiresOn', e.target.value)}
+              />
+            </Field>
+            <Field label="Hospital licence expires" error={err('licenceExpiresOn')}>
+              <input
+                type="date"
+                value={values.licenceExpiresOn}
+                onChange={(e) => set('licenceExpiresOn', e.target.value)}
+              />
+            </Field>
+          </div>
         </>
       )}
 

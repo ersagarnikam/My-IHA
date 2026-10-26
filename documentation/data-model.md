@@ -41,13 +41,14 @@ erDiagram
 | `email_verification_codes` | 6-digit codes for email verification and password reset (hashed, expiring, attempt-limited). |
 | `specialties` | Medical specialties (English/Chinese labels, sort order). |
 | `platform_fee_settings` | Admin-editable fees, one row per key (`fees/FeeSettingsService` holds the catalogue): `doctor_registration_fee` (default AUD 5,000), `doctor_annual_fee` (2,000), `consultation_fee` (200), `mta_service_fee_pct` (10, a percentage), `lawyer_*` and `hospital_*` registration/annual fees (0, not charged yet). `updated_by` records the last admin. |
+| `provider_verifications` | Register checks MTA recorded on a doctor (AHPRA) or hospital (accreditation, licence): outcome, valid until, details, who and when (V11). The latest per kind is current. |
 | `business_settings` | MTA's legal name, ABN, address, billing email, GST registration and per-charge GST classification (key/value, V10). |
 | `platform_fee_changes` | History of fee changes: key, old and new amount, reason, who, when (V7). |
 | `patients` | Patient profile: personal details, encrypted DOB and medical background, emergency contact, avatar, alert preferences, Stripe customer, deletion schedule. |
-| `doctors` | Doctor profile: registration details, encrypted DOB and licence, specialties, languages, working days, availability (JSON), registration documents (JSON), approval status, fee dates, alert preferences. |
+| `doctors` | Doctor profile: registration details, encrypted DOB and licence, specialties, languages, working days, availability (JSON), registration documents (JSON), approval status, fee dates, alert preferences, time zone, indemnity declaration (insurer, encrypted policy number, expiry, overseas cover, telehealth acknowledgement, declared at — V11). |
 | `doctor_hospital_affiliations` | Hospitals a doctor works with (plan hospitals come from here). |
 | `doctors.time_zone`, `hospitals.time_zone` | The Australian IANA zone the account works in (V9, default `Australia/Brisbane`). |
-| `hospitals` | Hospital accounts: seeded reference hospitals (no login, approved) and hospitals registered through the hospital portal (`status` pending → approved / rejected / more_info_requested, registration and licence numbers and ABN encrypted, `certificates` JSON list of registration documents, notification preferences). |
+| `hospitals` | Hospital accounts: seeded reference hospitals (no login, approved) and hospitals registered through the hospital portal (`status` pending → approved / rejected / more_info_requested, registration and licence numbers and ABN encrypted, `certificates` JSON list of registration documents, notification preferences, declared accreditation and licence expiry dates — V11). |
 | `lawyers` | Visa lawyer accounts (portal not ported yet). |
 | `cases` | A patient's medical case: reference `MTA-<year>-<seq>`, specialty, description, status, travel-assistance flags. |
 | `case_documents` | Medical documents (and standalone uploads not yet linked to a case). |

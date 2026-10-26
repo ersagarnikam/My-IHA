@@ -111,6 +111,25 @@ public class Doctor {
 	@Column(name = "time_zone", nullable = false)
 	private String timeZone = AustralianTimeZones.DEFAULT;
 
+	@Column(name = "indemnity_insurer")
+	private String indemnityInsurer;
+
+	@Convert(converter = EncryptedStringConverter.class)
+	@Column(name = "indemnity_policy_number_enc")
+	private String indemnityPolicyNumber;
+
+	@Column(name = "indemnity_expires_on")
+	private LocalDate indemnityExpiresOn;
+
+	@Column(name = "indemnity_covers_overseas", nullable = false)
+	private boolean indemnityCoversOverseas;
+
+	@Column(name = "telehealth_guidelines_ack", nullable = false)
+	private boolean telehealthGuidelinesAck;
+
+	@Column(name = "indemnity_declared_at")
+	private Instant indemnityDeclaredAt;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -202,6 +221,24 @@ public class Doctor {
 
 	public void setTimeZone(String timeZone) {
 		this.timeZone = AustralianTimeZones.valid(timeZone);
+	}
+
+	/** Professional indemnity and telehealth declaration (see {@code DoctorAccountService.declareIndemnity}). */
+	public void declareIndemnity(String insurer, String policyNumber, LocalDate expiresOn, boolean coversOverseas,
+			boolean telehealthAck) {
+		this.indemnityInsurer = insurer;
+		this.indemnityPolicyNumber = policyNumber;
+		this.indemnityExpiresOn = expiresOn;
+		this.indemnityCoversOverseas = coversOverseas;
+		this.telehealthGuidelinesAck = telehealthAck;
+		this.indemnityDeclaredAt = Instant.now();
+	}
+
+	/** The declaration, or null when the doctor hasn't made one. */
+	public Indemnity getIndemnity() {
+		return indemnityDeclaredAt == null ? null
+				: new Indemnity(indemnityInsurer, indemnityPolicyNumber, indemnityExpiresOn, indemnityCoversOverseas,
+						telehealthGuidelinesAck, indemnityDeclaredAt);
 	}
 
 	public void setNotificationPreferences(boolean email, boolean sms) {
@@ -340,6 +377,19 @@ public class Doctor {
 
 	public Instant getCreatedAt() {
 		return createdAt;
+	}
+
+	public record Indemnity(String insurer, String policyNumber, LocalDate expiresOn, boolean coversOverseas,
+			boolean telehealthGuidelinesAck, Instant declaredAt) {
+
+		/** {@code missing}, {@code expired} or {@code valid}. */
+		public static String status(Indemnity i, LocalDate today) {
+			if (i == null || !i.coversOverseas() || !i.telehealthGuidelinesAck()) {
+				return "missing";
+			}
+			return i.expiresOn().isBefore(today) ? "expired" : "valid";
+		}
+
 	}
 
 	public record Registration(String fullName, String contactEmail, String contactPhone, String[] specialties,

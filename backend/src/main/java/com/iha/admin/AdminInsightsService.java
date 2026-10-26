@@ -47,6 +47,7 @@ import com.iha.treatment.TreatmentOption;
 import com.iha.treatment.TreatmentOptionRepository;
 import com.iha.treatment.TreatmentPlan;
 import com.iha.treatment.TreatmentPlanRepository;
+import com.iha.verification.ComplianceService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,12 +99,14 @@ public class AdminInsightsService {
 	private final ConsultationSlotRepository slots;
 	private final ConsultationService consultationService;
 	private final RefundService refunds;
+	private final ComplianceService compliance;
 
 	AdminInsightsService(AdminService admin, DoctorRepository doctors, DoctorCaseAssignmentRepository assignments,
 			CaseRepository cases, PatientRepository patients, TreatmentPlanRepository plans,
 			TreatmentOptionRepository options, PaymentRepository payments, DoctorFeePaymentRepository feePayments,
 			ConsultationRequestRepository consultations, ConsultationSlotRepository slots,
-			ConsultationService consultationService, RefundService refunds) {
+			ConsultationService consultationService, RefundService refunds, ComplianceService compliance) {
+		this.compliance = compliance;
 		this.admin = admin;
 		this.doctors = doctors;
 		this.assignments = assignments;
@@ -252,7 +255,7 @@ public class AdminInsightsService {
 
 		return new Insights(platform, new Attention(overview.pendingDoctors(), overview.casesNeedingDoctor(),
 				overview.plansToReview(), overview.chatsWaiting()), money, pipeline, doctorsByStatus, doctorStats,
-				specialtyCoverage, waiting, feeAlerts, upcoming(s, now));
+				specialtyCoverage, waiting, feeAlerts, compliance.alerts(), upcoming(s, now));
 	}
 
 	/** One doctor's figures and cases, for the admin doctor page. */
@@ -415,7 +418,8 @@ public class AdminInsightsService {
 
 	public record Insights(Platform platform, Attention attention, Money money, List<StageCount> pipeline,
 			Map<String, Long> doctorsByStatus, List<DoctorStats> doctors, List<Coverage> specialties,
-			List<WaitingInvitation> waitingInvitations, List<FeeAlert> feeAlerts, List<Upcoming> upcomingConsultations) {
+			List<WaitingInvitation> waitingInvitations, List<FeeAlert> feeAlerts,
+			List<ComplianceService.Alert> complianceAlerts, List<Upcoming> upcomingConsultations) {
 	}
 
 	public record Platform(long activeDoctors, long doctorsAwaitingFee, long patients, long totalCases,

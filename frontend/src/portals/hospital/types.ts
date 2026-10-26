@@ -33,6 +33,9 @@ export type HospitalProfile = {
   roomTypes: string[]
   licenseNumber: string | null
   accreditationBody: string | null
+  /** NSQHS accreditation and state licence expiry dates, as declared by the hospital. */
+  accreditationExpiresOn: string | null
+  licenceExpiresOn: string | null
   emailNotificationsEnabled: boolean
   smsNotificationsEnabled: boolean
   timeZone: string

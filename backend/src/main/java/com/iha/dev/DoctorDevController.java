@@ -30,6 +30,8 @@ import com.iha.treatment.TreatmentOption;
 import com.iha.treatment.TreatmentPlan;
 import com.iha.treatment.TreatmentOptionRepository;
 import com.iha.treatment.TreatmentPlanRepository;
+import com.iha.verification.ProviderVerification;
+import com.iha.verification.VerificationService;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -68,6 +70,7 @@ class DoctorDevController {
 	private final DoctorCaseAssignmentRepository assignments;
 	private final PasswordEncoder passwordEncoder;
 	private final org.springframework.jdbc.core.JdbcTemplate jdbc;
+	private final VerificationService verification;
 
 	DoctorDevController(DoctorAccountService accounts, DoctorAdminService admin, CaseService caseService,
 			CaseRepository cases, CaseDocumentRequestRepository documentRequests, PatientRepository patients,
@@ -75,7 +78,9 @@ class DoctorDevController {
 			ConsultationRequestRepository consultationRequests, PaymentService payments,
 			ProviderMessageService providerMessages, TreatmentOptionRepository options,
 			DoctorCaseAssignmentRepository assignments, PasswordEncoder passwordEncoder,
-			org.springframework.jdbc.core.JdbcTemplate jdbc) {
+			org.springframework.jdbc.core.JdbcTemplate jdbc,
+			VerificationService verification) {
+		this.verification = verification;
 		this.jdbc = jdbc;
 		this.accounts = accounts;
 		this.admin = admin;
@@ -98,6 +103,7 @@ class DoctorDevController {
 	@PostMapping("/approve")
 	public Map<String, Object> approve(@AuthenticationPrincipal Jwt jwt) {
 		Doctor doctor = accounts.requireCurrent(CurrentUser.from(jwt));
+		verification.recordDemoChecks(ProviderVerification.DOCTOR, doctor.getId());
 		return Map.of("status", admin.review(doctor.getId(), Doctor.APPROVED, null).getStatus());
 	}
 

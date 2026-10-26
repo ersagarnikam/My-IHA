@@ -9,6 +9,7 @@ import {
   FileText,
   Pencil,
   Shield,
+  ShieldCheck,
   User,
   type LucideIcon,
 } from 'lucide-react'
@@ -32,11 +33,19 @@ import {
 } from '../types'
 import { useDoctorPhoto } from './useDoctorPhoto'
 
-type Tab = 'profile' | 'availability' | 'billing' | 'invoices' | 'security' | 'notifications'
+type Tab =
+  | 'profile'
+  | 'availability'
+  | 'indemnity'
+  | 'billing'
+  | 'invoices'
+  | 'security'
+  | 'notifications'
 
 const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'availability', label: 'Availability', icon: Clock },
+  { id: 'indemnity', label: 'Indemnity', icon: ShieldCheck },
   { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'invoices', label: 'Invoices', icon: FileText },
   { id: 'security', label: 'Security', icon: Shield },
@@ -74,6 +83,7 @@ export function AccountSettingsPage() {
               <AvailabilityTab />
             </>
           )}
+          {tab === 'indemnity' && <IndemnityTab />}
           {tab === 'billing' && <BillingTab />}
           {tab === 'invoices' && <InvoicesTab />}
           {tab === 'security' && <SecurityTab />}
@@ -505,6 +515,119 @@ function TimeZoneCard() {
         </button>
       </div>
     </section>
+  )
+}
+
+// ── Indemnity ───────────────────────────────────────────────────────────
+
+/** Wording for MTA's lawyer to confirm before launch. */
+function IndemnityTab() {
+  const doctor = useDoctor()
+  const toast = useToast()
+  const current = doctor.indemnity
+  const [insurer, setInsurer] = useState(current?.insurer ?? '')
+  const [policyNumber, setPolicyNumber] = useState(current?.policyNumber ?? '')
+  const [expiresOn, setExpiresOn] = useState(current?.expiresOn ?? '')
+  const [coversOverseas, setCoversOverseas] = useState(current?.coversOverseas ?? false)
+  const [ack, setAck] = useState(current?.telehealthGuidelinesAck ?? false)
+  const [error, setError] = useState<unknown>(null)
+  const [pending, setPending] = useState(false)
+
+  async function save(e: FormEvent) {
+    e.preventDefault()
+    setPending(true)
+    setError(null)
+    try {
+      doctor.update(
+        await apiPut<DoctorProfile>('/api/doctor/profile/indemnity', {
+          insurer,
+          policyNumber,
+          expiresOn: expiresOn || null,
+          coversOverseas,
+          telehealthGuidelinesAck: ack,
+        }),
+      )
+      toast({ title: 'Indemnity declaration saved.', tone: 'good' })
+    } catch (err) {
+      setError(err)
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <form className="dr-card stack" onSubmit={save}>
+      <div>
+        <h2 className="dr-subtitle">Professional indemnity &amp; telehealth</h2>
+        <p className="muted small" style={{ margin: 0 }}>
+          Zoom consultations with patients overseas need professional indemnity insurance that
+          covers patients located outside Australia. You can offer consultation times once this is
+          declared and current.
+        </p>
+      </div>
+      {current && (
+        <p
+          className={`dr-banner${doctor.indemnityStatus === 'valid' ? ' info' : ' bad'}`}
+          style={{ margin: 0 }}
+        >
+          {doctor.indemnityStatus === 'valid'
+            ? `Declared ${formatDate(current.declaredAt)}; cover runs until ${formatDate(current.expiresOn)}.`
+            : `Your cover expired on ${formatDate(current.expiresOn)}. Enter your renewed policy.`}
+        </p>
+      )}
+      <div className="dr-grid-2">
+        <Field label="Insurer (MDO)" error={fieldError(error, 'insurer')}>
+          <input
+            value={insurer}
+            onChange={(e) => setInsurer(e.target.value)}
+            placeholder="e.g. Avant, MDA National, MIGA, Tego"
+            maxLength={120}
+          />
+        </Field>
+        <Field label="Policy or membership number" error={fieldError(error, 'policyNumber')}>
+          <input
+            value={policyNumber}
+            onChange={(e) => setPolicyNumber(e.target.value)}
+            maxLength={60}
+          />
+        </Field>
+        <Field label="Cover expires on" error={fieldError(error, 'expiresOn')}>
+          <input type="date" value={expiresOn} onChange={(e) => setExpiresOn(e.target.value)} />
+        </Field>
+      </div>
+      <label className="dr-check-row">
+        <input
+          type="checkbox"
+          checked={coversOverseas}
+          onChange={(e) => setCoversOverseas(e.target.checked)}
+        />
+        <span>
+          I confirm my indemnity insurance covers consultations with patients located outside
+          Australia, including by video.
+        </span>
+      </label>
+      <label className="dr-check-row">
+        <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+        <span>
+          I have read and will follow the Medical Board of Australia&apos;s{' '}
+          <a
+            href="https://www.medicalboard.gov.au/Codes-Guidelines-Policies/Telehealth-consultations-with-patients.aspx"
+            target="_blank"
+            rel="noreferrer"
+          >
+            guidelines for telehealth consultations with patients
+          </a>
+          , and I hold the registration needed to consult patients in their location where it
+          applies.
+        </span>
+      </label>
+      <FormError error={error} />
+      <div className="row-end">
+        <button type="submit" disabled={pending || !insurer || !policyNumber || !expiresOn}>
+          {pending ? 'Saving…' : current ? 'Update declaration' : 'Save declaration'}
+        </button>
+      </div>
+    </form>
   )
 }
 

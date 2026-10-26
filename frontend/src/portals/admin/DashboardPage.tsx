@@ -410,6 +410,27 @@ function NudgeCard({ insights: i }: { insights: Insights }) {
     to: string
   }
   const items: Item[] = [
+    ...i.complianceAlerts.map(
+      (c): Item => ({
+        key: `comp-${c.providerId}-${c.item}`,
+        tone: c.status === 'expiring' ? 'orange' : 'red',
+        title: (
+          <>
+            {c.name}: {c.label.toLowerCase()}{' '}
+            {c.status === 'missing' ? 'missing' : c.status === 'failed' ? 'check failed' : c.status}
+          </>
+        ),
+        detail:
+          c.status === 'missing'
+            ? c.item === 'indemnity'
+              ? "Can't offer consultation times until declared"
+              : 'No register check recorded'
+            : c.status === 'failed'
+              ? `Check failed ${formatDate(c.date)}`
+              : `${c.status === 'expired' ? 'Expired' : 'Expires'} ${formatDate(c.date)}`,
+        to: `/admin/${c.providerType === 'doctor' ? 'doctors' : 'hospitals'}/${c.providerId}`,
+      }),
+    ),
     ...i.waitingInvitations.map(
       (w): Item => ({
         key: `inv-${w.caseId}-${w.doctorId}`,
@@ -444,7 +465,8 @@ function NudgeCard({ insights: i }: { insights: Insights }) {
     <Card title="Needs a nudge">
       {items.length === 0 ? (
         <p className="muted">
-          Nothing overdue. Invitations older than 48 hours and doctor fees due show here.
+          Nothing overdue. Invitations older than 48 hours, doctor fees due and registrations,
+          insurance, accreditation or licences that lapse within 30 days show here.
         </p>
       ) : (
         <ul className="dash-actions">

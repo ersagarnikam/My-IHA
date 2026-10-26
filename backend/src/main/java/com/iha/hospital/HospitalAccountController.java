@@ -1,6 +1,7 @@
 package com.iha.hospital;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +21,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import org.springframework.core.io.Resource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -101,7 +103,8 @@ public class HospitalAccountController {
 				h.getMoreInfoMessage(), h.getName(), h.getRegistrationNumber(), h.getAbnNumber(), h.getPhone(),
 				h.getContactEmail(), h.getCountry(), h.getCity(), h.getAddress(), h.getZipCode(),
 				h.getRegistrationType(), list(h.getSpecialties()), h.getBedCount(), list(h.getRoomTypes()),
-				h.getLicenseNumber(), h.getAccreditationBody(), h.isEmailNotificationsEnabled(),
+				h.getLicenseNumber(), h.getAccreditationBody(), h.getAccreditationExpiresOn(), h.getLicenceExpiresOn(),
+				h.isEmailNotificationsEnabled(),
 				h.isSmsNotificationsEnabled(), h.getTimeZone(), h.getCreatedAt(),
 				IntStream.range(0, docs.size())
 					.mapToObj(i -> new DocumentResponse(i, docs.get(i).fileName(), docs.get(i).category(),
@@ -146,6 +149,8 @@ public class HospitalAccountController {
 			@NotEmpty(message = "Add at least one room type") List<String> roomTypes,
 			@NotBlank(message = "License number is required") String licenseNumber,
 			@NotBlank(message = "Accreditation body is required") @Size(max = 160) String accreditationBody,
+			@NotNull(message = "Accreditation expiry is required") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate accreditationExpiresOn,
+			@NotNull(message = "Licence expiry is required") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate licenceExpiresOn,
 			MultipartFile hospitalLicense, MultipartFile registrationCertificate, List<MultipartFile> otherDocuments) {
 
 		HospitalAccountService.RegistrationInput input() {
@@ -153,7 +158,7 @@ public class HospitalAccountController {
 					new HospitalAccountService.BasicInput(name, registrationNumber, abnNumber, phone, country, city,
 							address, zipCode, timeZone),
 					new HospitalAccountService.DetailsInput(registrationType, specialties, bedCount, roomTypes,
-							licenseNumber, accreditationBody));
+							licenseNumber, accreditationBody, accreditationExpiresOn, licenceExpiresOn));
 		}
 
 		HospitalAccountService.RegistrationFiles files() {
@@ -184,11 +189,13 @@ public class HospitalAccountController {
 			@NotNull(message = "Number of beds is required") @Min(value = 1, message = "Number of beds must be greater than 0") @Max(100000) Integer bedCount,
 			@NotEmpty(message = "Add at least one room type") List<String> roomTypes,
 			@NotBlank(message = "License number is required") String licenseNumber,
-			@NotBlank(message = "Accreditation body is required") @Size(max = 160) String accreditationBody) {
+			@NotBlank(message = "Accreditation body is required") @Size(max = 160) String accreditationBody,
+			@NotNull(message = "Accreditation expiry is required") LocalDate accreditationExpiresOn,
+			@NotNull(message = "Licence expiry is required") LocalDate licenceExpiresOn) {
 
 		HospitalAccountService.DetailsInput input() {
 			return new HospitalAccountService.DetailsInput(registrationType, specialties, bedCount, roomTypes,
-					licenseNumber, accreditationBody);
+					licenseNumber, accreditationBody, accreditationExpiresOn, licenceExpiresOn);
 		}
 
 	}
@@ -206,7 +213,8 @@ public class HospitalAccountController {
 			String moreInfoMessage, String name, String registrationNumber, String abnNumber, String phone,
 			String contactEmail, String country, String city, String address, String zipCode, String registrationType,
 			List<String> specialties, Integer bedCount, List<String> roomTypes, String licenseNumber,
-			String accreditationBody, boolean emailNotificationsEnabled, boolean smsNotificationsEnabled,
+			String accreditationBody, LocalDate accreditationExpiresOn, LocalDate licenceExpiresOn,
+			boolean emailNotificationsEnabled, boolean smsNotificationsEnabled,
 			String timeZone, Instant createdAt, List<DocumentResponse> documents) {
 	}
 

@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import com.iha.auth.CurrentUser;
+import com.iha.common.AustralianTimeZones;
 import com.iha.cases.CaseService;
 import com.iha.cases.CaseStatus;
 import com.iha.cases.MedicalCase;
@@ -88,7 +89,8 @@ public class AdminController {
 		return new DoctorDetailResponse(DoctorRowResponse.of(d), d.getContactPhone(), d.getQualifications(),
 				d.getYearsExperience(), d.getLicenseNumber(), d.getBio(), list(d.getLanguagesSpoken()),
 				d.getDepartment(), d.getRole(), list(d.getWorkingDays()), d.getRejectionReason(),
-				d.getMoreInfoMessage(),
+				d.getMoreInfoMessage(), d.getIndemnity(),
+				Doctor.Indemnity.status(d.getIndemnity(), LocalDate.now(AustralianTimeZones.zone(d.getTimeZone()))),
 				admin.hospitalsById(doctorAccounts.hospitalIds(d)).stream().map(Hospital::getName).sorted().toList(),
 				IntStream.range(0, docs.size())
 					.mapToObj(i -> new DocumentResponse(i, docs.get(i).fileName(), docs.get(i).category(),
@@ -230,7 +232,7 @@ public class AdminController {
 	public record DoctorDetailResponse(DoctorRowResponse doctor, String contactPhone, String qualifications,
 			Integer yearsOfExperience, String licenseNumber, String bio, List<String> languagesSpoken,
 			String department, String role, List<String> workingDays, String rejectionReason, String moreInfoMessage,
-			List<String> hospitals, List<DocumentResponse> documents) {
+			Doctor.Indemnity indemnity, String indemnityStatus, List<String> hospitals, List<DocumentResponse> documents) {
 	}
 
 	public record CaseRowResponse(UUID id, String referenceNumber, String patientName, String specialty,

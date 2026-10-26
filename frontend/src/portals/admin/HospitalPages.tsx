@@ -3,11 +3,12 @@ import { Link, useOutletContext, useParams } from 'react-router'
 import { Download, Eye, FileText } from 'lucide-react'
 import { useToast } from '../../components/Toasts'
 import { ErrorState, Loading } from '../../components/ui'
-import { apiPost, openFile } from '../../lib/api'
+import { ApiError, apiPost, openFile } from '../../lib/api'
 import { useFormat } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { BackHeader, formatDate, PillTabs, SearchBox, usePaged } from '../doctor/shared'
 import type { AdminOutletContext } from './AdminLayout'
+import { VerificationCard, type Verifications } from './Verification'
 import { Fact, ReasonDialog } from './DoctorPages'
 import { DOCTOR_STATUS, Pill } from './types'
 
@@ -36,6 +37,8 @@ type HospitalDetail = {
   roomTypes: string[]
   licenseNumber: string | null
   accreditationBody: string | null
+  accreditationExpiresOn: string | null
+  licenceExpiresOn: string | null
   rejectionReason: string | null
   moreInfoMessage: string | null
   documents: {
@@ -163,6 +166,7 @@ export function AdminHospitalDetailPage() {
   const format = useFormat()
   const toast = useToast()
   const detail = useApi<HospitalDetail>(`/api/admin/hospitals/${hospitalId}`)
+  const checks = useApi<Verifications>(`/api/admin/verifications/hospital/${hospitalId}`)
   const [dialog, setDialog] = useState<'rejected' | 'more_info_requested' | null>(null)
   const { refreshCounts } = useOutletContext<AdminOutletContext>()
   if (detail.error) return <ErrorState error={detail.error} onRetry={detail.reload} />
@@ -180,8 +184,11 @@ export function AdminHospitalDetailPage() {
       })
       void detail.reload()
       refreshCounts()
-    } catch {
-      toast({ title: 'Could not approve this registration.', tone: 'bad' })
+    } catch (err) {
+      toast({
+        title: err instanceof ApiError ? err.message : 'Could not approve this registration.',
+        tone: 'bad',
+      })
     }
   }
 
@@ -199,7 +206,16 @@ export function AdminHospitalDetailPage() {
         </div>
         {h.status === 'pending' && (
           <div className="dr-actions">
-            <button type="button" onClick={approve}>
+            <button
+              type="button"
+              onClick={approve}
+              disabled={!checks.data?.allPassing}
+              title={
+                checks.data?.allPassing
+                  ? undefined
+                  : 'Record passing accreditation and licence checks first'
+              }
+            >
               Approve
             </button>
             <button
@@ -224,6 +240,15 @@ export function AdminHospitalDetailPage() {
         </div>
       )}
 
+      {checks.data && (
+        <VerificationCard
+          providerType="hospital"
+          providerId={h.id}
+          data={checks.data}
+          onChange={() => void checks.reload()}
+        />
+      )}
+
       <section className="dr-card stack">
         <h2 className="dr-subtitle">Hospital details</h2>
         <div className="dr-kv">
@@ -235,6 +260,14 @@ export function AdminHospitalDetailPage() {
           <Fact label="ABN" value={d.abnNumber} />
           <Fact label="License number" value={d.licenseNumber} />
           <Fact label="Accreditation body" value={d.accreditationBody} />
+          <Fact
+            label="Accreditation expires (declared)"
+            value={d.accreditationExpiresOn ? formatDate(d.accreditationExpiresOn) : null}
+          />
+          <Fact
+            label="Licence expires (declared)"
+            value={d.licenceExpiresOn ? formatDate(d.licenceExpiresOn) : null}
+          />
           <Fact label="Number of beds" value={d.bedCount} />
           <Fact label="Phone" value={d.phone} />
           <Fact

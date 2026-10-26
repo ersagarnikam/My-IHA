@@ -1,6 +1,7 @@
 package com.iha.hospital;
 
 import java.io.ByteArrayInputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ import com.iha.auth.CurrentUser;
 import com.iha.auth.Role;
 import com.iha.common.Abn;
 import com.iha.common.ApiException;
+import com.iha.common.AustralianTimeZones;
 import com.iha.notification.AlertPreferences;
 import com.iha.provider.Hospital;
 import com.iha.provider.HospitalRepository;
@@ -236,8 +238,17 @@ public class HospitalAccountService implements AlertPreferences {
 		}
 		String license = identifier(d.licenseNumber(), "invalid_license_number",
 				"License number must be 4–20 letters, numbers or hyphens.");
+		LocalDate today = LocalDate.now(AustralianTimeZones.zone(null));
+		if (d.accreditationExpiresOn() == null || d.accreditationExpiresOn().isBefore(today)) {
+			throw ApiException.badRequest("invalid_accreditation_expiry",
+					"Enter the expiry date of a current accreditation certificate.");
+		}
+		if (d.licenceExpiresOn() == null || d.licenceExpiresOn().isBefore(today)) {
+			throw ApiException.badRequest("invalid_licence_expiry", "Enter the expiry date of a current hospital licence.");
+		}
 		return new Hospital.Details(d.registrationType(), list.toArray(String[]::new), d.bedCount(),
-				rooms.toArray(String[]::new), license, d.accreditationBody().trim());
+				rooms.toArray(String[]::new), license, d.accreditationBody().trim(), d.accreditationExpiresOn(),
+				d.licenceExpiresOn());
 	}
 
 	/** Licence and registration certificate are required on first registration; resubmissions keep earlier files. */
@@ -316,7 +327,8 @@ public class HospitalAccountService implements AlertPreferences {
 	}
 
 	public record DetailsInput(String registrationType, List<String> specialties, Integer bedCount,
-			List<String> roomTypes, String licenseNumber, String accreditationBody) {
+			List<String> roomTypes, String licenseNumber, String accreditationBody, LocalDate accreditationExpiresOn,
+			LocalDate licenceExpiresOn) {
 	}
 
 	public record RegistrationInput(BasicInput basic, DetailsInput details) {

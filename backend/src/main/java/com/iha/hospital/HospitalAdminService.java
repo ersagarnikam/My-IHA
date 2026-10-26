@@ -12,6 +12,8 @@ import com.iha.common.ApiException;
 import com.iha.notification.NotificationService;
 import com.iha.provider.Hospital;
 import com.iha.provider.HospitalRepository;
+import com.iha.verification.ProviderVerification;
+import com.iha.verification.VerificationService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +28,14 @@ public class HospitalAdminService {
 	private final HospitalRepository hospitals;
 	private final NotificationService notifications;
 	private final AuditService audit;
+	private final VerificationService verification;
 
-	HospitalAdminService(HospitalRepository hospitals, NotificationService notifications, AuditService audit) {
+	HospitalAdminService(HospitalRepository hospitals, NotificationService notifications, AuditService audit,
+			VerificationService verification) {
 		this.hospitals = hospitals;
 		this.notifications = notifications;
 		this.audit = audit;
+		this.verification = verification;
 	}
 
 	/** Hospitals with a portal login (seeded reference hospitals without one aren't reviewed). Newest first. */
@@ -61,6 +66,9 @@ public class HospitalAdminService {
 		Hospital hospital = hospital(hospitalId);
 		if (!Hospital.PENDING.equals(hospital.getStatus())) {
 			throw ApiException.conflict("not_pending", "This registration isn't awaiting review.");
+		}
+		if (Hospital.APPROVED.equals(outcome)) {
+			verification.requirePassing(ProviderVerification.HOSPITAL, hospitalId);
 		}
 		hospital.review(outcome, reason);
 		if (hospital.getUserId() != null) {

@@ -80,7 +80,7 @@ flowchart LR
   H --> I[Treatment · mark completed]
 ```
 
-**The initial Zoom consultation is required before the plan.** During evaluation the doctor offers up to three times (in their time zone); the patient picks one and pays the AUD 200 consultation fee; the Zoom meeting is created on payment. *Submit Plan* stays locked until the consultation's time has come. When a consultation really isn't needed (e.g. they already spoke), the doctor can skip it with a reason MTA can see. Drafting the plan is allowed at any time.
+**The initial Zoom consultation is required before the plan.** During evaluation the doctor offers up to three times (in their time zone); the patient picks one and pays the AUD 200 consultation fee (offering times needs a current indemnity declaration, see Account & Settings); the Zoom meeting is created on payment. *Submit Plan* stays locked until the consultation's time has come. When a consultation really isn't needed (e.g. they already spoke), the doctor can skip it with a reason MTA can see. Drafting the plan is allowed at any time.
 
 The patient can still ask for a **follow-up consultation** about a published plan before choosing; it works the same way and doesn't block anything.
 
@@ -129,6 +129,7 @@ Support chat with the MTA coordinator ("Chat with your MTA coordinator"). MTA op
 |---|---|
 | Profile | Personal Details (name, email, phone, date of birth, gender, photo) and Professional Details (specializations, qualification, experience, licence, department, role, languages, hospital affiliations, bio) — each with Edit. |
 | Availability | Per-day toggle and hours (30-minute steps); "Not Working On this Day" when off. |
+| Indemnity | Professional indemnity & telehealth declaration: insurer, policy number, cover expiry, *covers patients located outside Australia*, *follows the Medical Board's telehealth guidelines* (both required). Needed before offering any consultation times; a red banner across the portal links here while it is missing or expired. |
 | Billing | Annual renewal fee and next due date; *Pay now* when due. |
 | Invoices | Paid registration/annual fees with PDF invoices; refunds by MTA show as *Partly refunded* / *Refunded* with the amount returned. |
 | Security | Change password. |

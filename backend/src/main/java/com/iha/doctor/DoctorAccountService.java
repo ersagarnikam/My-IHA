@@ -344,6 +344,39 @@ public class DoctorAccountService implements AlertPreferences {
 		return doctor;
 	}
 
+	/**
+	 * The doctor declares professional indemnity insurance that covers
+	 * consultations with patients located outside Australia and acknowledges the
+	 * Medical Board's telehealth guidelines. Needed before offering consultations.
+	 * (Wording for MTA's lawyer to confirm.)
+	 */
+	@Transactional
+	public Doctor declareIndemnity(CurrentUser user, IndemnityInput input) {
+		Doctor doctor = requireActive(user);
+		String insurer = input.insurer() == null ? "" : input.insurer().trim();
+		String policy = input.policyNumber() == null ? "" : input.policyNumber().trim();
+		if (insurer.length() < 2) {
+			throw ApiException.badRequest("insurer_required", "Enter your indemnity insurer.");
+		}
+		if (policy.length() < 3) {
+			throw ApiException.badRequest("policy_number_required", "Enter your policy or membership number.");
+		}
+		if (input.expiresOn() == null || input.expiresOn().isBefore(LocalDate.now(AustralianTimeZones.zone(doctor.getTimeZone())))) {
+			throw ApiException.badRequest("invalid_indemnity_expiry", "Enter the expiry date of a current policy.");
+		}
+		if (!input.coversOverseas()) {
+			throw ApiException.badRequest("overseas_cover_required",
+					"Your cover must include consultations with patients located outside Australia.");
+		}
+		if (!input.telehealthGuidelinesAck()) {
+			throw ApiException.badRequest("telehealth_ack_required", "Acknowledge the telehealth guidelines.");
+		}
+		doctor.declareIndemnity(insurer, policy, input.expiresOn(), true, true);
+		audit.record(user.id(), user.email(), "doctor", "doctor.indemnity_declared", "doctor", doctor.getId(),
+				Map.of("expires_on", input.expiresOn().toString()));
+		return doctor;
+	}
+
 	@Transactional
 	public Doctor updateNotificationPreferences(CurrentUser user, boolean email, boolean sms) {
 		Doctor doctor = requireActive(user);
@@ -461,6 +494,10 @@ public class DoctorAccountService implements AlertPreferences {
 	}
 
 	/** {@code timeZone}: one of {@link AustralianTimeZones#SUPPORTED}; null keeps the default (Brisbane). */
+	public record IndemnityInput(String insurer, String policyNumber, LocalDate expiresOn, boolean coversOverseas,
+			boolean telehealthGuidelinesAck) {
+	}
+
 	public record RegistrationInput(String fullName, String contactPhone, List<String> specialties,
 			String qualifications, int yearsOfExperience, String licenseNumber, String bio,
 			List<String> languagesSpoken, String department, String role, List<UUID> hospitalIds,

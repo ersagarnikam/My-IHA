@@ -37,6 +37,15 @@ const click = async (t) => {
   const exact = page.locator(`::-p-xpath(//*[self::button or self::a][normalize-space()="${t}"])`)
   await exact.setTimeout(8000).map((el) => (el.click(), true)).wait()
 }
+/** Date inputs follow the OS locale; set the value natively (see journey.mjs). */
+const setDate = async (selector, iso) => {
+  const handle = await page.locator(selector).waitHandle()
+  await handle.evaluate((el, v) => {
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+    set.call(el, v)
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+  }, iso)
+}
 const waitText = (t, timeout = 10000) =>
   page.waitForFunction((s) => document.body.innerText.includes(s), { timeout }, t)
 const fill = (selector, value) => page.locator(selector).fill(value)
@@ -95,6 +104,8 @@ try {
   await fill('input[placeholder="e.g. Private room, ICU"]', 'Private')
   await click('Add')
   await fill(byLabel('Accreditation body'), 'ACHS')
+  await setDate(byLabel('Accreditation certificate expires'), '2028-03-31')
+  await setDate(byLabel('Hospital licence expires'), '2027-06-30')
   await shot('wizard-details')
   await click('Continue')
   await waitText('Agreement')
@@ -126,7 +137,14 @@ try {
   await click('Resubmit Registration')
   await waitText('Your registration is under review')
 
-  // Approve through the admin portal UI (same browser storage: keep the hospital's session to restore).
+  // MTA records its accreditation and licence checks (API), then approves through the admin portal UI
+  // (same browser storage: keep the hospital's session to restore).
+  for (const checkType of ['accreditation', 'licence'])
+    await api(`/api/admin/verifications/hospital/${mine.id}`, {
+      method: 'POST',
+      token: admin.accessToken,
+      json: { checkType, outcome: 'verified', validUntil: '2027-06-30' },
+    })
   const hospitalSession = await page.evaluate(() => localStorage.getItem('iha.session'))
   const adminPage = await browser.newPage()
   adminPage.on('pageerror', (e) => consoleErrors.push(`admin pageerror: ${e.message}`))

@@ -9,7 +9,7 @@ import { AU_TIME_ZONES } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { Group } from '../doctor/registration/RegistrationForm'
 import { KV, SecurityTab, Toggle } from '../doctor/settings/AccountSettingsPage'
-import { TimeZoneSelect } from '../doctor/shared'
+import { formatDate, TimeZoneSelect } from '../doctor/shared'
 import { useHospital } from './HospitalContext'
 import { HOSPITAL_TYPES, type HospitalProfile } from './types'
 
@@ -239,6 +239,8 @@ function DetailsCard() {
           roomTypes: rooms,
           licenseNumber: String(f.get('licenseNumber') ?? '').trim(),
           accreditationBody: String(f.get('accreditationBody') ?? '').trim(),
+          accreditationExpiresOn: String(f.get('accreditationExpiresOn') ?? '') || null,
+          licenceExpiresOn: String(f.get('licenceExpiresOn') ?? '') || null,
         }),
       )
       setEditing(false)
@@ -262,6 +264,16 @@ function DetailsCard() {
           <KV label="Number of beds" value={hospital.bedCount} />
           <KV label="License number" value={hospital.licenseNumber} />
           <KV label="Accreditation body" value={hospital.accreditationBody} />
+          <KV
+            label="Accreditation expires"
+            value={
+              hospital.accreditationExpiresOn ? formatDate(hospital.accreditationExpiresOn) : null
+            }
+          />
+          <KV
+            label="Licence expires"
+            value={hospital.licenceExpiresOn ? formatDate(hospital.licenceExpiresOn) : null}
+          />
           <KV label="Specialties" value={hospital.specialties.join(', ')} className="full" />
           <KV label="Room types" value={hospital.roomTypes.join(', ')} className="full" />
         </div>
@@ -338,6 +350,25 @@ function DetailsCard() {
           <Field label="Accreditation body" error={fieldError(error, 'accreditationBody')}>
             <input name="accreditationBody" defaultValue={hospital.accreditationBody ?? ''} />
           </Field>
+          <div className="dr-grid-2">
+            <Field
+              label="Accreditation certificate expires"
+              error={fieldError(error, 'accreditationExpiresOn')}
+            >
+              <input
+                type="date"
+                name="accreditationExpiresOn"
+                defaultValue={hospital.accreditationExpiresOn ?? ''}
+              />
+            </Field>
+            <Field label="Hospital licence expires" error={fieldError(error, 'licenceExpiresOn')}>
+              <input
+                type="date"
+                name="licenceExpiresOn"
+                defaultValue={hospital.licenceExpiresOn ?? ''}
+              />
+            </Field>
+          </div>
           <FormError error={error} />
           <div className="row-end">
             <button

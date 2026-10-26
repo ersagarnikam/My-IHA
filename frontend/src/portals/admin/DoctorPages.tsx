@@ -3,11 +3,12 @@ import { Link, useOutletContext, useParams } from 'react-router'
 import { Download, Eye, FileText } from 'lucide-react'
 import { useToast } from '../../components/Toasts'
 import { ErrorState, FormError, Loading, Modal, StatusBadge } from '../../components/ui'
-import { apiPost, openFile } from '../../lib/api'
+import { ApiError, apiPost, openFile } from '../../lib/api'
 import { useFormat } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { BackHeader, formatDate, PillTabs, SearchBox, usePaged } from '../doctor/shared'
 import type { AdminOutletContext } from './AdminLayout'
+import { VerificationCard, type Verifications } from './Verification'
 import {
   ASSIGNMENT_STATUS,
   DOCTOR_STATUS,
@@ -20,6 +21,12 @@ import {
   type DoctorPerformance,
   type DoctorRow,
 } from './types'
+
+const INDEMNITY_STATUS: Record<string, [string, string]> = {
+  valid: ['Current', 'badge-good'],
+  expired: ['Expired', 'badge-bad'],
+  missing: ['Not declared', 'badge-warn'],
+}
 
 type Tab = 'pending' | 'more_info_requested' | 'approved' | 'rejected' | 'all'
 
@@ -120,6 +127,7 @@ export function AdminDoctorDetailPage() {
   const format = useFormat()
   const toast = useToast()
   const detail = useApi<DoctorDetail>(`/api/admin/doctors/${doctorId}`)
+  const checks = useApi<Verifications>(`/api/admin/verifications/doctor/${doctorId}`)
   const [dialog, setDialog] = useState<'rejected' | 'more_info_requested' | null>(null)
   const { refreshCounts } = useOutletContext<AdminOutletContext>()
   if (detail.error) return <ErrorState error={detail.error} onRetry={detail.reload} />
@@ -137,8 +145,11 @@ export function AdminDoctorDetailPage() {
       })
       void detail.reload()
       refreshCounts()
-    } catch {
-      toast({ title: 'Could not approve this registration.', tone: 'bad' })
+    } catch (err) {
+      toast({
+        title: err instanceof ApiError ? err.message : 'Could not approve this registration.',
+        tone: 'bad',
+      })
     }
   }
 
@@ -161,7 +172,12 @@ export function AdminDoctorDetailPage() {
         </div>
         {reviewable && (
           <div className="dr-actions">
-            <button type="button" onClick={approve}>
+            <button
+              type="button"
+              onClick={approve}
+              disabled={!checks.data?.allPassing}
+              title={checks.data?.allPassing ? undefined : 'Record a passing AHPRA check first'}
+            >
               Approve
             </button>
             <button
@@ -186,6 +202,15 @@ export function AdminDoctorDetailPage() {
         </div>
       )}
 
+      {checks.data && (
+        <VerificationCard
+          providerType="doctor"
+          providerId={doc.id}
+          data={checks.data}
+          onChange={() => void checks.reload()}
+        />
+      )}
+
       {doc.status === 'approved' && <PerformanceSection doctorId={doc.id} />}
 
       <section className="dr-card stack">
@@ -206,6 +231,34 @@ export function AdminDoctorDetailPage() {
           <Fact label="Hospital affiliations" value={d.hospitals.join(', ')} className="full" />
           <Fact label="Bio" value={d.bio} className="full" />
         </div>
+      </section>
+
+      <section className="dr-card stack">
+        <div className="row-between">
+          <h2 className="dr-subtitle">Indemnity & telehealth declaration</h2>
+          <Pill map={INDEMNITY_STATUS} value={d.indemnityStatus} />
+        </div>
+        {d.indemnity ? (
+          <div className="dr-kv">
+            <Fact label="Insurer" value={d.indemnity.insurer} />
+            <Fact label="Policy number" value={d.indemnity.policyNumber} />
+            <Fact label="Expires" value={formatDate(d.indemnity.expiresOn)} />
+            <Fact label="Declared" value={formatDate(d.indemnity.declaredAt)} />
+            <Fact
+              label="Covers patients outside Australia"
+              value={d.indemnity.coversOverseas ? 'Yes' : 'No'}
+            />
+            <Fact
+              label="Telehealth guidelines acknowledged"
+              value={d.indemnity.telehealthGuidelinesAck ? 'Yes' : 'No'}
+            />
+          </div>
+        ) : (
+          <p className="muted small" style={{ margin: 0 }}>
+            Not declared yet. The doctor declares it in Settings after paying the registration fee;
+            they can't offer consultation times until then.
+          </p>
+        )}
       </section>
 
       <section className="dr-card">

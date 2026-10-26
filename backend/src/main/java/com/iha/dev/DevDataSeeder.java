@@ -20,6 +20,8 @@ import com.iha.hospital.HospitalAccountService;
 import com.iha.hospital.HospitalAdminService;
 import com.iha.provider.Hospital;
 import com.iha.provider.HospitalRepository;
+import com.iha.verification.ProviderVerification;
+import com.iha.verification.VerificationService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,12 +65,15 @@ class DevDataSeeder implements ApplicationRunner {
 	private final HospitalAccountService hospitalAccounts;
 	private final HospitalAdminService hospitalAdmin;
 	private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+	private final VerificationService verification;
 
 	DevDataSeeder(AppUserRepository users, HospitalRepository hospitals, DoctorRepository doctors,
 			PatientService patients, CaseService cases, DoctorAccountService doctorAccounts,
 			DoctorAdminService doctorAdmin, DoctorCaseService doctorCases, DoctorFeeService doctorFees,
 			DevHistory history, HospitalAccountService hospitalAccounts, HospitalAdminService hospitalAdmin,
-			org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
+			org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
+			VerificationService verification) {
+		this.verification = verification;
 		this.history = history;
 		this.hospitalAccounts = hospitalAccounts;
 		this.hospitalAdmin = hospitalAdmin;
@@ -139,6 +144,7 @@ class DevDataSeeder implements ApplicationRunner {
 				"LIC-NSW-77812", List.of("Cardiology", "Orthopaedics & Joint Replacement", "Oncology (Cancer Treatment)"), 420,
 				"Australia/Sydney"),
 				hospitalFiles());
+		verification.recordDemoChecks(ProviderVerification.HOSPITAL, hospital.getId());
 		return hospitalAdmin.review(null, hospital.getId(), Hospital.APPROVED, null);
 	}
 
@@ -159,7 +165,8 @@ class DevDataSeeder implements ApplicationRunner {
 				new HospitalAccountService.BasicInput(name, registration, "51824753556", phone, "Australia", city,
 						address, zip, timeZone),
 				new HospitalAccountService.DetailsInput(Hospital.MULTI_SPECIALTY, specialties, beds,
-						List.of("Standard", "Private", "Deluxe Suite"), licence, "Australian Council on Healthcare Standards"));
+						List.of("Standard", "Private", "Deluxe Suite"), licence, "Australian Council on Healthcare Standards",
+						LocalDate.now().plusYears(2), LocalDate.now().plusMonths(14)));
 	}
 
 	private static HospitalAccountService.RegistrationFiles hospitalFiles() {
@@ -197,9 +204,12 @@ class DevDataSeeder implements ApplicationRunner {
 						affiliated.stream().map(Hospital::getId).toList(), List.of("mon", "tue", "wed", "thu", "fri")),
 				new DoctorAccountService.RegistrationFiles(null, BytesMultipartFile.pdf("medicalLicense", "Medical license"),
 						BytesMultipartFile.pdf("degreeCertificate", "Degree certificate"), List.of()));
+		verification.recordDemoChecks(ProviderVerification.DOCTOR, doctor.getId());
 		doctorAdmin.review(doctor.getId(), Doctor.APPROVED, null);
 		DoctorFeeService.Checkout checkout = doctorFees.checkout(user, "registration");
 		doctorFees.simulate(user, checkout.intentId());
+		doctorAccounts.declareIndemnity(user, new DoctorAccountService.IndemnityInput("MDA National",
+				"MDA-" + licence, LocalDate.now().plusMonths(9), true, true));
 		return user;
 	}
 
