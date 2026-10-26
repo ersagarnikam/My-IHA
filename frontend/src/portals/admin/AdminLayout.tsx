@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import {
   BriefcaseMedical,
+  Building2,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
@@ -28,6 +29,12 @@ const NAV: { to: string; label: string; icon: LucideIcon; count?: (o: Overview) 
     label: 'Doctor Approvals',
     icon: Stethoscope,
     count: (o) => o.pendingDoctors,
+  },
+  {
+    to: '/admin/hospitals',
+    label: 'Hospital Approvals',
+    icon: Building2,
+    count: (o) => o.pendingHospitals,
   },
   {
     to: '/admin/cases',

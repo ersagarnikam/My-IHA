@@ -126,8 +126,10 @@ function Shell() {
             <span className="topbar-divider" />
           </div>
           <div className="topbar-right">
-            {doctor.status === 'approved' && <span className="topbar-badge">✓ Verified Doctor</span>}
-            <NotificationBell />
+            {doctor.status === 'approved' && (
+              <span className="topbar-badge">✓ Verified Doctor</span>
+            )}
+            <NotificationBell hrefFor={doctorNotificationHref} allPath="/doctor/notifications" />
             <div className="topbar-user">
               {photo ? (
                 <img src={photo} alt="" className="avatar" />
@@ -150,7 +152,9 @@ function Shell() {
           </div>
         </header>
         <main className="portal-main">
-          <Outlet context={{ refreshMessagesUnread: messagesUnread.reload } satisfies DoctorOutletContext} />
+          <Outlet
+            context={{ refreshMessagesUnread: messagesUnread.reload } satisfies DoctorOutletContext}
+          />
         </main>
       </div>
       <LogoutDialog open={confirmLogout} onClose={() => setConfirmLogout(false)} />
@@ -160,7 +164,10 @@ function Shell() {
 
 /** First letter after an optional "Dr." prefix. */
 export function initial(name: string) {
-  return name.replace(/^dr\.?\s+/i, '').slice(0, 1).toUpperCase()
+  return name
+    .replace(/^dr\.?\s+/i, '')
+    .slice(0, 1)
+    .toUpperCase()
 }
 
 function NavLinks({
@@ -231,7 +238,14 @@ export function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => 
   )
 }
 
-function NotificationBell() {
+/** Header bell with the latest notifications (shared by the doctor and hospital portals). */
+export function NotificationBell({
+  hrefFor,
+  allPath,
+}: {
+  hrefFor: (n: Notification) => string
+  allPath: string
+}) {
   const format = useFormat()
   const navigate = useNavigate()
   const toast = useToast()
@@ -261,7 +275,7 @@ function NotificationBell() {
       void unread.reload()
       void latest.reload()
     }
-    navigate(doctorNotificationHref(n))
+    navigate(hrefFor(n))
   }
 
   async function markAll() {
@@ -313,7 +327,7 @@ function NotificationBell() {
             className="button-link small"
             onClick={() => {
               setOpen(false)
-              navigate('/doctor/notifications')
+              navigate(allPath)
             }}
           >
             View all notifications

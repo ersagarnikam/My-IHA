@@ -1,10 +1,10 @@
-// Opens every page of the patient, doctor and admin portals as the demo accounts (needs the
+// Opens every page of the patient, doctor, hospital and admin portals as the demo accounts (needs the
 // API on :8080 in the dev profile and Vite on :5173) and fails on crashes, console errors,
 // failed API calls, error panels or "not found" pages. Desktop and phone widths. Usage:
 //   node smoke.mjs
 import puppeteer from 'puppeteer-core'
 
-const BASE = 'http://localhost:5173'
+const BASE = process.env.E2E_BASE ?? 'http://localhost:5173'
 
 async function api(path, token) {
   const res = await fetch(BASE + path, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
@@ -30,6 +30,7 @@ const first = (list, what) => {
 const patient = await login('patient@demo.local')
 const doctor = await login('doctor@demo.local')
 const admin = await login('admin@demo.local')
+const hospital = await login('hospital@demo.local')
 
 const patientCase = first(await api('/api/patient/cases', patient.accessToken), 'patient cases')
 const visas = await api('/api/patient/visa-submissions', patient.accessToken)
@@ -41,8 +42,27 @@ const adminDoctor = first(await api('/api/admin/doctors', admin.accessToken), 'd
 const adminCase = first(await api('/api/admin/cases', admin.accessToken), 'cases')
 const adminPlan = first(await api('/api/admin/plans', admin.accessToken), 'plans')
 const adminPayment = first(await api('/api/admin/payments', admin.accessToken), 'payments')
+const adminHospital = first(await api('/api/admin/hospitals', admin.accessToken), 'hospitals')
+const hospitalCase = first(await api('/api/hospital/cases', hospital.accessToken), 'hospital cases')
+const hospitalDoctor = first(await api('/api/hospital/doctors', hospital.accessToken), 'hospital doctors')
 
 const portals = [
+  {
+    session: hospital,
+    pages: [
+      '/hospital/dashboard',
+      '/hospital/cases',
+      `/hospital/cases/${hospitalCase.planId}`,
+      '/hospital/patients',
+      `/hospital/patients/${hospitalCase.patientId}`,
+      '/hospital/doctors',
+      `/hospital/doctors/${hospitalDoctor.id}`,
+      '/hospital/documents',
+      '/hospital/messages',
+      '/hospital/notifications',
+      '/hospital/account-settings',
+    ],
+  },
   {
     session: patient,
     pages: [
@@ -79,6 +99,8 @@ const portals = [
     pages: [
       '/admin/dashboard',
       '/admin/doctors',
+      '/admin/hospitals',
+      `/admin/hospitals/${adminHospital.id}`,
       `/admin/doctors/${adminDoctor.id}`,
       '/admin/cases',
       `/admin/cases/${adminCase.id}`,

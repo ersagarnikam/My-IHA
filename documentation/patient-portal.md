@@ -52,7 +52,7 @@ Request one about an option → the doctor proposes up to three times (shown in 
 Stripe Payment Element with saved cards (or a simulated Pay Now in development). Payment history with PDF invoices. Refunds issued by MTA show on the payment (*Partly refunded* / *Refunded*, the amount returned) with a credit note PDF per refund; the patient is notified, including any card processing fee kept.
 
 ### Visa & Travel
-Once the treatment is paid and the hospital's invitation and appointment letters arrive, the 8-step visa wizard collects personal, passport, travel, financial and companion details with document uploads; the API validates the whole form. Afterwards: application detail, lawyer document requests, approved-visa download and a travel guide.
+Once the treatment is paid and the hospital's invitation and appointment letters arrive (the hospital issues them in the hospital portal), the 8-step visa wizard collects personal, passport, travel, financial and companion details with document uploads; the API validates the whole form. Afterwards: application detail, lawyer document requests, approved-visa download and a travel guide.
 
 ### Documents
 All medical and visa documents in one place; upload standalone documents and link them to a case later.

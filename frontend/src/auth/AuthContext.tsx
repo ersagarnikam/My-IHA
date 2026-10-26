@@ -79,7 +79,7 @@ export function useAuth() {
 export const ROLE_HOME: Record<Role, string> = {
   PATIENT: '/patient/dashboard',
   DOCTOR: '/doctor/dashboard',
-  HOSPITAL: '/hospital',
+  HOSPITAL: '/hospital/dashboard',
   LAWYER: '/lawyer',
   ADMIN: '/admin/dashboard',
 }

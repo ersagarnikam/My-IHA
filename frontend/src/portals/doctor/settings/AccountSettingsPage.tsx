@@ -157,7 +157,15 @@ function ProfileTab() {
   )
 }
 
-function KV({ label, value, className }: { label: string; value: ReactNode; className?: string }) {
+export function KV({
+  label,
+  value,
+  className,
+}: {
+  label: string
+  value: ReactNode
+  className?: string
+}) {
   return (
     <div className={className}>
       <p className="dr-fact-label">{label}</p>
@@ -666,7 +674,7 @@ function InvoicesTab() {
 
 // ── Security and notifications ──────────────────────────────────────────
 
-function SecurityTab() {
+export function SecurityTab() {
   const toast = useToast()
   const [error, setError] = useState<unknown>(null)
   const [pending, setPending] = useState(false)
@@ -775,7 +783,7 @@ function NotificationsTab() {
   )
 }
 
-function Toggle({
+export function Toggle({
   title,
   description,
   checked,

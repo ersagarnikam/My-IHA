@@ -16,6 +16,8 @@ import com.iha.doctor.DoctorFeeService;
 import com.iha.patient.PatientService;
 import com.iha.provider.Doctor;
 import com.iha.provider.DoctorRepository;
+import com.iha.hospital.HospitalAccountService;
+import com.iha.hospital.HospitalAdminService;
 import com.iha.provider.Hospital;
 import com.iha.provider.HospitalRepository;
 
@@ -44,6 +46,7 @@ class DevDataSeeder implements ApplicationRunner {
 	static final String PATIENT_EMAIL = "patient@demo.local";
 	static final String DOCTOR_EMAIL = "doctor@demo.local";
 	static final String ADMIN_EMAIL = "admin@demo.local";
+	static final String HOSPITAL_EMAIL = "hospital@demo.local";
 
 	private static final Logger log = LoggerFactory.getLogger(DevDataSeeder.class);
 
@@ -57,13 +60,18 @@ class DevDataSeeder implements ApplicationRunner {
 	private final DoctorCaseService doctorCases;
 	private final DoctorFeeService doctorFees;
 	private final DevHistory history;
+	private final HospitalAccountService hospitalAccounts;
+	private final HospitalAdminService hospitalAdmin;
 	private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
 	DevDataSeeder(AppUserRepository users, HospitalRepository hospitals, DoctorRepository doctors,
 			PatientService patients, CaseService cases, DoctorAccountService doctorAccounts,
 			DoctorAdminService doctorAdmin, DoctorCaseService doctorCases, DoctorFeeService doctorFees,
-			DevHistory history, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
+			DevHistory history, HospitalAccountService hospitalAccounts, HospitalAdminService hospitalAdmin,
+			org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
 		this.history = history;
+		this.hospitalAccounts = hospitalAccounts;
+		this.hospitalAdmin = hospitalAdmin;
 		this.passwordEncoder = passwordEncoder;
 		this.users = users;
 		this.hospitals = hospitals;
@@ -82,7 +90,7 @@ class DevDataSeeder implements ApplicationRunner {
 			return;
 		}
 		List<Hospital> seeded = List.of(
-				hospital("St Vincent's Hospital Sydney", "Sydney"),
+				registeredHospital(),
 				hospital("Royal Brisbane and Women's Hospital", "Brisbane"),
 				hospital("Royal Melbourne Hospital", "Melbourne"),
 				hospital("Fiona Stanley Hospital", "Perth"));
@@ -108,17 +116,53 @@ class DevDataSeeder implements ApplicationRunner {
 
 		admin();
 		pendingDoctor(seeded);
+		pendingHospital();
 		history.seed(patient, doctor, seeded,
 				(email, name, licence) -> doctor(email, name, licence, List.of("Cardiology"), seeded));
 
-		log.info("Dev demo data ready. Sign in as {}, {} or {} with password {}", PATIENT_EMAIL, DOCTOR_EMAIL,
-				ADMIN_EMAIL, PASSWORD);
+		log.info("Dev demo data ready. Sign in as {}, {}, {} or {} with password {}", PATIENT_EMAIL, DOCTOR_EMAIL,
+				HOSPITAL_EMAIL, ADMIN_EMAIL, PASSWORD);
 	}
 
 	private Hospital hospital(String name, String city) {
 		Hospital hospital = new Hospital(null, name, city, "Australia");
 		hospital.setRoomTypes(new String[] { "Standard", "Private", "Deluxe Suite" });
 		return hospitals.save(hospital);
+	}
+
+	/** St Vincent's, registered through the hospital portal and approved: the hospital demo login. */
+	private Hospital registeredHospital() {
+		hospitalAccounts.createAccount(HOSPITAL_EMAIL, PASSWORD);
+		CurrentUser user = verified(HOSPITAL_EMAIL, Role.HOSPITAL);
+		Hospital hospital = hospitalAccounts.register(user, hospitalInput("St Vincent's Hospital Sydney",
+				"390 Victoria Street, Darlinghurst", "Sydney", "2010", "+61 2 8382 1111", "HOSP-NSW-0390",
+				"LIC-NSW-77812", List.of("Cardiology", "Orthopaedics & Joint Replacement", "Oncology (Cancer Treatment)"), 420),
+				hospitalFiles());
+		return hospitalAdmin.review(null, hospital.getId(), Hospital.APPROVED, null);
+	}
+
+	/** A registration waiting in the admin portal's Hospital Approvals. */
+	private void pendingHospital() {
+		hospitalAccounts.createAccount("pending.hospital@demo.local", PASSWORD);
+		CurrentUser user = verified("pending.hospital@demo.local", Role.HOSPITAL);
+		hospitalAccounts.register(user, hospitalInput("Gold Coast Private Hospital", "14 Hill Street, Southport",
+				"Gold Coast", "4215", "+61 7 5530 0300", "HOSP-QLD-0014", "LIC-QLD-55120",
+				List.of("Orthopaedics & Joint Replacement", "General Surgery"), 284), hospitalFiles());
+	}
+
+	private static HospitalAccountService.RegistrationInput hospitalInput(String name, String address, String city,
+			String zip, String phone, String registration, String licence, List<String> specialties, int beds) {
+		// 51 824 753 556 is the ATO's published example ABN (valid checksum).
+		return new HospitalAccountService.RegistrationInput(
+				new HospitalAccountService.BasicInput(name, registration, "51824753556", phone, "Australia", city,
+						address, zip),
+				new HospitalAccountService.DetailsInput(Hospital.MULTI_SPECIALTY, specialties, beds,
+						List.of("Standard", "Private", "Deluxe Suite"), licence, "Australian Council on Healthcare Standards"));
+	}
+
+	private static HospitalAccountService.RegistrationFiles hospitalFiles() {
+		return new HospitalAccountService.RegistrationFiles(BytesMultipartFile.pdf("hospitalLicense", "Hospital license"),
+				BytesMultipartFile.pdf("registrationCertificate", "Registration certificate"), List.of());
 	}
 
 	private CurrentUser patient() {

@@ -14,4 +14,6 @@ public interface TreatmentPlanRepository extends JpaRepository<TreatmentPlan, UU
 
 	List<TreatmentPlan> findByDoctorId(UUID doctorId);
 
+	List<TreatmentPlan> findByHospitalIdAndStatusNot(UUID hospitalId, String status);
+
 }

@@ -20,6 +20,7 @@ Packages are by **feature** under `com.iha`:
 | `doctor` | The doctor portal: registration, approval gate, assigned cases, plan authoring, consultations, fees, settings; `DoctorAdminService` for admin-side steps. |
 | `provider` | Provider entities shared by modules: `Doctor`, `Hospital`, `Lawyer`, `DoctorCaseAssignment`, `DoctorHospitalAffiliation`. |
 | `providerchat` | Provider (doctor/hospital/lawyer) ↔ MTA admin chat. |
+| `hospital` | The hospital portal: `HospitalAccountService` (sign-up, registration, approval gate, settings), `HospitalPortalService` (what a hospital sees; visa letters), `HospitalLetterRenderer` (PDFs), `HospitalAdminService` (MTA review), `HospitalPaymentListener` (tells the hospital when a patient pays). |
 | `admin` | The admin portal API: `AdminService` (overview, doctors, cases, plans), `AdminController`, `AdminChatController` (patient and provider inboxes), `AdminBootstrap` (first admin from `IHA_ADMIN_EMAIL`/`IHA_ADMIN_PASSWORD`). Decisions go through `DoctorAdminService`, `ChatService` and `ProviderMessageService`. |
 | `notification` | In-portal notifications, email/SMS alert dispatch, alert preferences. |
 | `realtime` | Server-sent events hub and endpoint. |

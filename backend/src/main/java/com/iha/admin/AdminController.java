@@ -14,6 +14,7 @@ import com.iha.cases.CaseStatus;
 import com.iha.cases.MedicalCase;
 import com.iha.doctor.DoctorAccountService;
 import com.iha.doctor.DoctorAdminService;
+import com.iha.hospital.HospitalAdminService;
 import com.iha.documents.PatientDocumentController;
 import com.iha.patient.Patient;
 import com.iha.provider.Doctor;
@@ -48,19 +49,22 @@ public class AdminController {
 	private final DoctorAdminService doctorAdmin;
 	private final DoctorAccountService doctorAccounts;
 	private final AdminInsightsService insights;
+	private final HospitalAdminService hospitalAdmin;
 
 	AdminController(AdminService admin, DoctorAdminService doctorAdmin, DoctorAccountService doctorAccounts,
-			AdminInsightsService insights) {
+			AdminInsightsService insights, HospitalAdminService hospitalAdmin) {
 		this.admin = admin;
 		this.doctorAdmin = doctorAdmin;
 		this.doctorAccounts = doctorAccounts;
 		this.insights = insights;
+		this.hospitalAdmin = hospitalAdmin;
 	}
 
 	@GetMapping("/overview")
 	public OverviewResponse overview() {
 		AdminService.Overview o = admin.overview();
-		return new OverviewResponse(o.pendingDoctors(), o.casesNeedingDoctor(), o.plansToReview(), o.chatsWaiting(),
+		return new OverviewResponse(o.pendingDoctors(), hospitalAdmin.pendingCount(), o.casesNeedingDoctor(),
+				o.plansToReview(), o.chatsWaiting(),
 				o.totalCases(), o.recentCases().stream().map(CaseRowResponse::of).toList());
 	}
 
@@ -206,7 +210,7 @@ public class AdminController {
 	public record RejectRequest(@NotBlank @Size(max = 1000) String reason) {
 	}
 
-	public record OverviewResponse(long pendingDoctors, long casesNeedingDoctor, long plansToReview,
+	public record OverviewResponse(long pendingDoctors, long pendingHospitals, long casesNeedingDoctor, long plansToReview,
 			long chatsWaiting, long totalCases, List<CaseRowResponse> recentCases) {
 	}
 

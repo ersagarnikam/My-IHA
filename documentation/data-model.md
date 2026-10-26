@@ -45,7 +45,8 @@ erDiagram
 | `patients` | Patient profile: personal details, encrypted DOB and medical background, emergency contact, avatar, alert preferences, Stripe customer, deletion schedule. |
 | `doctors` | Doctor profile: registration details, encrypted DOB and licence, specialties, languages, working days, availability (JSON), registration documents (JSON), approval status, fee dates, alert preferences. |
 | `doctor_hospital_affiliations` | Hospitals a doctor works with (plan hospitals come from here). |
-| `hospitals`, `lawyers` | Provider accounts (portals not ported yet). |
+| `hospitals` | Hospital accounts: seeded reference hospitals (no login, approved) and hospitals registered through the hospital portal (`status` pending → approved / rejected / more_info_requested, registration and licence numbers and ABN encrypted, `certificates` JSON list of registration documents, notification preferences). |
+| `lawyers` | Visa lawyer accounts (portal not ported yet). |
 | `cases` | A patient's medical case: reference `MTA-<year>-<seq>`, specialty, description, status, travel-assistance flags. |
 | `case_documents` | Medical documents (and standalone uploads not yet linked to a case). |
 | `case_document_requests` | Documents a doctor requested during evaluation; `pending` until the patient adds one of that type, then `received`. |
@@ -57,7 +58,7 @@ erDiagram
 | `payments`, `payment_methods` | Patient payments (treatment, consultation fee) and saved cards. |
 | `doctor_fee_payments` | Doctor registration and annual fees (status `pending`, `completed`, `failed`, `refunded`). |
 | `payment_refunds` | Admin refunds of either kind of payment (`payment_kind` `patient`/`doctor`): amount, card fee deducted (`fee_source` `stripe`, `estimate`, `waived` or `none`), amount back to the card, reason and note, provider refund id and status (`pending`, `succeeded`, `failed`), who and when (V8). A payment refunded in full gets status `refunded`. |
-| `visa_submissions`, `visa_documents`, `visa_document_requests`, `visa_case_notes` | Visa application, its documents (patient, hospital letters, approved visa), lawyer requests and notes. |
+| `visa_submissions`, `visa_documents`, `visa_document_requests`, `visa_case_notes` | Visa application, its documents (patient uploads; hospital letters — `source = hospital_generated`, `hospital_id`, one per case and category, visible to the patient once `sent_to_patient_at` is set; approved visa), lawyer requests and notes. |
 | `chat_threads`, `chat_messages` | Patient ↔ coordinator chat. |
 | `provider_message_threads`, `provider_messages` | Doctor/hospital/lawyer ↔ admin chat (one thread per provider account). |
 | `notifications` | In-portal notifications (title, message, type, case). |

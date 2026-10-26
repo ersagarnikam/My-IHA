@@ -6,7 +6,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import puppeteer from 'puppeteer-core'
 
-const BASE = 'http://localhost:5173'
+const BASE = process.env.E2E_BASE ?? 'http://localhost:5173'
 const OUT = path.join(import.meta.dirname, 'shots', 'admin')
 fs.mkdirSync(OUT, { recursive: true })
 

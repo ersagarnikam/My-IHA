@@ -55,6 +55,7 @@ The portal's home is https://medicaltourismaustralia.com. Point the website's bu
 | Submit your case | `https://portal.example.com/patient/cases/new` |
 | Forgot password | `https://portal.example.com/forgot-password` |
 | Doctor registration | `https://portal.example.com/register/doctor` |
+| Hospital registration | `https://portal.example.com/register/hospital` |
 | Doctor, hospital or lawyer login | `https://portal.example.com/login` |
 
 ## Not production-ready yet
@@ -62,7 +63,7 @@ The portal's home is https://medicaltourismaustralia.com. Point the website's bu
 | Gap | What's needed |
 |---|---|
 | Email and SMS | Wire a provider (e.g. Resend, Twilio) into `notification/AlertDispatcher` and `auth/VerificationCodeSender` — today they only log. **Users can't verify their email in production until this is done.** |
-| Hospital and lawyer portals | Not ported; hospital letters and visa processing need them (or direct database work). The admin portal covers approvals, assignment and plan publishing, but more admin tools (users, payments, settings) aren't built yet. |
+| Visa lawyer portal | Not ported; visa processing (lawyer assignment, document requests, approved visas) needs it, or direct database work. |
 | Several API instances | `RealtimeHub` is in memory; add a broker before scaling out. |
 | File storage | Local disk only; use shared/object storage for more than one instance. |
 | Data from the old Supabase project | Needs a migration script (decrypt with the old pgcrypto key, re-encrypt with `IHA_PII_KEY`). |

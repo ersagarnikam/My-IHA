@@ -49,6 +49,32 @@ import {
 } from './portals/doctor/registration/RegistrationPages'
 import { AccountSettingsPage } from './portals/doctor/settings/AccountSettingsPage'
 import { AdminLayout } from './portals/admin/AdminLayout'
+import {
+  HospitalCaseByCaseRedirect,
+  HospitalCaseDetailPage,
+  HospitalCasesPage,
+} from './portals/hospital/CasePages'
+import { HospitalDashboardPage } from './portals/hospital/DashboardPage'
+import { HospitalDocumentsPage } from './portals/hospital/DocumentsPage'
+import {
+  HospitalGateStep,
+  HospitalProvider,
+  RequireApprovedHospital,
+} from './portals/hospital/HospitalContext'
+import { HospitalLayout, hospitalNotificationHref } from './portals/hospital/HospitalLayout'
+import {
+  HospitalDoctorDetailPage,
+  HospitalDoctorsPage,
+  HospitalPatientDetailPage,
+  HospitalPatientsPage,
+} from './portals/hospital/PeoplePages'
+import {
+  HospitalPendingApprovalPage,
+  HospitalRegisterPage,
+  HospitalSignUpPage,
+} from './portals/hospital/RegistrationPages'
+import { HospitalSettingsPage } from './portals/hospital/SettingsPage'
+import { AdminHospitalDetailPage, AdminHospitalsPage } from './portals/admin/HospitalPages'
 import { AdminCaseDetailPage, AdminCasesPage } from './portals/admin/CasePages'
 import { AdminDashboardPage } from './portals/admin/DashboardPage'
 import { AdminDoctorDetailPage, AdminDoctorsPage } from './portals/admin/DoctorPages'
@@ -99,6 +125,14 @@ function RouteError() {
   )
 }
 
+function HospitalRoot() {
+  return (
+    <HospitalProvider>
+      <Outlet />
+    </HospitalProvider>
+  )
+}
+
 function DoctorRoot() {
   return (
     <DoctorProvider>
@@ -125,6 +159,7 @@ const router = createBrowserRouter([
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
       { path: '/register/doctor', element: <DoctorSignUpPage /> },
+      { path: '/register/hospital', element: <HospitalSignUpPage /> },
       { path: '/verify', element: <VerifyPage /> },
       { path: '/forgot-password', element: <ForgotPasswordPage /> },
       { path: '/reset-password', element: <ResetPasswordPage /> },
@@ -224,7 +259,64 @@ const router = createBrowserRouter([
           },
         ],
       },
-      portal('/hospital', 'HOSPITAL', 'MTA Hospital Portal'),
+      {
+        path: '/hospital',
+        element: <RequireRole role="HOSPITAL" />,
+        children: [
+          {
+            element: <HospitalRoot />,
+            children: [
+              {
+                path: 'register',
+                element: (
+                  <HospitalGateStep path="/hospital/register">
+                    <HospitalRegisterPage />
+                  </HospitalGateStep>
+                ),
+              },
+              {
+                path: 'pending-approval',
+                element: (
+                  <HospitalGateStep path="/hospital/pending-approval">
+                    <HospitalPendingApprovalPage />
+                  </HospitalGateStep>
+                ),
+              },
+              {
+                element: <RequireApprovedHospital />,
+                children: [
+                  {
+                    element: <HospitalLayout />,
+                    children: [
+                      { index: true, element: <Navigate to="dashboard" replace /> },
+                      { path: 'dashboard', element: <HospitalDashboardPage /> },
+                      { path: 'cases', element: <HospitalCasesPage /> },
+                      { path: 'cases/by-case/:caseId', element: <HospitalCaseByCaseRedirect /> },
+                      { path: 'cases/:planId', element: <HospitalCaseDetailPage /> },
+                      { path: 'patients', element: <HospitalPatientsPage /> },
+                      { path: 'patients/:patientId', element: <HospitalPatientDetailPage /> },
+                      { path: 'doctors', element: <HospitalDoctorsPage /> },
+                      { path: 'doctors/:doctorId', element: <HospitalDoctorDetailPage /> },
+                      { path: 'documents', element: <HospitalDocumentsPage /> },
+                      {
+                        path: 'messages',
+                        element: (
+                          <DoctorMessagesPage api="/api/hospital/messages" devChatPath={null} />
+                        ),
+                      },
+                      {
+                        path: 'notifications',
+                        element: <DoctorNotificationsPage hrefFor={hospitalNotificationHref} />,
+                      },
+                      { path: 'account-settings', element: <HospitalSettingsPage /> },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
       portal('/lawyer', 'LAWYER', 'MTA Visa Lawyer Portal'),
       {
         path: '/admin',
@@ -237,6 +329,8 @@ const router = createBrowserRouter([
               { path: 'dashboard', element: <AdminDashboardPage /> },
               { path: 'doctors', element: <AdminDoctorsPage /> },
               { path: 'doctors/:doctorId', element: <AdminDoctorDetailPage /> },
+              { path: 'hospitals', element: <AdminHospitalsPage /> },
+              { path: 'hospitals/:hospitalId', element: <AdminHospitalDetailPage /> },
               { path: 'cases', element: <AdminCasesPage /> },
               { path: 'cases/:caseId', element: <AdminCaseDetailPage /> },
               { path: 'plans', element: <AdminPlansPage /> },
@@ -255,7 +349,7 @@ const router = createBrowserRouter([
 ])
 
 /** Placeholder area for a role whose screens haven't been ported yet. */
-function portal(path: string, role: 'HOSPITAL' | 'LAWYER', title: string) {
+function portal(path: string, role: 'LAWYER', title: string) {
   return {
     path,
     element: <RequireRole role={role} />,

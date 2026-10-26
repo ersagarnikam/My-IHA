@@ -11,6 +11,8 @@ public interface DoctorHospitalAffiliationRepository extends JpaRepository<Docto
 
 	List<DoctorHospitalAffiliation> findByDoctorId(UUID doctorId);
 
+	List<DoctorHospitalAffiliation> findByHospitalId(UUID hospitalId);
+
 	boolean existsByDoctorIdAndHospitalId(UUID doctorId, UUID hospitalId);
 
 	@Modifying(flushAutomatically = true, clearAutomatically = false)

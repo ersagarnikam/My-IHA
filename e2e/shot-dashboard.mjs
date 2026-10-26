@@ -2,7 +2,7 @@
 // Usage: node shot-dashboard.mjs <email> <password> shots/<name>
 import puppeteer from 'puppeteer-core'
 
-const BASE = 'http://localhost:5173'
+const BASE = process.env.E2E_BASE ?? 'http://localhost:5173'
 const [email, password, out] = process.argv.slice(2)
 const session = await fetch(`${BASE}/api/auth/login`, {
   method: 'POST',

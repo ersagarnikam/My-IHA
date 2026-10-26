@@ -59,7 +59,9 @@ function initialValues(doctor: DoctorProfile | null): Values {
     department: doctor?.department ?? '',
     role: doctor?.role ?? '',
     hospitalIds: doctor?.hospitalIds ?? [],
-    workingDays: doctor?.workingDays.length ? doctor.workingDays : ['mon', 'tue', 'wed', 'thu', 'fri'],
+    workingDays: doctor?.workingDays.length
+      ? doctor.workingDays
+      : ['mon', 'tue', 'wed', 'thu', 'fri'],
   }
 }
 
@@ -68,7 +70,8 @@ function stepErrors(step: number, v: Values, f: Files, resubmit: boolean): Recor
   const e: Record<string, string> = {}
   if (step === 0) {
     if (v.fullName.trim().length < 2) e.fullName = 'Full name must be at least 2 characters'
-    if (!/^\+?[\d\s()-]{8,20}$/.test(v.contactPhone.trim())) e.contactPhone = 'Enter a valid phone number.'
+    if (!/^\+?[\d\s()-]{8,20}$/.test(v.contactPhone.trim()))
+      e.contactPhone = 'Enter a valid phone number.'
   }
   if (step === 1) {
     if (v.specialties.length === 0) e.specialties = 'Select at least one specialty'
@@ -77,7 +80,8 @@ function stepErrors(step: number, v: Values, f: Files, resubmit: boolean): Recor
     if (v.yearsOfExperience === '' || !Number.isInteger(years) || years < 0 || years > 70)
       e.yearsOfExperience = 'Enter your years of experience (0–70)'
     if (!/^[A-Za-z]{3}\d{10}$/.test(v.licenseNumber.trim()))
-      e.licenseNumber = 'Enter a valid AHPRA number (3 letters followed by 10 digits, e.g. MED0001234567)'
+      e.licenseNumber =
+        'Enter a valid AHPRA number (3 letters followed by 10 digits, e.g. MED0001234567)'
     if (!v.bio.trim()) e.bio = 'A short professional bio is required'
     if (v.languagesSpoken.length === 0) e.languagesSpoken = 'Select at least one language'
   }
@@ -108,7 +112,9 @@ export function RegistrationForm({
   const resubmit = doctor !== null
   const specialties = useApi<Specialty[]>('/api/specialties')
   const hospitals = useApi<HospitalChoice[]>('/api/doctor/hospitals')
-  const fees = useApi<{ registrationFeeAud: number; annualFeeAud: number }>('/api/doctor/billing/fees')
+  const fees = useApi<{ registrationFeeAud: number; annualFeeAud: number }>(
+    '/api/doctor/billing/fees',
+  )
   const [step, setStep] = useState(0)
   const [values, setValues] = useState<Values>(() => initialValues(doctor))
   const [files, setFiles] = useState<Files>({
@@ -121,8 +127,12 @@ export function RegistrationForm({
   const [error, setError] = useState<unknown>(null)
   const [pending, setPending] = useState(false)
 
-  const set = <K extends keyof Values>(key: K, value: Values[K]) => setValues((v) => ({ ...v, [key]: value }))
-  const toggle = (key: 'specialties' | 'languagesSpoken' | 'hospitalIds' | 'workingDays', item: string) =>
+  const set = <K extends keyof Values>(key: K, value: Values[K]) =>
+    setValues((v) => ({ ...v, [key]: value }))
+  const toggle = (
+    key: 'specialties' | 'languagesSpoken' | 'hospitalIds' | 'workingDays',
+    item: string,
+  ) =>
     setValues((v) => ({
       ...v,
       [key]: v[key].includes(item) ? v[key].filter((x) => x !== item) : [...v[key], item],
@@ -198,9 +208,17 @@ export function RegistrationForm({
         <>
           <h2 className="dr-subtitle">Basic Information</h2>
           <Field label="Full name" error={err('fullName')}>
-            <input value={values.fullName} autoComplete="name" onChange={(e) => set('fullName', e.target.value)} />
+            <input
+              value={values.fullName}
+              autoComplete="name"
+              onChange={(e) => set('fullName', e.target.value)}
+            />
           </Field>
-          <Field label="Phone number" error={err('contactPhone')} hint="Include your country code, e.g. +61 4…">
+          <Field
+            label="Phone number"
+            error={err('contactPhone')}
+            hint="Include your country code, e.g. +61 4…"
+          >
             <input
               value={values.contactPhone}
               type="tel"
@@ -213,7 +231,11 @@ export function RegistrationForm({
             optional
             accept=".jpg,.jpeg,.png,.webp"
             file={files.photo}
-            existing={resubmit && doctor.hasPhoto ? 'Current photo kept unless you choose a new one.' : undefined}
+            existing={
+              resubmit && doctor.hasPhoto
+                ? 'Current photo kept unless you choose a new one.'
+                : undefined
+            }
             error={err('photo')}
             onPick={(f) => pickFile('photo', f)}
             onClear={() => setFiles((x) => ({ ...x, photo: null }))}
@@ -256,7 +278,11 @@ export function RegistrationForm({
               />
             </Field>
           </div>
-          <Field label="AHPRA registration number" error={err('licenseNumber')} hint="e.g. MED0001234567">
+          <Field
+            label="AHPRA registration number"
+            error={err('licenseNumber')}
+            hint="e.g. MED0001234567"
+          >
             <input
               value={values.licenseNumber}
               style={{ textTransform: 'uppercase' }}
@@ -278,7 +304,12 @@ export function RegistrationForm({
             </div>
           </Group>
           <Field label="Professional bio" error={err('bio')}>
-            <textarea rows={4} maxLength={2000} value={values.bio} onChange={(e) => set('bio', e.target.value)} />
+            <textarea
+              rows={4}
+              maxLength={2000}
+              value={values.bio}
+              onChange={(e) => set('bio', e.target.value)}
+            />
           </Field>
         </>
       )}
@@ -312,7 +343,9 @@ export function RegistrationForm({
           </div>
           <Group label="Hospital affiliations" error={err('hospitalIds')} optional>
             {hospitals.data?.length === 0 ? (
-              <p className="muted small">No hospitals are registered yet — you can add affiliations later.</p>
+              <p className="muted small">
+                No hospitals are registered yet — you can add affiliations later.
+              </p>
             ) : (
               <div className="dr-multi">
                 {hospitals.data?.map((h) => (
@@ -396,7 +429,10 @@ export function RegistrationForm({
                 accept=".pdf,.jpg,.jpeg,.png"
                 onChange={(e) => {
                   const picked = Array.from(e.target.files ?? []).filter((f) => f.size <= MAX_BYTES)
-                  setFiles((x) => ({ ...x, otherDocuments: [...x.otherDocuments, ...picked].slice(0, 5) }))
+                  setFiles((x) => ({
+                    ...x,
+                    otherDocuments: [...x.otherDocuments, ...picked].slice(0, 5),
+                  }))
                   e.target.value = ''
                 }}
               />
@@ -409,7 +445,10 @@ export function RegistrationForm({
                   className="dr-icon-button"
                   aria-label={`Remove ${f.name}`}
                   onClick={() =>
-                    setFiles((x) => ({ ...x, otherDocuments: x.otherDocuments.filter((_, j) => j !== i) }))
+                    setFiles((x) => ({
+                      ...x,
+                      otherDocuments: x.otherDocuments.filter((_, j) => j !== i),
+                    }))
                   }
                 >
                   <X size={14} />
@@ -420,8 +459,8 @@ export function RegistrationForm({
           {fees.data && (
             <div className="dr-banner info">
               Once MTA approves your registration, a one-time registration fee of{' '}
-              <strong>{money(fees.data.registrationFeeAud)}</strong> unlocks your account, followed by an annual
-              renewal of <strong>{money(fees.data.annualFeeAud)}</strong>.
+              <strong>{money(fees.data.registrationFeeAud)}</strong> unlocks your account, followed
+              by an annual renewal of <strong>{money(fees.data.annualFeeAud)}</strong>.
             </div>
           )}
         </>
@@ -456,7 +495,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: 'Other certificate',
 }
 
-function Group({
+export function Group({
   label,
   error,
   optional,
@@ -479,7 +518,7 @@ function Group({
   )
 }
 
-function FilePicker({
+export function FilePicker({
   label,
   file,
   error,
@@ -516,7 +555,12 @@ function FilePicker({
         {file ? (
           <span className="small">
             {file.name}{' '}
-            <button type="button" className="dr-icon-button" aria-label={`Remove ${file.name}`} onClick={onClear}>
+            <button
+              type="button"
+              className="dr-icon-button"
+              aria-label={`Remove ${file.name}`}
+              onClick={onClear}
+            >
               <X size={14} />
             </button>
           </span>

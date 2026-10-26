@@ -45,13 +45,22 @@ export function DoctorSignUpPage() {
   }
 
   return (
-    <AuthShell title="Register as a doctor" subtitle="Create your login, then tell us about your practice.">
+    <AuthShell
+      title="Register as a doctor"
+      subtitle="Create your login, then tell us about your practice."
+    >
       <form className="stack" onSubmit={onSubmit}>
         <Field label={t('email')} error={fieldError(error, 'email')}>
           <input name="email" type="email" autoComplete="email" required />
         </Field>
         <Field label={t('password')} error={fieldError(error, 'password')} hint={t('passwordHint')}>
-          <input name="password" type="password" autoComplete="new-password" required minLength={8} />
+          <input
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+          />
         </Field>
         <Field label={t('confirmPassword')}>
           <input name="confirmPassword" type="password" autoComplete="new-password" required />
@@ -69,7 +78,15 @@ export function DoctorSignUpPage() {
 }
 
 /** Header-only page frame for the registration gate (no portal navigation until active). */
-function GateShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+export function GateShell({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string
+  subtitle?: string
+  children: ReactNode
+}) {
   const { signOut } = useAuth()
   return (
     <div className="dr-register">
@@ -114,7 +131,10 @@ export function PendingApprovalPage() {
 
   if (editing)
     return (
-      <GateShell title="Update your registration" subtitle="Make the changes MTA asked for, then resubmit.">
+      <GateShell
+        title="Update your registration"
+        subtitle="Make the changes MTA asked for, then resubmit."
+      >
         <RegistrationForm
           doctor={doctor}
           onDone={(saved) => {
@@ -150,7 +170,10 @@ export function PendingApprovalPage() {
         {rejected || moreInfo ? (
           <>
             {(doctor.rejectionReason || doctor.moreInfoMessage) && (
-              <div className={`dr-banner${rejected ? ' bad' : ''}`} style={{ alignSelf: 'stretch' }}>
+              <div
+                className={`dr-banner${rejected ? ' bad' : ''}`}
+                style={{ alignSelf: 'stretch' }}
+              >
                 {doctor.rejectionReason ?? doctor.moreInfoMessage}
               </div>
             )}
@@ -163,8 +186,8 @@ export function PendingApprovalPage() {
           </>
         ) : (
           <p className="muted" style={{ margin: 0 }}>
-            The MTA team is checking your details and documents. We'll email you when there's an outcome —
-            usually within two business days.
+            The MTA team is checking your details and documents. We'll email you when there's an
+            outcome — usually within two business days.
           </p>
         )}
       </section>
@@ -173,7 +196,10 @@ export function PendingApprovalPage() {
           doctor.status === 'pending'
             ? [
                 { label: 'Approve my registration (admin)', path: '/api/dev/doctor/approve' },
-                { label: 'Ask me for more information (admin)', path: '/api/dev/doctor/request-more-info' },
+                {
+                  label: 'Ask me for more information (admin)',
+                  path: '/api/dev/doctor/request-more-info',
+                },
               ]
             : []
         }
@@ -185,7 +211,9 @@ export function PendingApprovalPage() {
 
 export function RegistrationFeePage() {
   const { reload } = useDoctorAccount()
-  const fees = useApi<{ registrationFeeAud: number; annualFeeAud: number }>('/api/doctor/billing/fees')
+  const fees = useApi<{ registrationFeeAud: number; annualFeeAud: number }>(
+    '/api/doctor/billing/fees',
+  )
   const navigate = useNavigate()
   return (
     <GateShell
@@ -201,7 +229,8 @@ export function RegistrationFeePage() {
         )}
         {fees.data && (
           <p className="muted small" style={{ margin: 0 }}>
-            An annual renewal fee of {money(fees.data.annualFeeAud)} falls due one year after payment.
+            An annual renewal fee of {money(fees.data.annualFeeAud)} falls due one year after
+            payment.
           </p>
         )}
         <Checkout
@@ -224,7 +253,9 @@ export function RegistrationFeePage() {
 
 async function feePaid() {
   try {
-    const account = await apiGet<{ doctor: { registrationFeePaidAt: string | null } | null }>('/api/doctor/account')
+    const account = await apiGet<{ doctor: { registrationFeePaidAt: string | null } | null }>(
+      '/api/doctor/account',
+    )
     return !!account.doctor?.registrationFeePaidAt
   } catch {
     return false

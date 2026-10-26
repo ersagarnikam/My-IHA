@@ -171,19 +171,54 @@ Required to submit: hospital, diagnosis (≥10 chars), treatment type, procedure
 | PUT | `/api/doctor/profile/notification-preferences` | `{emailNotificationsEnabled, smsNotificationsEnabled}`. |
 | PUT / GET | `/api/doctor/profile/photo` | Upload (*multipart* `file`) / download. |
 
+## Hospital (`HOSPITAL` role)
+
+See the [hospital portal](hospital-portal.md) guide. Everything except the account, registration and registration documents needs an approved hospital (`403 hospital_not_approved`, `hospital_profile_missing`).
+
+### Registration and settings
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/auth/register/hospital` | Public. `{email, password}` → emails a 6-digit code; `POST /api/auth/verify` signs in. |
+| GET | `/api/hospital/account` | `{registered, hospital}` — status, review messages, profile, documents. |
+| POST / PUT | `/api/hospital/registration` | *Multipart*: name, registrationNumber, abnNumber, phone, country, city, address, zipCode, registrationType (`multi_specialty`/`single_specialty`), specialties (repeated), bedCount, roomTypes (repeated), licenseNumber, accreditationBody, hospitalLicense, registrationCertificate, otherDocuments. PUT resubmits after a rejection or more-info request (files optional). Codes: `invalid_abn`, `invalid_registration_number`, `invalid_license_number`, `documents_required`, `already_registered`, `not_resubmittable`. |
+| GET | `/api/hospital/registration/documents/{index}` | One of the hospital's registration documents. |
+| PUT | `/api/hospital/profile/basic` | Name, registration number, ABN, phone, country, city, address, zip code. |
+| PUT | `/api/hospital/profile/details` | Type, specialties, beds, room types, licence number, accreditation body. |
+| PUT | `/api/hospital/profile/notification-preferences` | `{emailNotificationsEnabled, smsNotificationsEnabled}`. |
+
+### Portal
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/hospital/dashboard` | Counts, letters waiting, upcoming admissions, recent cases. |
+| GET | `/api/hospital/cases` | One row per plan naming the hospital (not draft): case, patient, doctor, plan and case status, admission date, `chosen`, `lettersEligible`, letters generated/sent. |
+| GET | `/api/hospital/cases/{planId}` | Case summary, patient (clinical only), doctor, plan with costs, letters. |
+| GET | `/api/hospital/patients` · `/{patientId}` | Patients with cases here; clinical profile and their cases. |
+| GET | `/api/hospital/doctors` · `/{doctorId}` | Affiliated doctors; profile, affiliations, schedule, cases here. |
+| GET | `/api/hospital/letters` | Cases whose patient chose and paid for this hospital's plan. |
+| POST | `/api/hospital/cases/{planId}/letters/{type}` | Generate (or regenerate) `hospital_invitation` / `appointment_confirmation`; `plan_not_selected`, `case_not_payment_confirmed`. |
+| GET | `/api/hospital/cases/{planId}/letters/{type}` | The letter PDF (`?download=true`). |
+| POST | `/api/hospital/cases/{planId}/letters/{type}/send` | Send to the patient (notifies them); `not_generated`. |
+| GET / POST | `/api/hospital/messages` (+ `/unread-count`, `/read`, `/reopen-request`) | Support chat with MTA, same shape as the doctor's. |
+
 ## Admin (`ADMIN` role)
 
 See the [admin portal](admin-portal.md) guide.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/admin/overview` | Counts for the sidebar badges, plus the latest cases. |
+| GET | `/api/admin/overview` | Counts for the sidebar badges (incl. `pendingHospitals`), plus the latest cases. |
 | GET | `/api/admin/insights` | Dashboard figures: platform totals, money (12 months, by month), case pipeline, per-doctor stats, doctors by status, specialty coverage, stale invitations, fee alerts, upcoming consultations. |
 | GET | `/api/admin/doctors` | All doctor registrations. |
 | GET | `/api/admin/doctors/{id}` | Registration detail with documents and review messages. |
 | GET | `/api/admin/doctors/{id}/performance` | One doctor's stats, membership fees paid and the cases they were invited to. |
 | GET | `/api/admin/doctors/{id}/documents/{index}` | A registration document (`?download=true` to download). |
 | POST | `/api/admin/doctors/{id}/review` | `{outcome: approved|rejected|more_info_requested, reason}`; reason required unless approving; `not_pending` otherwise. |
+| GET | `/api/admin/hospitals` | Hospitals registered through the portal, with status, affiliated doctors and plans. |
+| GET | `/api/admin/hospitals/{id}` | Registration detail with documents and review messages. |
+| GET | `/api/admin/hospitals/{id}/documents/{index}` | A registration document (`?download=true`). |
+| POST | `/api/admin/hospitals/{id}/review` | `{outcome: approved|rejected|more_info_requested, reason}`; reason required unless approving; `not_pending`. |
 | GET | `/api/admin/cases` | All cases with patient, specialty and assigned doctors. |
 | GET | `/api/admin/cases/{id}` | Case detail: description, documents, assignments, plans, consultations. |
 | GET | `/api/admin/cases/{id}/documents/{docId}/content` | A case document. |

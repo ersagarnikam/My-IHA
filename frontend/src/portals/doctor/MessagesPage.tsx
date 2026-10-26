@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { useNavigate, useOutletContext } from 'react-router'
 import { useToast } from '../../components/Toasts'
-import { Empty, ErrorState, Field, FormError, fieldError, Loading, Modal } from '../../components/ui'
+import {
+  Empty,
+  ErrorState,
+  Field,
+  FormError,
+  fieldError,
+  Loading,
+  Modal,
+} from '../../components/ui'
 import { apiPost } from '../../lib/api'
 import type { Notification } from '../../lib/cases'
 import { useFormat } from '../../lib/format'
@@ -20,11 +28,17 @@ type Thread = {
   messages: Message[]
 }
 
-/** The doctor's support thread with MTA (old provider messages page). */
-export function MessagesPage() {
+/**
+ * A provider's support thread with MTA (old provider messages page). Shared by
+ * the doctor and hospital portals: `api` is the role's messages endpoint.
+ */
+export function MessagesPage({
+  api = '/api/doctor/messages',
+  devChatPath = '/api/dev/doctor/chat/open',
+}: { api?: string; devChatPath?: string | null } = {}) {
   const format = useFormat()
   const { refreshMessagesUnread } = useOutletContext<DoctorOutletContext>()
-  const thread = useApi<Thread>('/api/doctor/messages')
+  const thread = useApi<Thread>(api)
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<unknown>(null)
@@ -38,7 +52,7 @@ export function MessagesPage() {
 
   const unread = thread.data?.messages.some((m) => m.senderType === 'admin' && !m.read)
   useEffect(() => {
-    if (unread) void apiPost('/api/doctor/messages/read').then(refreshMessagesUnread)
+    if (unread) void apiPost(`${api}/read`).then(refreshMessagesUnread)
   }, [unread, thread.data?.messages.length, refreshMessagesUnread])
 
   // Block body on purpose: newer browsers return a Promise from scrollIntoView.
@@ -57,8 +71,11 @@ export function MessagesPage() {
     setSending(true)
     setError(null)
     try {
-      const message = await apiPost<Message>('/api/doctor/messages', { body: draft })
-      thread.setData({ ...data, messages: [...data.messages.filter((m) => m.id !== message.id), message] })
+      const message = await apiPost<Message>(api, { body: draft })
+      thread.setData({
+        ...data,
+        messages: [...data.messages.filter((m) => m.id !== message.id), message],
+      })
       setDraft('')
     } catch (err) {
       setError(err)
@@ -99,7 +116,11 @@ export function MessagesPage() {
                 : 'This conversation is closed. MTA opens it when they need to reach you, or you can ask to reopen it.'}
             </span>
             {!data.reopenRequestedAt && (
-              <button type="button" className="button-secondary" onClick={() => setReopenOpen(true)}>
+              <button
+                type="button"
+                className="button-secondary"
+                onClick={() => setReopenOpen(true)}
+              >
                 Request to reopen
               </button>
             )}
@@ -123,16 +144,35 @@ export function MessagesPage() {
       </div>
       {closed && (
         <DevDoctorPanel
-          actions={[{ label: 'Open chat as MTA coordinator (admin)', path: '/api/dev/doctor/chat/open' }]}
+          actions={
+            devChatPath
+              ? [{ label: 'Open chat as MTA coordinator (admin)', path: devChatPath }]
+              : []
+          }
           onChanged={thread.reload}
         />
       )}
-      <ReopenModal open={reopenOpen} onClose={() => setReopenOpen(false)} onSent={thread.reload} />
+      <ReopenModal
+        api={api}
+        open={reopenOpen}
+        onClose={() => setReopenOpen(false)}
+        onSent={thread.reload}
+      />
     </section>
   )
 }
 
-function ReopenModal({ open, onClose, onSent }: { open: boolean; onClose: () => void; onSent: () => void }) {
+function ReopenModal({
+  api,
+  open,
+  onClose,
+  onSent,
+}: {
+  api: string
+  open: boolean
+  onClose: () => void
+  onSent: () => void
+}) {
   const toast = useToast()
   const [reason, setReason] = useState('')
   const [error, setError] = useState<unknown>(null)
@@ -144,7 +184,7 @@ function ReopenModal({ open, onClose, onSent }: { open: boolean; onClose: () => 
     setPending(true)
     setError(null)
     try {
-      await apiPost('/api/doctor/messages/reopen-request', { reason })
+      await apiPost(`${api}/reopen-request`, { reason })
       toast({ title: 'Request sent.', tone: 'good' })
       onClose()
       onSent()
@@ -161,9 +201,17 @@ function ReopenModal({ open, onClose, onSent }: { open: boolean; onClose: () => 
         <p className="muted">Tell MTA what you'd like to discuss.</p>
         <Field
           label="Reason"
-          error={fieldError(error, 'reason') ?? (reason && tooShort ? 'Please write at least 10 characters.' : undefined)}
+          error={
+            fieldError(error, 'reason') ??
+            (reason && tooShort ? 'Please write at least 10 characters.' : undefined)
+          }
         >
-          <textarea rows={4} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
+          <textarea
+            rows={4}
+            maxLength={500}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
         </Field>
         <FormError error={error} />
         <div className="row-end">
@@ -179,7 +227,9 @@ function ReopenModal({ open, onClose, onSent }: { open: boolean; onClose: () => 
   )
 }
 
-export function NotificationsPage() {
+export function NotificationsPage({
+  hrefFor = doctorNotificationHref,
+}: { hrefFor?: (n: Notification) => string } = {}) {
   const format = useFormat()
   const navigate = useNavigate()
   const list = useApi<Notification[]>('/api/notifications?limit=200')
@@ -190,7 +240,7 @@ export function NotificationsPage() {
 
   async function open(n: Notification) {
     if (!n.read) await apiPost(`/api/notifications/${n.id}/read`).catch(() => {})
-    navigate(doctorNotificationHref(n))
+    navigate(hrefFor(n))
   }
 
   return (

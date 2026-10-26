@@ -105,6 +105,31 @@ public class VisaDocument {
 		return doc;
 	}
 
+	/** A letter generated in the hospital portal; the patient sees it once the hospital sends it. */
+	public static VisaDocument hospitalLetter(UUID patientId, UUID caseId, UUID visaSubmissionId, UUID hospitalId,
+			String category, String fileName, String filePath, long fileSizeBytes) {
+		VisaDocument doc = new VisaDocument(UUID.randomUUID(), patientId, caseId, visaSubmissionId, category, fileName,
+				filePath, fileSizeBytes, "application/pdf", false);
+		doc.source = HOSPITAL_GENERATED;
+		doc.hospitalId = hospitalId;
+		return doc;
+	}
+
+	/** Regenerating a letter replaces its file; whether it was sent is kept. */
+	public void replaceFile(String fileName, String filePath, long fileSizeBytes) {
+		this.fileName = fileName;
+		this.filePath = filePath;
+		this.fileSizeBytes = fileSizeBytes;
+	}
+
+	public void markSentToPatient() {
+		this.sentToPatientAt = Instant.now();
+	}
+
+	public UUID getHospitalId() {
+		return hospitalId;
+	}
+
 	void linkTo(UUID caseId, UUID submissionId) {
 		this.caseId = caseId;
 		this.visaSubmissionId = submissionId;

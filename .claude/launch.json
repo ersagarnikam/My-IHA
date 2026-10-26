@@ -24,6 +24,22 @@
       ],
       "port": 5173,
       "autoPort": false
+    },
+    {
+      "name": "web-alt",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "frontend",
+        "run",
+        "dev"
+      ],
+      "env": {
+        "PORT": "5174",
+        "API_URL": "http://localhost:8081"
+      },
+      "port": 5174,
+      "autoPort": false
     }
   ]
 }

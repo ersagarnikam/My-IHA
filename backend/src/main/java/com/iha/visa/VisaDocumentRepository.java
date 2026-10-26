@@ -19,4 +19,8 @@ public interface VisaDocumentRepository extends JpaRepository<VisaDocument, UUID
 
 	List<VisaDocument> findByCaseIdAndSourceAndVisaSubmissionIdIsNull(UUID caseId, String source);
 
+	List<VisaDocument> findByCaseIdInAndSource(Collection<UUID> caseIds, String source);
+
+	Optional<VisaDocument> findFirstByCaseIdAndSourceAndCategory(UUID caseId, String source, String category);
+
 }

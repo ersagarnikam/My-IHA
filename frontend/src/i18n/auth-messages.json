@@ -39,7 +39,9 @@
     "networkError": "Could not reach the server. Please try again.",
     "backToWebsite": "Back to {site}",
     "areYouDoctor": "Are you a doctor?",
-    "registerAsDoctor": "Register as a doctor"
+    "registerAsDoctor": "Register as a doctor",
+    "areYouHospital": "Represent a hospital?",
+    "registerHospital": "Register your hospital"
   },
   "zh": {
     "brand": "MTA",
@@ -81,6 +83,8 @@
     "networkError": "无法连接服务器，请重试。",
     "backToWebsite": "返回 {site}",
     "areYouDoctor": "您是医生吗？",
-    "registerAsDoctor": "注册为医生"
+    "registerAsDoctor": "注册为医生",
+    "areYouHospital": "代表医院？",
+    "registerHospital": "注册您的医院"
   }
 }

@@ -40,6 +40,8 @@ The database starts empty on every API start, so the dev profile seeds demo data
 | `peer1@demo.local`, `peer2@demo.local` | `Demo1234` | Two more Cardiology doctors, so the anonymised benchmark and rank have data |
 | `pending.doctor@demo.local` | `Demo1234` | Dr. Olivia Grant, a registration waiting for admin review |
 | `admin@demo.local` | `Demo1234` | MTA coordinator (admin portal) |
+| `hospital@demo.local` | `Demo1234` | St Vincent's Hospital Sydney, registered and approved; Dr. Chen's and the peers' plans name it, so it has cases, and paid cases waiting for visa letters |
+| `pending.hospital@demo.local` | `Demo1234` | Gold Coast Private Hospital, a registration waiting in Hospital Approvals |
 
 Turn seeding off with `iha.dev.seed-demo-data=false`.
 
@@ -55,13 +57,13 @@ Payments use the simulated provider (`iha.payments.provider=fake`): payment page
 
 ### Dev simulation (stand-ins for unported portals)
 
-The hospital and lawyer portals don't exist yet, so in the dev profile `/api/dev/**` endpoints play those roles — and, for quick testing from one portal, the admin and patient too. The web app shows them as dashed **Dev simulation** boxes (only under `npm run dev`, never in a production build).
+The lawyer portal doesn't exist yet, so in the dev profile `/api/dev/**` endpoints play that role — and, for quick testing from one portal, the admin, hospital and patient too. The web app shows them as dashed **Dev simulation** boxes (only under `npm run dev`, never in a production build).
 
 | Where | Button | Plays |
 |---|---|---|
 | Patient case page | Publish two treatment options | admin + doctors |
 | Patient case page | Propose consultation times | doctor |
-| Patient case page | Send hospital letters | hospital |
+| Patient case page | Send hospital letters (real: hospital portal → Documents) | hospital |
 | Patient / doctor messages | Open chat as coordinator | admin |
 | Doctor pending-approval page | Approve my registration / Ask me for more information | admin |
 | Doctor dashboard | Assign me a new case | patient + admin |
@@ -70,7 +72,19 @@ The hospital and lawyer portals don't exist yet, so in the dev profile `/api/dev
 | Doctor case page | Request an online consultation | patient |
 | Doctor consultation page | Choose the first time and pay | patient |
 
-The admin steps are now available for real in the [admin portal](admin-portal.md); the buttons remain because the e2e scripts use them. Remove them once the hospital portal exists and the scripts drive the real portals.
+The admin steps are now available for real in the [admin portal](admin-portal.md); the buttons remain because the e2e scripts use them. Remove them once the scripts drive the real portals.
+
+### Ports already in use
+
+If another project holds 8080 or 5173, run the API on another port and point Vite at it — the defaults stay unchanged:
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8081      # in backend/
+PORT=5174 API_URL=http://localhost:8081 npm run dev                          # in frontend/
+E2E_BASE=http://localhost:5174 API_LOG=… node journey.mjs                    # in e2e/
+```
+
+`.claude/launch.json` has a matching `web-alt` preview configuration.
 
 ### Sharing a temporary link
 
@@ -104,6 +118,7 @@ Spring Boot tests that boot the whole API on H2, run every migration, validate t
 | `DoctorPortalFlowTests` | Doctor sign-up, registration, approval gate, fee, case through to submitted plan, document requests, consultation slots, chat, settings. |
 | `AdminPortalFlowTests` | Admin access, doctor approval, case assignment, plan publish/decline, patient and provider chats. |
 | `RefundTests` | Admin refunds: validation, partial and full refunds with the card fee deducted once, credit notes, waived fees, a refunded consultation cancelled, doctor fee refunds, dashboard net of refunds. |
+| `HospitalPortalFlowTests` | Hospital sign-up, registration, MTA review and resubmission, the gate, settings; what the demo hospital sees, issuing and sending both visa letters and the patient's visa application unlocking. |
 | `FeeSettingsTests` | Admin fee settings: access, validation, history and audit, and that doctor billing, consultation fees and the suggested MTA service fee follow the settings. |
 | `SecurityAndAuthTests` | Every role against every API prefix, forged and altered tokens, sign-in without revealing accounts, the wrong-code limit, password reset, other patients' records and invoices, unknown ids on admin routes, the seeded demo accounts. |
 
@@ -125,6 +140,7 @@ npm install
 API_LOG=../api.log node journey.mjs          # patient: register → visa application
 API_LOG=../api.log node doctor-journey.mjs   # doctor: sign-up → scheduled consultation
 node admin-journey.mjs                       # admin: approve, assign, publish/decline, chat (needs a freshly started API)
+API_LOG=../api.log node hospital-journey.mjs # hospital: sign-up, wizard, MTA review, visa letters
 node smoke.mjs                               # opens every patient/doctor/admin page at desktop and phone width
 ```
 

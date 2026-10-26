@@ -16,6 +16,7 @@ export type CaseRow = {
 
 export type Overview = {
   pendingDoctors: number
+  pendingHospitals: number
   casesNeedingDoctor: number
   plansToReview: number
   chatsWaiting: number
