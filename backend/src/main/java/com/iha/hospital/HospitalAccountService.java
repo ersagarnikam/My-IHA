@@ -16,6 +16,7 @@ import com.iha.auth.AppUser;
 import com.iha.auth.AuthService;
 import com.iha.auth.CurrentUser;
 import com.iha.auth.Role;
+import com.iha.common.Abn;
 import com.iha.common.ApiException;
 import com.iha.notification.AlertPreferences;
 import com.iha.provider.Hospital;
@@ -205,8 +206,8 @@ public class HospitalAccountService implements AlertPreferences {
 	private Hospital.BasicInfo basicInfo(CurrentUser user, BasicInput b) {
 		String registration = identifier(b.registrationNumber(), "invalid_registration_number",
 				"Registration number must be 4–20 letters, numbers or hyphens.");
-		String abn = b.abnNumber() == null ? "" : b.abnNumber().replaceAll("\\s", "");
-		if (!isValidAbn(abn)) {
+		String abn = Abn.normalize(b.abnNumber());
+		if (!Abn.isValid(abn)) {
 			throw ApiException.badRequest("invalid_abn", "Enter a valid ABN (11 digits).");
 		}
 		return new Hospital.BasicInfo(b.name().trim(), registration, abn, b.phone().trim(), user.email(),
@@ -292,23 +293,6 @@ public class HospitalAccountService implements AlertPreferences {
 			throw ApiException.badRequest(code, message);
 		}
 		return v;
-	}
-
-	/** Australian Business Number checksum (weighted modulus 89). */
-	static boolean isValidAbn(String value) {
-		if (value == null || !value.matches("\\d{11}")) {
-			return false;
-		}
-		int[] weights = { 10, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19 };
-		int total = 0;
-		for (int i = 0; i < 11; i++) {
-			int digit = value.charAt(i) - '0';
-			if (i == 0) {
-				digit -= 1;
-			}
-			total += digit * weights[i];
-		}
-		return total % 89 == 0;
 	}
 
 	private static List<String> clean(List<String> values) {

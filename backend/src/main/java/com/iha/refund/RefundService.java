@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -37,9 +38,12 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Full and partial refunds by MTA admin, of patient payments (treatment,
  * consultation) and doctor fees (registration, annual). The card processing
- * fee is deducted from refunds, at most once per payment in total, unless the
- * admin waives it: with Stripe it is the fee Stripe actually kept, otherwise an
- * estimate from the fee settings. Refunds go back to the original card.
+ * fee is deducted only when the refund is for the payer's own reasons (see
+ * {@link #FEE_KEPT}): when the doctor, hospital or MTA is at fault, Australian
+ * Consumer Law gives a full refund, so MTA absorbs the fee. It is deducted at
+ * most once per payment in total, and admin can still waive it. With Stripe it
+ * is the fee Stripe actually kept, otherwise an estimate from the fee
+ * settings. Refunds go back to the original card.
  */
 @Service
 public class RefundService {
@@ -51,13 +55,22 @@ public class RefundService {
 	public static final Map<String, String> REASONS = new LinkedHashMap<>();
 
 	static {
-		REASONS.put("doctor_cancelled", "Doctor cancelled or missed the consultation");
+		REASONS.put("patient_changed_mind", "Patient changed their mind or cancelled");
 		REASONS.put("visa_refused", "Visa refused");
-		REASONS.put("treatment_not_possible", "Treatment not possible or cancelled");
+		REASONS.put("doctor_cancelled", "Doctor cancelled or missed the consultation");
+		REASONS.put("treatment_not_possible", "Treatment not possible (doctor or hospital)");
+		REASONS.put("service_not_delivered", "Service not delivered as promised");
 		REASONS.put("duplicate", "Duplicate or mistaken payment");
 		REASONS.put("goodwill", "Goodwill gesture");
 		REASONS.put("other", "Other");
 	}
+
+	/**
+	 * Reasons on the payer's side, where the card fee is kept. For the rest (the
+	 * doctor, hospital or MTA didn't deliver, or charged by mistake) the fee is
+	 * never deducted. To be confirmed by MTA's lawyer.
+	 */
+	public static final Set<String> FEE_KEPT = Set.of("patient_changed_mind", "visa_refused", "goodwill", "other");
 
 	private final PaymentRepository payments;
 	private final DoctorFeePaymentRepository feePayments;
@@ -135,8 +148,9 @@ public class RefundService {
 			throw ApiException.badRequest("amount_too_high",
 					"At most " + aud(q.refundableAud()) + " of this payment can still be refunded.");
 		}
-		BigDecimal deduct = waiveFee ? BigDecimal.ZERO : q.feeRemainingAud().min(amount);
-		String feeSource = waiveFee ? "waived" : deduct.signum() == 0 ? "none" : q.feeSource();
+		boolean keepFee = FEE_KEPT.contains(reason) && !waiveFee;
+		BigDecimal deduct = keepFee ? q.feeRemainingAud().min(amount) : BigDecimal.ZERO;
+		String feeSource = q.feeRemainingAud().signum() == 0 ? "none" : keepFee ? q.feeSource() : "waived";
 		if (amount.subtract(deduct).signum() <= 0) {
 			throw ApiException.badRequest("refund_below_fee",
 					"After the card processing fee of " + aud(deduct) + " there is nothing left to refund.");

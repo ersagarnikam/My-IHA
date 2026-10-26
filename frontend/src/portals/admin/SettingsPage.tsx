@@ -4,6 +4,7 @@ import { ErrorState, FormError, Loading } from '../../components/ui'
 import { apiPut } from '../../lib/api'
 import { useFormat } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
+import { BusinessSettingsCard } from './BusinessSettings'
 import type { FeeSetting, FeeSettings } from './types'
 
 const GROUPS: { id: FeeSetting['group']; title: string; intro: string }[] = [
@@ -53,10 +54,12 @@ export function AdminSettingsPage() {
       <div>
         <h1 className="dr-title">Settings</h1>
         <p className="muted" style={{ margin: 0 }}>
-          Platform fees. A change applies to payments started after you save it; payments already
-          started keep their amount.
+          MTA's business details and platform fees. A fee change applies to payments started after
+          you save it; payments already started keep their amount.
         </p>
       </div>
+
+      <BusinessSettingsCard />
 
       {GROUPS.map((g) => (
         <section key={g.id} className="dr-card stack">

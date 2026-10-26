@@ -1,5 +1,7 @@
 package com.iha.refund;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,7 @@ import com.iha.common.ApiException;
 import com.iha.patient.Patient;
 import com.iha.patient.PatientService;
 import com.iha.payment.InvoiceRenderer;
+import com.iha.payment.InvoiceService;
 import com.iha.payment.Payment;
 import com.iha.payment.PaymentRepository;
 
@@ -38,15 +41,21 @@ public class PatientRefundController {
 	private final CaseRepository cases;
 	private final InvoiceRenderer renderer;
 	private final AuditService audit;
+	private final InvoiceService invoices;
 
 	PatientRefundController(PaymentRefundRepository refunds, PaymentRepository payments, PatientService patientService,
-			CaseRepository cases, InvoiceRenderer renderer, AuditService audit) {
+			CaseRepository cases, InvoiceRenderer renderer, AuditService audit, InvoiceService invoices) {
 		this.refunds = refunds;
 		this.payments = payments;
 		this.patientService = patientService;
 		this.cases = cases;
 		this.renderer = renderer;
 		this.audit = audit;
+		this.invoices = invoices;
+	}
+
+	private static BigDecimal gstPart(BigDecimal amount, BigDecimal share) {
+		return share.signum() == 0 ? null : amount.multiply(share).setScale(2, RoundingMode.HALF_UP);
 	}
 
 	@GetMapping("/api/patient/refunds/{refundId}/credit-note")
@@ -63,10 +72,13 @@ public class PatientRefundController {
 		String reference = cases.findById(payment.getCaseId()).map(MedicalCase::getReferenceNumber).orElse("");
 		String what = Payment.CONSULTATION_FEE.equals(payment.getPaymentType()) ? "online consultation fee"
 				: "treatment payment";
+		// The GST in a refund follows the GST share of the original payment.
+		BigDecimal share = invoices.gstShare(payment);
 		List<InvoiceRenderer.Line> lines = new ArrayList<>();
-		lines.add(new InvoiceRenderer.Line("Refund of " + what, refund.getAmountAud()));
+		lines.add(new InvoiceRenderer.Line("Refund of " + what, refund.getAmountAud(), gstPart(refund.getAmountAud(), share)));
 		if (refund.getFeeDeductedAud().signum() > 0) {
-			lines.add(new InvoiceRenderer.Line("Less card processing fee", refund.getFeeDeductedAud().negate()));
+			lines.add(new InvoiceRenderer.Line("Less card processing fee", refund.getFeeDeductedAud().negate(),
+					gstPart(refund.getFeeDeductedAud().negate(), share)));
 		}
 		String number = "CN-" + reference + "-" + refund.getId().toString().substring(0, 6).toUpperCase();
 		byte[] pdf = renderer.render(new InvoiceRenderer.Invoice(number, refund.getCreatedAt(), "Case", reference,

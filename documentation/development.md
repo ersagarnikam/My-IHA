@@ -120,6 +120,7 @@ Spring Boot tests that boot the whole API on H2, run every migration, validate t
 | `RefundTests` | Admin refunds: validation, partial and full refunds with the card fee deducted once, credit notes, waived fees, a refunded consultation cancelled, doctor fee refunds, dashboard net of refunds. |
 | `HospitalPortalFlowTests` | Hospital sign-up, registration, MTA review and resubmission, the gate, settings; what the demo hospital sees, issuing and sending both visa letters and the patient's visa application unlocking. |
 | `TimeZoneTests` | A Sydney doctor's slots across daylight saving (10:00 → 23:00 UTC in January, 00:00 UTC in July), the patient getting the doctor's zone, only Australian zones accepted, hospital zones. |
+| `TaxInvoiceTests` | MTA's business details and GST: plain invoices until registered, then tax invoices with the ABN, GST per line and total (read back from the PDFs). |
 | `FeeSettingsTests` | Admin fee settings: access, validation, history and audit, and that doctor billing, consultation fees and the suggested MTA service fee follow the settings. |
 | `SecurityAndAuthTests` | Every role against every API prefix, forged and altered tokens, sign-in without revealing accounts, the wrong-code limit, password reset, other patients' records and invoices, unknown ids on admin routes, the seeded demo accounts. |
 

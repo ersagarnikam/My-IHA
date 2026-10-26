@@ -191,8 +191,8 @@ class RefundTests {
 		String paymentId = JsonPath.read(payments, "$[0].id");
 		assertThat(JsonPath.<String>read(payments, "$[0].type")).isEqualTo("consultation");
 
-		// Waived fee: MTA's mistake, so the patient gets the full A$200 back.
-		refund(admin, "/api/admin/payments/patient/" + paymentId, "200", "doctor_cancelled", null, true)
+		// The doctor cancelled: no card fee is kept (no waiver needed), so the patient gets the full A$200 back.
+		refund(admin, "/api/admin/payments/patient/" + paymentId, "200", "doctor_cancelled", null, false)
 			.andExpect(jsonPath("$.payment.status").value("refunded"))
 			.andExpect(jsonPath("$.refunds[0].feeDeductedAud").value(0.0))
 			.andExpect(jsonPath("$.refunds[0].feeSource").value("waived"))

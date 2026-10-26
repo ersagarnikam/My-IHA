@@ -12,6 +12,7 @@ import java.util.UUID;
 import com.iha.audit.AuditService;
 import com.iha.auth.CurrentUser;
 import com.iha.common.ApiException;
+import com.iha.fees.BusinessSettingsService;
 import com.iha.fees.FeeSettingsService;
 import com.iha.notification.NotificationService;
 import com.iha.payment.InvoiceRenderer;
@@ -39,18 +40,20 @@ public class DoctorFeeService {
 	private final DoctorRepository doctors;
 	private final DoctorFeePaymentRepository payments;
 	private final FeeSettingsService fees;
+	private final BusinessSettingsService business;
 	private final PaymentGateway gateway;
 	private final InvoiceRenderer invoices;
 	private final NotificationService notifications;
 	private final AuditService audit;
 
 	DoctorFeeService(DoctorAccountService accounts, DoctorRepository doctors, DoctorFeePaymentRepository payments,
-			FeeSettingsService fees, PaymentGateway gateway, InvoiceRenderer invoices,
+			FeeSettingsService fees, BusinessSettingsService business, PaymentGateway gateway, InvoiceRenderer invoices,
 			NotificationService notifications, AuditService audit) {
 		this.accounts = accounts;
 		this.doctors = doctors;
 		this.payments = payments;
 		this.fees = fees;
+		this.business = business;
 		this.gateway = gateway;
 		this.invoices = invoices;
 		this.notifications = notifications;
@@ -180,7 +183,9 @@ public class DoctorFeeService {
 		String number = "MTA-DR-" + payment.getId().toString().substring(0, 8).toUpperCase();
 		byte[] pdf = invoices.render(new InvoiceRenderer.Invoice(number, payment.getPaidAt(), "Fee", label,
 				payment.getGatewayReference(), doctor.getFullName(), user.email(), null,
-				List.of(new InvoiceRenderer.Line(label, payment.getAmountAud())), payment.getAmountAud()));
+				List.of(new InvoiceRenderer.Line(label, payment.getAmountAud(),
+						business.gstIn(BusinessSettingsService.Charge.DOCTOR_FEES, payment.getAmountAud()))),
+				payment.getAmountAud()));
 		audit.record(user.id(), user.email(), "doctor", "fee.invoice_downloaded", "doctor_fee_payment", paymentId,
 				Map.of());
 		return new Invoice(number + ".pdf", pdf);

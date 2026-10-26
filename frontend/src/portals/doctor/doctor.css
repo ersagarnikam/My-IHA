@@ -1532,3 +1532,18 @@
   padding-top: 0.4rem;
   font-weight: 700;
 }
+
+/* Admin settings: GST per charge */
+
+.admin-gst-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-gst-row select {
+  width: auto;
+  min-width: 12rem;
+}

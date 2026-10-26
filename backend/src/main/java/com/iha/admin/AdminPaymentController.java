@@ -86,7 +86,8 @@ public class AdminPaymentController {
 	public PaymentDetail detail(@PathVariable String kind, @PathVariable UUID paymentId) {
 		PaymentRow row = row(kind, paymentId);
 		return new PaymentDetail(row, refunds.quote(kind, paymentId),
-				refunds.refundsFor(paymentId).stream().map(RefundRow::of).toList(), RefundService.REASONS);
+				refunds.refundsFor(paymentId).stream().map(RefundRow::of).toList(), RefundService.REASONS,
+				RefundService.FEE_KEPT.stream().sorted().toList());
 	}
 
 	@PostMapping("/{kind}/{paymentId}/refunds")
@@ -186,8 +187,9 @@ public class AdminPaymentController {
 
 	}
 
+	/** {@code feeKeptReasons}: reasons for which the card fee is deducted (unless waived). */
 	public record PaymentDetail(PaymentRow payment, RefundService.Quote quote, List<RefundRow> refunds,
-			Map<String, String> reasons) {
+			Map<String, String> reasons, List<String> feeKeptReasons) {
 	}
 
 }

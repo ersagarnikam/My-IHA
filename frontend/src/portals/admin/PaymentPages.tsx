@@ -167,7 +167,7 @@ export function AdminPaymentDetailPage() {
   const [refundOpen, setRefundOpen] = useState(false)
   if (detail.error) return <ErrorState error={detail.error} onRetry={detail.reload} />
   if (!detail.data) return <Loading />
-  const { payment: p, quote, refunds, reasons } = detail.data
+  const { payment: p, quote, refunds, reasons, feeKeptReasons } = detail.data
   const canRefund = quote.refundableAud > 0 && p.status === 'completed'
 
   return (
@@ -284,6 +284,7 @@ export function AdminPaymentDetailPage() {
         payer={p.payerName}
         quote={quote}
         reasons={reasons}
+        feeKeptReasons={feeKeptReasons}
         onClose={() => setRefundOpen(false)}
         onDone={(next) => {
           detail.setData(next)
@@ -302,6 +303,7 @@ function RefundDialog({
   payer,
   quote,
   reasons,
+  feeKeptReasons,
   onClose,
   onDone,
 }: {
@@ -311,6 +313,7 @@ function RefundDialog({
   payer: string | null
   quote: RefundQuote
   reasons: Record<string, string>
+  feeKeptReasons: string[]
   onClose: () => void
   onDone: (detail: AdminPaymentDetail) => void
 }) {
@@ -326,7 +329,9 @@ function RefundDialog({
 
   const value = mode === 'full' ? quote.refundableAud : Number(amount)
   const valid = Number.isFinite(value) && value > 0 && value <= quote.refundableAud
-  const fee = waive || !valid ? 0 : Math.min(quote.feeRemainingAud, value)
+  // The fee is kept only for reasons on the payer's side, and only if not waived.
+  const keepsFee = reason !== '' && feeKeptReasons.includes(reason)
+  const fee = !keepsFee || waive || !valid ? 0 : Math.min(quote.feeRemainingAud, value)
   const toCard = valid ? Math.round((value - fee) * 100) / 100 : 0
   const noteNeeded = reason === 'other' && note.trim().length < 5
   const ready = valid && toCard > 0 && reason !== '' && !noteNeeded
@@ -427,16 +432,24 @@ function RefundDialog({
             onChange={(e) => setNote(e.target.value)}
           />
         </label>
-        <label className="row" style={{ gap: '0.5rem', alignItems: 'flex-start' }}>
-          <input type="checkbox" checked={waive} onChange={(e) => setWaive(e.target.checked)} />
-          <span>
-            Waive the card processing fee
-            <span className="muted small" style={{ display: 'block' }}>
-              Only when the charge was MTA's mistake (e.g. a duplicate payment). MTA then absorbs
-              the fee.
+        {reason !== '' && !keepsFee && quote.feeRemainingAud > 0 && (
+          <p className="muted small" style={{ margin: 0 }}>
+            No card fee is kept for this reason: the doctor, hospital or MTA is responsible, so the
+            payer gets the full amount back and MTA absorbs the fee.
+          </p>
+        )}
+        {keepsFee && quote.feeRemainingAud > 0 && (
+          <label className="row" style={{ gap: '0.5rem', alignItems: 'flex-start' }}>
+            <input type="checkbox" checked={waive} onChange={(e) => setWaive(e.target.checked)} />
+            <span>
+              Waive the card processing fee
+              <span className="muted small" style={{ display: 'block' }}>
+                The fee is normally kept for this reason. Waive it as a goodwill gesture; MTA then
+                absorbs it.
+              </span>
             </span>
-          </span>
-        </label>
+          </label>
+        )}
         <div className="refund-breakdown">
           <div>
             <span>Refund</span>
@@ -447,7 +460,9 @@ function RefundDialog({
               Less card processing fee
               {quote.feeSource === 'estimate' ? ' (estimate)' : ''}
             </span>
-            <span>{waive ? 'Waived' : valid ? `− ${aud(fee)}` : '—'}</span>
+            <span>
+              {!valid ? '—' : keepsFee && !waive ? `− ${aud(fee)}` : reason ? 'Not kept' : '—'}
+            </span>
           </div>
           <div className="total">
             <span>Back to the card</span>

@@ -405,6 +405,8 @@ export type AdminPaymentDetail = {
   quote: RefundQuote
   refunds: AdminRefund[]
   reasons: Record<string, string>
+  /** Reasons for which the card fee is deducted (the payer's side); for the rest MTA absorbs it. */
+  feeKeptReasons: string[]
 }
 
 export const PAYMENT_TYPE: Record<AdminPayment['type'], string> = {

@@ -41,6 +41,7 @@ erDiagram
 | `email_verification_codes` | 6-digit codes for email verification and password reset (hashed, expiring, attempt-limited). |
 | `specialties` | Medical specialties (English/Chinese labels, sort order). |
 | `platform_fee_settings` | Admin-editable fees, one row per key (`fees/FeeSettingsService` holds the catalogue): `doctor_registration_fee` (default AUD 5,000), `doctor_annual_fee` (2,000), `consultation_fee` (200), `mta_service_fee_pct` (10, a percentage), `lawyer_*` and `hospital_*` registration/annual fees (0, not charged yet). `updated_by` records the last admin. |
+| `business_settings` | MTA's legal name, ABN, address, billing email, GST registration and per-charge GST classification (key/value, V10). |
 | `platform_fee_changes` | History of fee changes: key, old and new amount, reason, who, when (V7). |
 | `patients` | Patient profile: personal details, encrypted DOB and medical background, emergency contact, avatar, alert preferences, Stripe customer, deletion schedule. |
 | `doctors` | Doctor profile: registration details, encrypted DOB and licence, specialties, languages, working days, availability (JSON), registration documents (JSON), approval status, fee dates, alert preferences. |
