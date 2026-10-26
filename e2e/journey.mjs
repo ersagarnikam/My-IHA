@@ -54,6 +54,7 @@ try {
   await type('input[name=email]', email)
   await type('input[name=password]', 'Secret123')
   await type('input[name=confirmPassword]', 'Secret123')
+  for (const box of await page.$$('.consent-check input')) await box.click()
   await page.locator('button[type=submit]').click()
   await page.waitForSelector('input[name=code]')
   await new Promise((r) => setTimeout(r, 500))

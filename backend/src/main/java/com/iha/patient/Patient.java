@@ -103,6 +103,14 @@ public class Patient {
 	@Column(name = "scheduled_delete_at")
 	private Instant scheduledDeleteAt;
 
+	/** When the grace period ended and the login and contact details were erased. */
+	@Column(name = "account_closed_at")
+	private Instant accountClosedAt;
+
+	/** Health and payment records are kept until then, then purged. */
+	@Column(name = "retain_until")
+	private Instant retainUntil;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -174,6 +182,34 @@ public class Patient {
 			deletedAt = Instant.now();
 			scheduledDeleteAt = deletedAt.plus(DELETION_GRACE);
 		}
+	}
+
+	/**
+	 * After the grace period: erases contact and convenience data (phone,
+	 * address, emergency contact, photo, payment-provider id, alert settings).
+	 * Name, date of birth and the medical details stay with the retained health
+	 * records until {@code retainUntil}.
+	 */
+	void closeAccount(Instant retainUntil) {
+		this.phone = null;
+		this.address = null;
+		this.emergencyContactName = null;
+		this.emergencyContactRelationship = null;
+		this.emergencyContactPhone = null;
+		this.avatarPath = null;
+		this.stripeCustomerId = null;
+		this.emailNotificationsEnabled = false;
+		this.smsNotificationsEnabled = false;
+		this.accountClosedAt = Instant.now();
+		this.retainUntil = retainUntil;
+	}
+
+	public Instant getAccountClosedAt() {
+		return accountClosedAt;
+	}
+
+	public Instant getRetainUntil() {
+		return retainUntil;
 	}
 
 	public UUID getId() {

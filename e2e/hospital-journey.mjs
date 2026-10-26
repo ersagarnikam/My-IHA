@@ -73,6 +73,7 @@ try {
   await fill('input[name=email]', email)
   await fill('input[name=password]', 'Secret123')
   await fill('input[name=confirmPassword]', 'Secret123')
+  for (const box of await page.$$('.consent-check input')) await box.click()
   await page.locator('button[type=submit]').click()
   await page.waitForSelector('input[name=code]')
   await sleep(500)

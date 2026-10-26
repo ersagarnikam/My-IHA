@@ -660,7 +660,7 @@
     },
     "deleteAccount": {
       "warningTitle": "您的账户将立即被停用",
-      "warningBody": "您将被退出登录，且无法再次登录。您的数据、案例历史及上传的文件将在30天后永久删除。",
+      "warningBody": "您将被退出登录，且无法再次登录。30天后，您的登录信息和联系方式将被删除。您的医疗和付款记录将按法律要求的期限安全保存，之后删除。",
       "confirmInstruction": "如需确认，请在下方输入框中输入",
       "confirmSuffix": "：",
       "deleteButton": "删除账户",

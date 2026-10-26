@@ -8,6 +8,8 @@ import java.util.UUID;
 import com.iha.auth.CurrentUser;
 import com.iha.common.validation.PhoneNumber;
 import com.iha.common.validation.StrongPassword;
+import com.iha.privacy.Consent;
+import com.iha.privacy.ConsentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -38,14 +40,19 @@ public class PatientController {
 
 	private final PatientService patientService;
 
-	public PatientController(PatientService patientService) {
+	private final ConsentService consents;
+
+	public PatientController(PatientService patientService, ConsentService consents) {
 		this.patientService = patientService;
+		this.consents = consents;
 	}
 
 	@PostMapping("/api/auth/register/patient")
 	@ResponseStatus(HttpStatus.ACCEPTED)
 	public RegistrationResponse register(@Valid @RequestBody RegisterPatientRequest request) {
-		patientService.register(request.fullName(), request.email(), request.password());
+		ConsentService.require(request.acceptTerms(), request.consentHealthInfo(), true);
+		Patient patient = patientService.register(request.fullName(), request.email(), request.password());
+		consents.record(patient.getUserId(), Consent.TERMS_AND_PRIVACY, Consent.HEALTH_INFORMATION);
 		return new RegistrationResponse(request.email().trim().toLowerCase(), "verification_required");
 	}
 
@@ -110,7 +117,8 @@ public class PatientController {
 
 	public record RegisterPatientRequest(
 			@NotBlank @Size(min = 2, max = 100, message = "Full name must be 2–100 characters") String fullName,
-			@NotBlank @Email String email, @StrongPassword String password) {
+			@NotBlank @Email String email, @StrongPassword String password, Boolean acceptTerms,
+			Boolean consentHealthInfo) {
 	}
 
 	public record RegistrationResponse(String email, String status) {

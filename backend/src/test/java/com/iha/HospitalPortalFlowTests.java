@@ -84,7 +84,7 @@ class HospitalPortalFlowTests {
 		String admin = adminToken();
 		String email = "hosp-" + UUID.randomUUID() + "@example.com";
 		mvc.perform(post("/api/auth/register/hospital").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"email\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)))
+			.content("{\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(email, PASSWORD)))
 			.andExpect(status().isAccepted());
 		String token = verifyEmail(email);
 		perform(get("/api/hospital/account"), token).andExpect(jsonPath("$.registered").value(false));

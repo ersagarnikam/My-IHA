@@ -84,6 +84,7 @@ try {
   await page.locator('input[name=email]').fill(email)
   await page.locator('input[name=password]').fill('Secret123')
   await page.locator('input[name=confirmPassword]').fill('Secret123')
+  for (const box of await page.$$('.consent-check input')) await box.click()
   await page.locator('button[type=submit]').click()
   await page.waitForSelector('input[name=code]')
   await sleep(500)

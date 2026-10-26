@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { ConsentChecks, consentValues } from '../../components/ConsentChecks'
 import { Link, useNavigate } from 'react-router'
 import { CheckCircle2, Clock, FileText, Upload, X, XCircle } from 'lucide-react'
 import { Field, FormError, fieldError, Stepper } from '../../components/ui'
@@ -37,6 +38,7 @@ export function HospitalSignUpPage() {
       const { email } = await apiPost<{ email: string }>('/api/auth/register/hospital', {
         email: form.get('email'),
         password,
+        ...consentValues(form),
       })
       navigate(`/verify?email=${encodeURIComponent(email)}`)
     } catch (err) {
@@ -71,6 +73,7 @@ export function HospitalSignUpPage() {
         <Field label={t('confirmPassword')}>
           <input name="confirmPassword" type="password" autoComplete="new-password" required />
         </Field>
+        <ConsentChecks />
         <FormError error={error} />
         <button type="submit" disabled={pending}>
           {pending ? t('creatingAccount') : t('createAccount')}

@@ -163,7 +163,7 @@ class PatientCaseFlowTests {
 
 	private void register(String email) throws Exception {
 		mvc.perform(post("/api/auth/register/patient").contentType(MediaType.APPLICATION_JSON)
-				.content("{\"fullName\":\"Test Patient\",\"email\":\"%s\",\"password\":\"Secret123\"}".formatted(email)))
+				.content("{\"fullName\":\"Test Patient\",\"email\":\"%s\",\"password\":\"Secret123\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(email)))
 			.andExpect(status().isAccepted());
 	}
 

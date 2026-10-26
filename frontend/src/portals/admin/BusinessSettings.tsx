@@ -175,3 +175,102 @@ function BusinessForm({
     </section>
   )
 }
+
+type Privacy = {
+  privacyPolicyUrl: string
+  termsUrl: string
+  consentVersion: string
+  retentionYears: number
+}
+
+/**
+ * Links shown at sign-up, the consent version recorded with each consent, and
+ * how long a closed patient account's records are kept (admin → Settings).
+ */
+export function PrivacySettingsCard() {
+  const data = useApi<Privacy>('/api/admin/settings/privacy')
+  if (data.error) return <ErrorState error={data.error} onRetry={data.reload} />
+  if (!data.data) return <Loading />
+  return <PrivacyForm key={JSON.stringify(data.data)} privacy={data.data} onSaved={data.setData} />
+}
+
+function PrivacyForm({ privacy, onSaved }: { privacy: Privacy; onSaved: (p: Privacy) => void }) {
+  const toast = useToast()
+  const [error, setError] = useState<unknown>(null)
+  const [pending, setPending] = useState(false)
+  const codeError = (code: string) =>
+    error instanceof ApiError && error.code === code ? error.message : undefined
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const f = new FormData(event.currentTarget)
+    setPending(true)
+    setError(null)
+    try {
+      onSaved(
+        await apiPut<Privacy>('/api/admin/settings/privacy', {
+          privacyPolicyUrl: String(f.get('privacyPolicyUrl') ?? '').trim(),
+          termsUrl: String(f.get('termsUrl') ?? '').trim(),
+          consentVersion: String(f.get('consentVersion') ?? '').trim(),
+          retentionYears: Number(f.get('retentionYears')),
+        }),
+      )
+      toast({ title: 'Privacy settings saved.', tone: 'good' })
+    } catch (err) {
+      setError(err)
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <section className="dr-card stack">
+      <div>
+        <h2 className="dr-subtitle">Privacy, consent &amp; record retention</h2>
+        <p className="muted small" style={{ margin: 0 }}>
+          Everyone accepts the terms and privacy policy at sign-up; patients also consent to MTA
+          collecting their health information and sharing it with providers. Each consent is stored
+          with the version below — change it when the wording or policy changes. When a patient
+          deletes their account, the login and contact details are erased after 30 days and the
+          medical and payment records are kept for the retention period, then purged. Have
+          MTA&apos;s lawyer confirm the wording and the period.
+        </p>
+      </div>
+      <form className="stack" onSubmit={submit}>
+        <div className="dr-grid-2">
+          <Field label="Privacy policy link" error={codeError('invalid_url')}>
+            <input name="privacyPolicyUrl" type="url" defaultValue={privacy.privacyPolicyUrl} />
+          </Field>
+          <Field label="Terms of use link">
+            <input name="termsUrl" type="url" defaultValue={privacy.termsUrl} />
+          </Field>
+          <Field
+            label="Consent version"
+            error={codeError('invalid_consent_version')}
+            hint="e.g. 2026-10"
+          >
+            <input name="consentVersion" defaultValue={privacy.consentVersion} maxLength={40} />
+          </Field>
+          <Field
+            label="Keep records of closed accounts (years)"
+            error={codeError('invalid_retention_years')}
+          >
+            <input
+              name="retentionYears"
+              type="number"
+              min={1}
+              max={50}
+              defaultValue={privacy.retentionYears}
+            />
+          </Field>
+        </div>
+        <FormError error={error} />
+        <div className="row-end">
+          <button type="submit" disabled={pending}>
+            {pending ? 'Saving…' : 'Save privacy settings'}
+          </button>
+        </div>
+      </form>
+    </section>
+  )
+}

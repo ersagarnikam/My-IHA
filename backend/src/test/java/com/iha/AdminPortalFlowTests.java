@@ -85,7 +85,7 @@ class AdminPortalFlowTests {
 		// ── Only admins get in ─────────────────────────────────────────────
 		String patientEmail = "pat-" + UUID.randomUUID() + "@example.com";
 		mvc.perform(post("/api/auth/register/patient").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"fullName\":\"Ana Lopez\",\"email\":\"%s\",\"password\":\"%s\"}".formatted(patientEmail, PASSWORD)))
+			.content("{\"fullName\":\"Ana Lopez\",\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(patientEmail, PASSWORD)))
 			.andExpect(status().isAccepted());
 		String patientToken = verifyEmail(patientEmail);
 		perform(get("/api/admin/overview"), patientToken).andExpect(status().isForbidden());
@@ -94,7 +94,7 @@ class AdminPortalFlowTests {
 		// ── Doctor approval ───────────────────────────────────────────────
 		String doctorEmail = "doc-" + UUID.randomUUID() + "@example.com";
 		mvc.perform(post("/api/auth/register/doctor").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"email\":\"%s\",\"password\":\"%s\"}".formatted(doctorEmail, PASSWORD)))
+			.content("{\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(doctorEmail, PASSWORD)))
 			.andExpect(status().isAccepted());
 		String doctorToken = verifyEmail(doctorEmail);
 		String registered = perform(multipart("/api/doctor/registration")

@@ -154,7 +154,7 @@ class SecurityAndAuthTests {
 
 		// Duplicate sign-up is refused; password reset answers the same for known and unknown emails.
 		mvc.perform(post("/api/auth/register/patient").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"fullName\":\"Copy Cat\",\"email\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)))
+			.content("{\"fullName\":\"Copy Cat\",\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(email, PASSWORD)))
 			.andExpect(status().isConflict())
 			.andExpect(jsonPath("$.code").value("email_taken"));
 		emailRequest("/api/auth/forgot-password", email).andExpect(status().isNoContent());
@@ -289,7 +289,7 @@ class SecurityAndAuthTests {
 
 	private void register(String email) throws Exception {
 		mvc.perform(post("/api/auth/register/patient").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"fullName\":\"Test Patient\",\"email\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)))
+			.content("{\"fullName\":\"Test Patient\",\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(email, PASSWORD)))
 			.andExpect(status().isAccepted());
 	}
 

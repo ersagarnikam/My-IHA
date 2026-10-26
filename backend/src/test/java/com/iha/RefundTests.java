@@ -255,7 +255,7 @@ class RefundTests {
 	private String newPatient() throws Exception {
 		String email = "ref-" + UUID.randomUUID() + "@example.com";
 		mvc.perform(post("/api/auth/register/patient").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"fullName\":\"Refund Patient\",\"email\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)))
+			.content("{\"fullName\":\"Refund Patient\",\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(email, PASSWORD)))
 			.andExpect(status().isAccepted());
 		ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
 		verify(codeSender, atLeastOnce()).send(eq(email), eq("verify_email"), code.capture());

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { ConsentChecks, consentValues } from '../../components/ConsentChecks'
 import { Field, FormError, fieldError } from '../../components/ui'
 import { useT } from '../../i18n/I18nContext'
 import { ApiError, apiPost } from '../../lib/api'
@@ -27,6 +28,7 @@ export function RegisterPage() {
         fullName: form.get('fullName'),
         email: form.get('email'),
         password,
+        ...consentValues(form),
       })
       navigate(`/verify?email=${encodeURIComponent(email)}`)
     } catch (err) {
@@ -57,6 +59,7 @@ export function RegisterPage() {
         <Field label={t('confirmPassword')}>
           <input name="confirmPassword" type="password" autoComplete="new-password" required />
         </Field>
+        <ConsentChecks patient />
         <FormError error={error} />
         <button type="submit" disabled={pending}>
           {pending ? t('creatingAccount') : t('createAccount')}

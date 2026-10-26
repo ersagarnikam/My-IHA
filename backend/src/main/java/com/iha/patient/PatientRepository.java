@@ -11,6 +11,8 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
 
 	Optional<Patient> findByUserId(UUID userId);
 
-	List<Patient> findByDeletedTrueAndScheduledDeleteAtBefore(Instant cutoff);
+	List<Patient> findByDeletedTrueAndAccountClosedAtIsNullAndScheduledDeleteAtBefore(Instant cutoff);
+
+	List<Patient> findByDeletedTrueAndRetainUntilBefore(Instant cutoff);
 
 }

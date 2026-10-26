@@ -234,6 +234,8 @@ See the [admin portal](admin-portal.md) guide.
 | GET | `/api/admin/payments` | Paid patient payments and doctor fees with refund totals (`?caseId=` for one case's payments). |
 | GET | `/api/admin/payments/{kind}/{id}` | `kind` = `patient` or `doctor`: the payment, a refund quote (refundable, card fee and its source, fee already deducted), its refunds and the reason list. |
 | POST | `/api/admin/payments/{kind}/{id}/refunds` | `{amountAud, reason, note?, waiveFee?}` → the updated detail (the card fee is kept only for the reasons in `feeKeptReasons`); `amount_too_high`, `invalid_amount`, `invalid_reason`, `note_required`, `refund_below_fee`, `refund_not_possible`, `not_paid`. |
+| GET | `/api/auth/privacy` | Public: `{privacyPolicyUrl, termsUrl, consentVersion}` for the sign-up pages. Sign-up bodies take `acceptTerms` (everyone) and `consentHealthInfo` (patients); without them `400 consent_required`. |
+| GET / PUT | `/api/admin/settings/privacy` | `{privacyPolicyUrl, termsUrl, consentVersion, retentionYears}` (`invalid_url` — https only, `invalid_consent_version`, `invalid_retention_years` — 1 to 50). |
 | GET / PUT | `/api/admin/settings/business` | MTA's business details and GST: `{legalName, abn, address, email, gstRegistered, taxable: {MTA_SERVICE_FEE, DOCTOR_FEES, CONSULTATION_FEE, TREATMENT_COSTS}}`; the response adds `taxInvoices` and per-charge labels. `invalid_abn`, `abn_required` (GST without an ABN). |
 | GET | `/api/admin/settings/fees` | `{fees, history}`: every configurable fee (key, group, label, description, unit `aud`/`percent`, `charged`, amount, last changed by/at) and the last 50 changes. |
 | PUT | `/api/admin/settings/fees/{key}` | `{amount, reason?}`; `invalid_amount`; 404 for an unknown key. |

@@ -100,7 +100,7 @@ class DoctorPortalFlowTests {
 		// ── Sign-up, then the registration wizard ─────────────────────────
 		String email = "doc-" + UUID.randomUUID() + "@example.com";
 		mvc.perform(post("/api/auth/register/doctor").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"email\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)))
+			.content("{\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(email, PASSWORD)))
 			.andExpect(status().isAccepted());
 		String doctorToken = verifyEmail(email);
 		perform(get("/api/doctor/account"), doctorToken).andExpect(jsonPath("$.registered").value(false));
@@ -171,7 +171,7 @@ class DoctorPortalFlowTests {
 		// ── A patient submits a case; admin invites the doctor ────────────
 		String patientEmail = "pat-" + UUID.randomUUID() + "@example.com";
 		mvc.perform(post("/api/auth/register/patient").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"fullName\":\"Wei Zhang\",\"email\":\"%s\",\"password\":\"%s\"}".formatted(patientEmail, PASSWORD)))
+			.content("{\"fullName\":\"Wei Zhang\",\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(patientEmail, PASSWORD)))
 			.andExpect(status().isAccepted());
 		String patientToken = verifyEmail(patientEmail);
 		String caseJson = perform(multipart("/api/patient/cases")
@@ -478,7 +478,7 @@ class DoctorPortalFlowTests {
 	private String activeDoctor(Hospital hospital) throws Exception {
 		String email = "doc-" + UUID.randomUUID() + "@example.com";
 		mvc.perform(post("/api/auth/register/doctor").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"email\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)))
+			.content("{\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(email, PASSWORD)))
 			.andExpect(status().isAccepted());
 		String token = verifyEmail(email);
 		perform(registration(multipart("/api/doctor/registration"), hospital.getId())

@@ -48,6 +48,17 @@ public class AdminSettingsController {
 	}
 
 	/** MTA's business details for invoices and how GST applies to each kind of charge. */
+	@GetMapping("/privacy")
+	public BusinessSettingsService.Privacy privacy() {
+		return business.privacy();
+	}
+
+	@PutMapping("/privacy")
+	public BusinessSettingsService.Privacy updatePrivacy(@AuthenticationPrincipal Jwt jwt,
+			@RequestBody BusinessSettingsService.Privacy request) {
+		return business.updatePrivacy(CurrentUser.from(jwt), request);
+	}
+
 	@GetMapping("/business")
 	public BusinessResponse business() {
 		return BusinessResponse.of(business.current());

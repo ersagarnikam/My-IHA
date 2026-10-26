@@ -13,6 +13,9 @@ import com.iha.common.validation.PhoneNumber;
 import com.iha.common.validation.StrongPassword;
 import com.iha.provider.Doctor;
 import com.iha.provider.Hospital;
+import com.iha.privacy.Consent;
+import com.iha.privacy.ConsentService;
+import com.iha.auth.AppUser;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -46,9 +49,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 public class DoctorAccountController {
 
+	private final ConsentService consents;
 	private final DoctorAccountService accounts;
 
-	DoctorAccountController(DoctorAccountService accounts) {
+	DoctorAccountController(DoctorAccountService accounts, ConsentService consents) {
+		this.consents = consents;
 		this.accounts = accounts;
 	}
 
@@ -56,7 +61,10 @@ public class DoctorAccountController {
 	@PostMapping("/api/auth/register/doctor")
 	@ResponseStatus(HttpStatus.ACCEPTED)
 	public SignUpResponse signUp(@Valid @RequestBody SignUpRequest request) {
-		return new SignUpResponse(accounts.createAccount(request.email(), request.password()).getEmail());
+		ConsentService.require(request.acceptTerms(), null, false);
+		AppUser user = accounts.createAccount(request.email(), request.password());
+		consents.record(user.getId(), Consent.TERMS_AND_PRIVACY);
+		return new SignUpResponse(user.getEmail());
 	}
 
 	/** Where the signed-in doctor stands: not registered, pending, approved without fee, or active. */
@@ -166,7 +174,7 @@ public class DoctorAccountController {
 		return values == null ? List.of() : Arrays.asList(values);
 	}
 
-	public record SignUpRequest(@NotBlank @Email String email, @StrongPassword String password) {
+	public record SignUpRequest(@NotBlank @Email String email, @StrongPassword String password, Boolean acceptTerms) {
 	}
 
 	public record SignUpResponse(String email) {

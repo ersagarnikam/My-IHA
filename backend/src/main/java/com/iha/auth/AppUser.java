@@ -68,6 +68,12 @@ public class AppUser {
 		this.passwordHash = newPasswordHash;
 	}
 
+	/** Account closed: the email is replaced so it can't sign in or be found, and the address is free again. */
+	public void close(String placeholderEmail, String unusableHash) {
+		this.email = placeholderEmail;
+		this.passwordHash = unusableHash;
+	}
+
 	public void markEmailVerified() {
 		if (emailVerifiedAt == null) {
 			emailVerifiedAt = Instant.now();

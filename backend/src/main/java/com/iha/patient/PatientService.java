@@ -127,8 +127,9 @@ public class PatientService {
 	}
 
 	/**
-	 * Soft delete: sign-in is blocked immediately and {@link PatientRetentionJob}
-	 * removes the account and its files after {@link Patient#DELETION_GRACE}.
+	 * Soft delete: sign-in is blocked immediately. After {@link Patient#DELETION_GRACE}
+	 * {@link PatientRetentionJob} erases the login and contact details and keeps the
+	 * health and payment records for the configured retention period, then purges them.
 	 */
 	@Transactional
 	public void deleteAccount(CurrentUser user) {

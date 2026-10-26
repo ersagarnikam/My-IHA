@@ -95,6 +95,47 @@ public class BusinessSettingsService {
 		return current();
 	}
 
+	/** Privacy policy and terms links, consent version and record retention (for MTA's lawyer to confirm). */
+	@Transactional(readOnly = true)
+	public Privacy privacy() {
+		Map<String, BusinessSetting> byKey = settings.findAll().stream()
+			.collect(Collectors.toMap(BusinessSetting::getKey, Function.identity()));
+		int years;
+		try {
+			years = Integer.parseInt(value(byKey, "retention_years"));
+		}
+		catch (NumberFormatException e) {
+			years = Privacy.DEFAULT_RETENTION_YEARS;
+		}
+		return new Privacy(value(byKey, "privacy_policy_url"), value(byKey, "terms_url"),
+				value(byKey, "consent_version"), years);
+	}
+
+	@Transactional
+	public Privacy updatePrivacy(CurrentUser actor, Privacy input) {
+		String policy = trim(input.privacyPolicyUrl());
+		String terms = trim(input.termsUrl());
+		if (!policy.startsWith("https://") || !terms.startsWith("https://")) {
+			throw ApiException.badRequest("invalid_url", "Links must start with https://.");
+		}
+		String version = trim(input.consentVersion());
+		if (version.isEmpty() || version.length() > 40) {
+			throw ApiException.badRequest("invalid_consent_version", "Enter a consent version (e.g. 2026-10).");
+		}
+		if (input.retentionYears() < 1 || input.retentionYears() > 50) {
+			throw ApiException.badRequest("invalid_retention_years", "Keep records for 1 to 50 years.");
+		}
+		Privacy before = privacy();
+		set(actor, "privacy_policy_url", policy);
+		set(actor, "terms_url", terms);
+		set(actor, "consent_version", version);
+		set(actor, "retention_years", String.valueOf(input.retentionYears()));
+		audit.record(actor.id(), actor.email(), "admin", "privacy_settings.changed", "business_settings", null,
+				Map.of("consent_version", version, "previous_consent_version", before.consentVersion(),
+						"retention_years", String.valueOf(input.retentionYears())));
+		return privacy();
+	}
+
 	/** GST contained in a GST-inclusive amount of a taxable charge, or null when none applies. */
 	@Transactional(readOnly = true)
 	public BigDecimal gstIn(Charge charge, BigDecimal amount) {
@@ -125,6 +166,18 @@ public class BusinessSettingsService {
 
 	private static String trim(String value) {
 		return value == null ? "" : value.trim();
+	}
+
+	/**
+	 * @param consentVersion recorded with every consent; change it when the
+	 * wording or the policy changes materially
+	 * @param retentionYears how long a closed patient account's health and
+	 * payment records are kept before they are purged
+	 */
+	public record Privacy(String privacyPolicyUrl, String termsUrl, String consentVersion, int retentionYears) {
+
+		public static final int DEFAULT_RETENTION_YEARS = 7;
+
 	}
 
 	/**

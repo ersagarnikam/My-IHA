@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
+import { ConsentChecks, consentValues } from '../../../components/ConsentChecks'
 import { Link, useNavigate } from 'react-router'
 import { CheckCircle2, Clock, LogOut, XCircle } from 'lucide-react'
 import { useAuth } from '../../../auth/AuthContext'
@@ -35,6 +36,7 @@ export function DoctorSignUpPage() {
       const { email } = await apiPost<{ email: string }>('/api/auth/register/doctor', {
         email: form.get('email'),
         password,
+        ...consentValues(form),
       })
       navigate(`/verify?email=${encodeURIComponent(email)}`)
     } catch (err) {
@@ -65,6 +67,7 @@ export function DoctorSignUpPage() {
         <Field label={t('confirmPassword')}>
           <input name="confirmPassword" type="password" autoComplete="new-password" required />
         </Field>
+        <ConsentChecks />
         <FormError error={error} />
         <button type="submit" disabled={pending}>
           {pending ? t('creatingAccount') : t('createAccount')}

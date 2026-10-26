@@ -660,7 +660,7 @@
     },
     "deleteAccount": {
       "warningTitle": "Your account will be deactivated immediately",
-      "warningBody": "You'll be signed out and won't be able to log back in. Your data, case history, and uploaded documents will be permanently deleted after 30 days.",
+      "warningBody": "You'll be signed out and won't be able to log back in. After 30 days your login and contact details are erased. Your medical and payment records are kept securely for the period the law requires, then deleted.",
       "confirmInstruction": "To confirm, type",
       "confirmSuffix": "in the box below:",
       "deleteButton": "Delete Account",

@@ -2086,3 +2086,24 @@ a.case-row:hover {
   border-color: #c9a227;
   background: #fffbea;
 }
+
+/* Sign-up consent (components/ConsentChecks.tsx) */
+.consent-checks {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-muted, #475569);
+}
+
+.consent-check input {
+  width: auto;
+  margin-top: 0.2rem;
+  flex: none;
+}

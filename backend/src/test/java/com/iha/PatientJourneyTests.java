@@ -398,7 +398,7 @@ class PatientJourneyTests {
 
 	private String registerAndVerify(String email) throws Exception {
 		mvc.perform(post("/api/auth/register/patient").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"fullName\":\"Wei Zhang\",\"email\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)))
+			.content("{\"fullName\":\"Wei Zhang\",\"email\":\"%s\",\"password\":\"%s\",\"acceptTerms\":true,\"consentHealthInfo\":true}".formatted(email, PASSWORD)))
 			.andExpect(status().isAccepted());
 		String body = mvc.perform(post("/api/auth/verify").contentType(MediaType.APPLICATION_JSON)
 			.content("{\"email\":\"%s\",\"code\":\"%s\"}".formatted(email, sentCode(email, "verify_email"))))
