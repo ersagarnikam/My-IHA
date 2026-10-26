@@ -110,6 +110,11 @@ public class DoctorAccountController {
 		return profile(accounts.updateAvailability(CurrentUser.from(jwt), days));
 	}
 
+	@PutMapping("/api/doctor/profile/time-zone")
+	public ProfileResponse updateTimeZone(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TimeZoneRequest r) {
+		return profile(accounts.updateTimeZone(CurrentUser.from(jwt), r.timeZone()));
+	}
+
 	@PutMapping("/api/doctor/profile/notification-preferences")
 	public ProfileResponse updateNotifications(@AuthenticationPrincipal Jwt jwt,
 			@RequestBody NotificationPreferencesRequest r) {
@@ -135,7 +140,7 @@ public class DoctorAccountController {
 				d.getLicenseNumber(), d.getPhotoUrl() != null, d.getBio(), list(d.getLanguagesSpoken()),
 				d.getDepartment(), d.getRole(), list(d.getWorkingDays()), accounts.hospitalIds(d),
 				accounts.availability(d), d.isEmailNotificationsEnabled(), d.isSmsNotificationsEnabled(),
-				d.getRegistrationFeePaidAt(), d.getAnnualFeeNextDueAt(),
+				d.getRegistrationFeePaidAt(), d.getAnnualFeeNextDueAt(), d.getTimeZone(),
 				IntStream.range(0, docs.size())
 					.mapToObj(i -> new DocumentResponse(i, docs.get(i).fileName(), docs.get(i).category(),
 							docs.get(i).mimeType(), docs.get(i).fileSizeBytes()))
@@ -176,14 +181,14 @@ public class DoctorAccountController {
 			@NotBlank(message = "Department is required") @Size(max = 120) String department,
 			@NotBlank(message = "Select a role") String role,
 			List<UUID> hospitalIds,
-			@NotEmpty(message = "Select at least one working day") List<String> workingDays,
+			@NotEmpty(message = "Select at least one working day") List<String> workingDays, String timeZone,
 			MultipartFile photo, MultipartFile medicalLicense, MultipartFile degreeCertificate,
 			List<MultipartFile> otherDocuments) {
 
 		DoctorAccountService.RegistrationInput input() {
 			return new DoctorAccountService.RegistrationInput(fullName, contactPhone, specialties, qualifications,
 					yearsOfExperience, licenseNumber, bio, languagesSpoken, department, role,
-					hospitalIds == null ? List.of() : hospitalIds, workingDays);
+					hospitalIds == null ? List.of() : hospitalIds, workingDays, timeZone);
 		}
 
 		DoctorAccountService.RegistrationFiles files() {
@@ -214,6 +219,9 @@ public class DoctorAccountController {
 	public record NotificationPreferencesRequest(boolean emailNotificationsEnabled, boolean smsNotificationsEnabled) {
 	}
 
+	public record TimeZoneRequest(@NotBlank(message = "Choose a time zone") String timeZone) {
+	}
+
 	public record AccountResponse(boolean registered, ProfileResponse doctor) {
 	}
 
@@ -226,7 +234,7 @@ public class DoctorAccountController {
 			String licenseNumber, boolean hasPhoto, String bio, List<String> languagesSpoken, String department,
 			String role, List<String> workingDays, List<UUID> hospitalIds,
 			List<DoctorAccountService.AvailabilityDay> availability, boolean emailNotificationsEnabled,
-			boolean smsNotificationsEnabled, Instant registrationFeePaidAt, Instant annualFeeNextDueAt,
+			boolean smsNotificationsEnabled, Instant registrationFeePaidAt, Instant annualFeeNextDueAt, String timeZone,
 			List<DocumentResponse> documents) {
 	}
 

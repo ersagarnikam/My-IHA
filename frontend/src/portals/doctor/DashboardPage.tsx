@@ -2,11 +2,11 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { CalendarPlus, Star } from 'lucide-react'
 import { ErrorState, Loading } from '../../components/ui'
-import { browserTimeZone, DOCTOR_TIME_ZONE } from '../../lib/format'
+import { browserTimeZone, providerTimeZone, zoneCity } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { DevDoctorPanel } from './DevPanel'
 import { useDoctor } from './DoctorContext'
-import { brisbaneToday, CaseBadge, formatDate } from './shared'
+import { providerToday, CaseBadge, formatDate } from './shared'
 import { specialtyLabel, type CaseRow, type DoctorConsultation } from './types'
 
 type Insights = {
@@ -43,7 +43,11 @@ type Insights = {
 
 const RESPONSE_TARGET_HOURS = 48
 
-const wholeDollars = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 })
+const wholeDollars = new Intl.NumberFormat('en-AU', {
+  style: 'currency',
+  currency: 'AUD',
+  maximumFractionDigits: 0,
+})
 
 /** Dashboard amounts are whole dollars ("$48,600"). */
 function money(amount: number | null | undefined) {
@@ -85,8 +89,10 @@ export function DashboardPage() {
           <p className="muted">Here's how MTA is working for you this year</p>
         </div>
         <p className="muted small">
-          {doctor.annualFeeNextDueAt ? `Membership renews ${formatDate(doctor.annualFeeNextDueAt)} · ` : ''}Last 12
-          months
+          {doctor.annualFeeNextDueAt
+            ? `Membership renews ${formatDate(doctor.annualFeeNextDueAt)} · `
+            : ''}
+          Last 12 months
         </p>
       </div>
 
@@ -126,23 +132,40 @@ export function DashboardPage() {
             </Trend>
           )}
         </Stat>
-        <Stat label="Plan acceptance rate" value={i.planAcceptancePct === null ? '—' : `${i.planAcceptancePct}%`}>
+        <Stat
+          label="Plan acceptance rate"
+          value={i.planAcceptancePct === null ? '—' : `${i.planAcceptancePct}%`}
+        >
           {i.platformPlanAcceptancePct !== null && (
             <Trend up={(i.planAcceptancePct ?? 0) >= i.platformPlanAcceptancePct}>
               Platform avg {i.platformPlanAcceptancePct}%
             </Trend>
           )}
         </Stat>
-        <Stat label="Avg response time" value={i.avgResponseHours === null ? '—' : `${formatHours(i.avgResponseHours)}`}>
-          <span className={i.avgResponseHours !== null && i.avgResponseHours <= RESPONSE_TARGET_HOURS ? 'dash-good' : 'muted'}>
-            Target ≤ {RESPONSE_TARGET_HOURS} h{i.avgResponseHours !== null && i.avgResponseHours <= RESPONSE_TARGET_HOURS && ' ✓'}
+        <Stat
+          label="Avg response time"
+          value={i.avgResponseHours === null ? '—' : `${formatHours(i.avgResponseHours)}`}
+        >
+          <span
+            className={
+              i.avgResponseHours !== null && i.avgResponseHours <= RESPONSE_TARGET_HOURS
+                ? 'dash-good'
+                : 'muted'
+            }
+          >
+            Target ≤ {RESPONSE_TARGET_HOURS} h
+            {i.avgResponseHours !== null && i.avgResponseHours <= RESPONSE_TARGET_HOURS && ' ✓'}
           </span>
         </Stat>
         <Stat label="Patient rating" soon value={<Star size={22} className="dash-faint" />}>
           <span className="muted">Patient reviews are coming soon</span>
         </Stat>
         <Stat label="Profile strength" value={`${i.profileStrengthPct}%`}>
-          <Link to="/doctor/account-settings" className="dash-bar" aria-label="Complete your profile">
+          <Link
+            to="/doctor/account-settings"
+            className="dash-bar"
+            aria-label="Complete your profile"
+          >
             <span style={{ width: `${i.profileStrengthPct}%` }} />
           </Link>
         </Stat>
@@ -169,7 +192,10 @@ export function DashboardPage() {
           title="Hospital packages"
           text="Pre-negotiated packages with your affiliated hospitals, so a plan takes minutes."
         />
-        <SoonCard title="Plan templates" text="Reuse costs, aftercare and instructions for common procedures." />
+        <SoonCard
+          title="Plan templates"
+          text="Reuse costs, aftercare and instructions for common procedures."
+        />
         <SoonCard
           title="Public profile"
           text="A profile page patients can see, with photos and outcome stories."
@@ -182,7 +208,9 @@ export function DashboardPage() {
       </div>
 
       <DevDoctorPanel
-        actions={[{ label: 'Assign me a new case (patient + admin)', path: '/api/dev/doctor/assign-case' }]}
+        actions={[
+          { label: 'Assign me a new case (patient + admin)', path: '/api/dev/doctor/assign-case' },
+        ]}
         onChanged={reload}
       />
     </div>
@@ -229,7 +257,11 @@ function Stat({
 }
 
 function Trend({ up, children }: { up: boolean; children: ReactNode }) {
-  return <span className={up ? 'dash-good' : 'dash-bad'}>{up ? '▲' : '▼'} {children}</span>
+  return (
+    <span className={up ? 'dash-good' : 'dash-bad'}>
+      {up ? '▲' : '▼'} {children}
+    </span>
+  )
 }
 
 function Card({ title, soon, children }: { title: string; soon?: boolean; children: ReactNode }) {
@@ -264,14 +296,15 @@ function ActionsCard({
   consultations: DoctorConsultation[]
 }) {
   const now = Date.now()
-  const today = brisbaneToday()
+  const today = providerToday()
   const actions: Action[] = []
 
   for (const c of cases) {
     const ref = <strong>{c.referenceNumber}</strong>
     if (c.assignment.status === 'invited') {
       const hoursLeft = Math.round(
-        (new Date(c.assignment.invitedAt).getTime() + RESPONSE_TARGET_HOURS * 3_600_000 - now) / 3_600_000,
+        (new Date(c.assignment.invitedAt).getTime() + RESPONSE_TARGET_HOURS * 3_600_000 - now) /
+          3_600_000,
       )
       actions.push({
         key: `invite-${c.caseId}`,
@@ -285,7 +318,11 @@ function ActionsCard({
           hoursLeft > 0
             ? `Respond within ${hoursLeft} h to keep your response time on target`
             : 'Response target passed — reply as soon as you can',
-        button: <ActionLink to={`/doctor/cases/${c.caseId}`} primary>Review</ActionLink>,
+        button: (
+          <ActionLink to={`/doctor/cases/${c.caseId}`} primary>
+            Review
+          </ActionLink>
+        ),
         sort: 0,
       })
     } else if (c.assignment.status === 'accepted') {
@@ -295,7 +332,11 @@ function ActionsCard({
           tone: 'orange',
           title: <>{ref} · MTA declined your treatment plan</>,
           detail: 'See the case for details or message MTA',
-          button: <ActionLink to={`/doctor/cases/${c.caseId}`} primary>View case</ActionLink>,
+          button: (
+            <ActionLink to={`/doctor/cases/${c.caseId}`} primary>
+              View case
+            </ActionLink>
+          ),
           sort: 1,
         })
       else if (
@@ -305,18 +346,34 @@ function ActionsCard({
         actions.push({
           key: `start-${c.caseId}`,
           tone: 'orange',
-          title: <>{ref} · {specialtyLabel(c)} · Start your evaluation</>,
+          title: (
+            <>
+              {ref} · {specialtyLabel(c)} · Start your evaluation
+            </>
+          ),
           detail: 'Review the documents, then book the initial Zoom consultation',
-          button: <ActionLink to={`/doctor/cases/${c.caseId}`} primary>Open case</ActionLink>,
+          button: (
+            <ActionLink to={`/doctor/cases/${c.caseId}`} primary>
+              Open case
+            </ActionLink>
+          ),
           sort: 2,
         })
       else if (!c.assignment.planSubmittedAt && c.initialConsultation === 'none')
         actions.push({
           key: `consult-needed-${c.caseId}`,
           tone: 'blue',
-          title: <>{ref} · {specialtyLabel(c)} · Book the initial Zoom consultation</>,
+          title: (
+            <>
+              {ref} · {specialtyLabel(c)} · Book the initial Zoom consultation
+            </>
+          ),
           detail: 'Talk with the patient before preparing the treatment plan',
-          button: <ActionLink to={`/doctor/cases/${c.caseId}#initial-consultation`} primary>Propose times</ActionLink>,
+          button: (
+            <ActionLink to={`/doctor/cases/${c.caseId}#initial-consultation`} primary>
+              Propose times
+            </ActionLink>
+          ),
           sort: 1,
         })
       else if (
@@ -326,9 +383,18 @@ function ActionsCard({
         actions.push({
           key: `plan-${c.caseId}`,
           tone: 'orange',
-          title: <>{ref} · {specialtyLabel(c)} · Treatment plan due</>,
-          detail: c.initialConsultation === 'held' ? 'Initial consultation held' : 'Consultation skipped',
-          button: <ActionLink to={`/doctor/cases/${c.caseId}/treatment-plan`} primary>Build plan</ActionLink>,
+          title: (
+            <>
+              {ref} · {specialtyLabel(c)} · Treatment plan due
+            </>
+          ),
+          detail:
+            c.initialConsultation === 'held' ? 'Initial consultation held' : 'Consultation skipped',
+          button: (
+            <ActionLink to={`/doctor/cases/${c.caseId}/treatment-plan`} primary>
+              Build plan
+            </ActionLink>
+          ),
           sort: 2,
         })
       else if (
@@ -339,7 +405,11 @@ function ActionsCard({
         actions.push({
           key: `complete-${c.caseId}`,
           tone: 'green',
-          title: <>{ref} · Treatment finished {formatDate(c.treatmentEndDate)}</>,
+          title: (
+            <>
+              {ref} · Treatment finished {formatDate(c.treatmentEndDate)}
+            </>
+          ),
           detail: 'Confirm the treatment took place to close the case',
           button: <ActionLink to={`/doctor/cases/${c.caseId}`}>Mark completed</ActionLink>,
           sort: 5,
@@ -353,7 +423,8 @@ function ActionsCard({
       tone: 'orange',
       title: (
         <>
-          <strong>{u.referenceNumber}</strong> · Patient uploaded {u.count} requested document{u.count === 1 ? '' : 's'}
+          <strong>{u.referenceNumber}</strong> · Patient uploaded {u.count} requested document
+          {u.count === 1 ? '' : 's'}
         </>
       ),
       button: <ActionLink to={`/doctor/cases/${u.caseId}`}>View</ActionLink>,
@@ -371,11 +442,20 @@ function ActionsCard({
           </>
         ),
         detail: 'The patient wants to discuss your plan — propose up to three times',
-        button: <ActionLink to={`/doctor/consultations/${c.id}`} primary>Propose times</ActionLink>,
+        button: (
+          <ActionLink to={`/doctor/consultations/${c.id}`} primary>
+            Propose times
+          </ActionLink>
+        ),
         sort: 1,
       })
-    const slot = c.status === 'scheduled' ? c.slots.find((s) => s.id === c.selectedSlotId) : undefined
-    if (slot && new Date(slot.slotEndTime).getTime() > now && new Date(slot.slotTime).getTime() - now < 7 * 86_400_000)
+    const slot =
+      c.status === 'scheduled' ? c.slots.find((s) => s.id === c.selectedSlotId) : undefined
+    if (
+      slot &&
+      new Date(slot.slotEndTime).getTime() > now &&
+      new Date(slot.slotTime).getTime() - now < 7 * 86_400_000
+    )
       actions.push({
         key: `consult-${c.id}`,
         tone: 'blue',
@@ -387,7 +467,11 @@ function ActionsCard({
         ),
         detail: `${c.patientName} · ${c.caseReference}`,
         button: (
-          <button type="button" className="button-secondary dash-small-button" onClick={() => downloadIcs(c, slot)}>
+          <button
+            type="button"
+            className="button-secondary dash-small-button"
+            onClick={() => downloadIcs(c, slot)}
+          >
             <CalendarPlus size={14} /> Add to calendar
           </button>
         ),
@@ -418,7 +502,15 @@ function ActionsCard({
   )
 }
 
-function ActionLink({ to, primary, children }: { to: string; primary?: boolean; children: ReactNode }) {
+function ActionLink({
+  to,
+  primary,
+  children,
+}: {
+  to: string
+  primary?: boolean
+  children: ReactNode
+}) {
   return (
     <Link to={to} className={`dash-small-button ${primary ? 'button' : 'button-secondary'}`}>
       {children}
@@ -426,7 +518,7 @@ function ActionLink({ to, primary, children }: { to: string; primary?: boolean; 
   )
 }
 
-/** "Tue 3 Nov, 1:30 pm (Brisbane) · 12:30 pm your time" */
+/** "Tue 3 Nov, 1:30 pm (Sydney) · 12:30 pm your time" — the doctor's zone, plus the browser's when travelling. */
 function slotLabel(iso: string) {
   const fmt = (tz: string, withDay: boolean) =>
     new Date(iso).toLocaleString('en-AU', {
@@ -436,12 +528,17 @@ function slotLabel(iso: string) {
       timeZone: tz,
     })
   const local = browserTimeZone()
-  const brisbane = `${fmt(DOCTOR_TIME_ZONE, true)} (Brisbane)`
-  return local === DOCTOR_TIME_ZONE ? brisbane : `${brisbane} · ${fmt(local, false)} your time`
+  const zone = providerTimeZone()
+  const label = `${fmt(zone, true)} (${zoneCity(zone)})`
+  return local === zone ? label : `${label} · ${fmt(local, false)} your time`
 }
 
 function downloadIcs(c: DoctorConsultation, slot: { slotTime: string; slotEndTime: string }) {
-  const stamp = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+  const stamp = (iso: string) =>
+    new Date(iso)
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}/, '')
   const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -485,12 +582,20 @@ function FunnelCard({ funnel }: { funnel: Insights['funnel'] }) {
           </div>
         ))}
       </div>
-      <p className="muted small dash-foot">Tip: patients who have a consultation with you are more likely to choose your plan.</p>
+      <p className="muted small dash-foot">
+        Tip: patients who have a consultation with you are more likely to choose your plan.
+      </p>
     </Card>
   )
 }
 
-function DeclinesCard({ reasons, insight }: { reasons: Insights['declineReasons']; insight: string | null }) {
+function DeclinesCard({
+  reasons,
+  insight,
+}: {
+  reasons: Insights['declineReasons']
+  insight: string | null
+}) {
   const max = Math.max(1, ...reasons.map((r) => r.count))
   const total = reasons.reduce((s, r) => s + r.count, 0)
   return (
@@ -525,7 +630,9 @@ function BenchmarkCard({ rows }: { rows: Insights['benchmark'] }) {
   return (
     <Card title="Price benchmark (anonymised)">
       {rows.length === 0 ? (
-        <p className="muted">Submit treatment plans to compare your prices with other MTA doctors.</p>
+        <p className="muted">
+          Submit treatment plans to compare your prices with other MTA doctors.
+        </p>
       ) : (
         <table className="dash-table">
           <thead>
@@ -541,7 +648,13 @@ function BenchmarkCard({ rows }: { rows: Insights['benchmark'] }) {
               <tr key={r.specialty}>
                 <td>{r.specialty}</td>
                 <td>{money(r.yourMedianAud)}</td>
-                <td>{r.platformMedianAud === null ? <span className="muted small">Not enough data</span> : money(r.platformMedianAud)}</td>
+                <td>
+                  {r.platformMedianAud === null ? (
+                    <span className="muted small">Not enough data</span>
+                  ) : (
+                    money(r.platformMedianAud)
+                  )}
+                </td>
                 <td>
                   {r.differencePct !== null && (
                     <span className={`dash-diff ${r.differencePct > 0 ? 'up' : 'down'}`}>
@@ -555,14 +668,17 @@ function BenchmarkCard({ rows }: { rows: Insights['benchmark'] }) {
           </tbody>
         </table>
       )}
-      <p className="muted small dash-foot">Whole-plan totals (doctor, hospital, itemised costs, specialists), before MTA's fee.</p>
+      <p className="muted small dash-foot">
+        Whole-plan totals (doctor, hospital, itemised costs, specialists), before MTA's fee.
+      </p>
     </Card>
   )
 }
 
 function EarningsCard({ money: m }: { money: Insights['money'] }) {
   const max = Math.max(1, ...m.monthly.map((x) => x.amountAud))
-  const month = (ym: string) => new Date(`${ym}-01T00:00:00`).toLocaleDateString('en-AU', { month: 'short' })
+  const month = (ym: string) =>
+    new Date(`${ym}-01T00:00:00`).toLocaleDateString('en-AU', { month: 'short' })
   return (
     <Card title="Earnings">
       <div className="dash-earn-figures">
@@ -590,8 +706,8 @@ function EarningsCard({ money: m }: { money: Insights['money'] }) {
         ))}
       </div>
       <div className="row-between muted small">
-        <span>{month(m.monthly[0]?.month ?? "")}</span>
-        <span>{month(m.monthly.at(-1)?.month ?? "")}</span>
+        <span>{month(m.monthly[0]?.month ?? '')}</span>
+        <span>{month(m.monthly.at(-1)?.month ?? '')}</span>
       </div>
       <p className="muted small dash-foot">
         Doctor fees on treatment plans your patients have paid for. Payouts <Soon />
@@ -608,11 +724,16 @@ function MembershipCard({ insights }: { insights: Insights }) {
         <div>
           <strong>Annual membership</strong>
           <p className="muted small">
-            {doctor.annualFeeNextDueAt ? `Renews ${formatDate(doctor.annualFeeNextDueAt)}` : 'Renewal date not set'} ·{' '}
-            {money(insights.money.feesPaidAud)} paid to date
+            {doctor.annualFeeNextDueAt
+              ? `Renews ${formatDate(doctor.annualFeeNextDueAt)}`
+              : 'Renewal date not set'}{' '}
+            · {money(insights.money.feesPaidAud)} paid to date
           </p>
         </div>
-        <Link className="button-secondary dash-small-button" to="/doctor/account-settings?tab=billing">
+        <Link
+          className="button-secondary dash-small-button"
+          to="/doctor/account-settings?tab=billing"
+        >
           Billing
         </Link>
       </div>
@@ -671,7 +792,11 @@ export function CasesTable({ rows, empty }: { rows: CaseRow[]; empty: string }) 
               <td>{c.patientName}</td>
               <td>{specialtyLabel(c)}</td>
               <td>
-                <CaseBadge assignment={c.assignment} caseStatus={c.caseStatus} planStatus={c.planStatus} />
+                <CaseBadge
+                  assignment={c.assignment}
+                  caseStatus={c.caseStatus}
+                  planStatus={c.planStatus}
+                />
               </td>
               <td>
                 <Link className="button dr-view" to={`/doctor/cases/${c.caseId}`}>

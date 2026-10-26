@@ -3,8 +3,9 @@ import { FileText, Upload, X } from 'lucide-react'
 import { Field, FormError, fieldError, Stepper } from '../../../components/ui'
 import { ApiError, apiPost, apiPut } from '../../../lib/api'
 import type { Specialty } from '../../../lib/cases'
+import { guessAustralianZone } from '../../../lib/format'
 import { useApi } from '../../../lib/useApi'
-import { money } from '../shared'
+import { money, TimeZoneSelect } from '../shared'
 import {
   LANGUAGE_OPTIONS,
   ROLE_LABELS,
@@ -26,6 +27,7 @@ type Values = {
   role: string
   hospitalIds: string[]
   workingDays: string[]
+  timeZone: string
 }
 
 type Files = {
@@ -62,6 +64,7 @@ function initialValues(doctor: DoctorProfile | null): Values {
     workingDays: doctor?.workingDays.length
       ? doctor.workingDays
       : ['mon', 'tue', 'wed', 'thu', 'fri'],
+    timeZone: doctor?.timeZone ?? guessAustralianZone(),
   }
 }
 
@@ -173,6 +176,7 @@ export function RegistrationForm({
     form.set('role', values.role)
     values.hospitalIds.forEach((h) => form.append('hospitalIds', h))
     values.workingDays.forEach((d) => form.append('workingDays', d))
+    form.set('timeZone', values.timeZone)
     if (files.photo) form.set('photo', files.photo)
     if (files.medicalLicense) form.set('medicalLicense', files.medicalLicense)
     if (files.degreeCertificate) form.set('degreeCertificate', files.degreeCertificate)
@@ -361,6 +365,13 @@ export function RegistrationForm({
               </div>
             )}
           </Group>
+          <Field
+            label="Time zone"
+            error={err('timeZone')}
+            hint="Consultation times are entered and shown in this zone."
+          >
+            <TimeZoneSelect value={values.timeZone} onChange={(z) => set('timeZone', z)} />
+          </Field>
           <Group label="Working days" error={err('workingDays')}>
             <div className="dr-pills">
               {WORKING_DAYS.map(([code, label]) => (

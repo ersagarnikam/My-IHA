@@ -5,12 +5,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import com.iha.common.AustralianTimeZones;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -30,7 +30,6 @@ import org.springframework.stereotype.Component;
 public class HospitalLetterRenderer {
 
 	private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
-	private static final ZoneId ZONE = ZoneId.of("Australia/Brisbane");
 	private static final Color TEAL = new Color(14, 116, 144);
 	private static final Color DARK = new Color(30, 41, 59);
 	private static final Color MID = new Color(100, 116, 139);
@@ -102,7 +101,7 @@ public class HospitalLetterRenderer {
 				y -= 34;
 				text(c, bold, 15, MARGIN, y, DARK, title);
 				y -= 18;
-				text(c, regular, 9.5f, MARGIN, y, MID, "Date: " + LocalDate.now(ZONE).format(DATE));
+				text(c, regular, 9.5f, MARGIN, y, MID, "Date: " + LocalDate.now(AustralianTimeZones.zone(in.hospitalTimeZone())).format(DATE));
 				y -= 30;
 
 				text(c, bold, 10.5f, MARGIN, y, DARK, salutation);
@@ -207,7 +206,8 @@ public class HospitalLetterRenderer {
 	}
 
 	public record LetterInput(String hospitalName, String hospitalAddress, String hospitalCity, String hospitalCountry,
-			String hospitalZip, String hospitalPhone, String hospitalEmail, String caseReference, String condition,
+			String hospitalZip, String hospitalPhone, String hospitalEmail, String hospitalTimeZone, String caseReference,
+			String condition,
 			String patientName, LocalDate patientDateOfBirth, String patientCountry, String doctorName,
 			String diagnosis, String procedure, String department, LocalDate admissionDate, LocalDate completionDate,
 			String lengthOfStay) {

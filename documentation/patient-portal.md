@@ -46,7 +46,7 @@ Published options show the doctor, hospital, procedure, timeline, recovery, afte
 While a doctor evaluates the case, they propose up to three times for a Zoom consultation. The case page shows "Initial consultation with Dr …": pick a time, pay the AUD 200 fee, and join on Zoom (the button opens 15 minutes before). The doctor prepares the treatment plan after this conversation.
 
 ### Online consultations (follow-up)
-Request one about an option → the doctor proposes up to three times (shown in Brisbane time plus the patient's own time zone) → pick a time → pay the AUD 200 fee → the consultation is scheduled with a Zoom link (the join button opens 15 minutes before).
+Request one about an option → the doctor proposes up to three times (shown in the doctor's time zone, e.g. Sydney, plus the patient's own) → pick a time → pay the AUD 200 fee → the consultation is scheduled with a Zoom link (the join button opens 15 minutes before).
 
 ### Payments
 Stripe Payment Element with saved cards (or a simulated Pay Now in development). Payment history with PDF invoices. Refunds issued by MTA show on the payment (*Partly refunded* / *Refunded*, the amount returned) with a credit note PDF per refund; the patient is notified, including any card processing fee kept.

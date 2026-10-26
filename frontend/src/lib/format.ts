@@ -1,8 +1,44 @@
 import { useLocale, type Locale } from '../i18n/I18nContext'
 import type { Specialty } from './cases'
 
-/** Doctors propose consultation times in Brisbane time (AEST all year, no daylight saving). */
-export const DOCTOR_TIME_ZONE = 'Australia/Brisbane'
+/** The zones doctors and hospitals can work in (same list as the API's AustralianTimeZones). */
+export const AU_TIME_ZONES: { id: string; label: string; city: string }[] = [
+  { id: 'Australia/Sydney', label: 'Sydney / Canberra (NSW, ACT)', city: 'Sydney' },
+  { id: 'Australia/Melbourne', label: 'Melbourne (VIC)', city: 'Melbourne' },
+  { id: 'Australia/Brisbane', label: 'Brisbane (QLD)', city: 'Brisbane' },
+  { id: 'Australia/Adelaide', label: 'Adelaide (SA)', city: 'Adelaide' },
+  { id: 'Australia/Darwin', label: 'Darwin (NT)', city: 'Darwin' },
+  { id: 'Australia/Perth', label: 'Perth (WA)', city: 'Perth' },
+  { id: 'Australia/Hobart', label: 'Hobart (TAS)', city: 'Hobart' },
+]
+
+/** Accounts created before time zones existed work in Brisbane (no daylight saving). */
+export const DEFAULT_TIME_ZONE = 'Australia/Brisbane'
+
+/** "Sydney" for Australia/Sydney. */
+export function zoneCity(zone: string | null | undefined) {
+  return AU_TIME_ZONES.find((z) => z.id === zone)?.city ?? 'Brisbane'
+}
+
+/** The browser's zone when it is one we support, else Sydney: the starting choice on sign-up. */
+export function guessAustralianZone() {
+  const local = Intl.DateTimeFormat().resolvedOptions().timeZone
+  return AU_TIME_ZONES.some((z) => z.id === local) ? local : 'Australia/Sydney'
+}
+
+let providerZone = DEFAULT_TIME_ZONE
+
+/**
+ * The signed-in doctor's or hospital's zone, set by their account provider. Doctor and
+ * hospital pages format consultation times and "today" in it (one account per tab).
+ */
+export function setProviderTimeZone(zone: string | null | undefined) {
+  providerZone = zone && AU_TIME_ZONES.some((z) => z.id === zone) ? zone : DEFAULT_TIME_ZONE
+}
+
+export function providerTimeZone() {
+  return providerZone
+}
 
 function tag(locale: Locale) {
   return locale === 'zh' ? 'zh-CN' : 'en-AU'

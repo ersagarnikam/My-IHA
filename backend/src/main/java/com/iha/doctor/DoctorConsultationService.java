@@ -20,6 +20,7 @@ import com.iha.auth.CurrentUser;
 import com.iha.cases.CaseRepository;
 import com.iha.cases.CaseStatus;
 import com.iha.cases.MedicalCase;
+import com.iha.common.AustralianTimeZones;
 import com.iha.common.ApiException;
 import com.iha.consultation.ConsultationRequest;
 import com.iha.consultation.ConsultationRequestRepository;
@@ -43,12 +44,11 @@ import org.springframework.transaction.annotation.Transactional;
  * The doctor's side of online consultations (ported from
  * {@code propose_consultation_slots}, {@code cancel_consultation} and the
  * consultation pages). A doctor sees the requests made on options built from
- * their own plans. Times are entered and shown in Brisbane time.
+ * their own plans. Times are entered and shown in the doctor's own time zone.
  */
 @Service
 public class DoctorConsultationService {
 
-	public static final ZoneId DOCTOR_ZONE = ZoneId.of("Australia/Brisbane");
 
 	private final DoctorAccountService accounts;
 	private final ConsultationRequestRepository requests;
@@ -110,7 +110,7 @@ public class DoctorConsultationService {
 					.flatMap(o -> plans.findById(o.getTreatmentPlanId()))
 					.map(TreatmentPlan::getTreatmentStartDate)
 					.orElse(null);
-		List<Instant[]> times = parseSlots(input, treatmentStart);
+		List<Instant[]> times = parseSlots(input, treatmentStart, AustralianTimeZones.zone(doctor.getTimeZone()));
 		slots.deleteByRequest(requestId);
 		times.forEach(t -> slots.save(new ConsultationSlot(requestId, t[0], t[1])));
 		String previous = request.getStatus();
@@ -147,7 +147,7 @@ public class DoctorConsultationService {
 			throw ApiException.conflict("initial_consultation_exists",
 					"An initial consultation is already under way for this case.");
 		}
-		List<Instant[]> times = parseSlots(input, null);
+		List<Instant[]> times = parseSlots(input, null, AustralianTimeZones.zone(doctor.getTimeZone()));
 		ConsultationRequest request = requests.save(
 				ConsultationRequest.initial(caseId, medicalCase.getPatientId(), doctor.getId()));
 		times.forEach(t -> slots.save(new ConsultationSlot(request.getId(), t[0], t[1])));
@@ -223,8 +223,8 @@ public class DoctorConsultationService {
 			.findFirst();
 	}
 
-	/** 1 to 3 wall-clock slots in Brisbane time: in the future, ending after they start, not after the treatment start. */
-	private List<Instant[]> parseSlots(List<SlotInput> input, LocalDate treatmentStart) {
+	/** 1 to 3 wall-clock slots in {@code zone}: in the future, ending after they start, not after the treatment start. */
+	private List<Instant[]> parseSlots(List<SlotInput> input, LocalDate treatmentStart, ZoneId zone) {
 		if (input == null || input.isEmpty() || input.size() > 3) {
 			throw ApiException.badRequest("invalid_slot_count", "Propose between 1 and 3 time slots.");
 		}
@@ -251,8 +251,8 @@ public class DoctorConsultationService {
 				throw ApiException.badRequest("slot_after_treatment",
 						"Slot dates cannot be after the treatment start date.");
 			}
-			Instant startAt = date.atTime(start).atZone(DOCTOR_ZONE).toInstant();
-			Instant endAt = date.atTime(end).atZone(DOCTOR_ZONE).toInstant();
+			Instant startAt = date.atTime(start).atZone(zone).toInstant();
+			Instant endAt = date.atTime(end).atZone(zone).toInstant();
 			if (!startAt.isAfter(now)) {
 				throw ApiException.badRequest("slot_in_past", "Slot times must be in the future.");
 			}
@@ -364,7 +364,7 @@ public class DoctorConsultationService {
 	public record InitialState(String state, UUID consultationId, String skippedReason) {
 	}
 
-	/** A wall-clock slot in Brisbane time: {@code 2026-11-02}, {@code 09:30}, {@code 10:00}. */
+	/** A wall-clock slot in the doctor's time zone: {@code 2026-11-02}, {@code 09:30}, {@code 10:00}. */
 	public record SlotInput(String date, String startTime, String endTime) {
 	}
 

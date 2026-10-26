@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.iha.common.AustralianTimeZones;
 import com.iha.crypto.EncryptedLocalDateConverter;
 import com.iha.crypto.EncryptedStringConverter;
 import jakarta.persistence.Column;
@@ -106,6 +107,10 @@ public class Doctor {
 	@Column(name = "sms_notifications_enabled", nullable = false)
 	private boolean smsNotificationsEnabled;
 
+	/** IANA zone the account works in; see {@link AustralianTimeZones}. */
+	@Column(name = "time_zone", nullable = false)
+	private String timeZone = AustralianTimeZones.DEFAULT;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -193,6 +198,10 @@ public class Doctor {
 	public void updateAvailability(String scheduleJson, String[] workingDays) {
 		this.availabilityScheduleJson = scheduleJson;
 		this.workingDays = workingDays;
+	}
+
+	public void setTimeZone(String timeZone) {
+		this.timeZone = AustralianTimeZones.valid(timeZone);
 	}
 
 	public void setNotificationPreferences(boolean email, boolean sms) {
@@ -319,6 +328,10 @@ public class Doctor {
 
 	public boolean isEmailNotificationsEnabled() {
 		return emailNotificationsEnabled;
+	}
+
+	public String getTimeZone() {
+		return timeZone;
 	}
 
 	public boolean isSmsNotificationsEnabled() {

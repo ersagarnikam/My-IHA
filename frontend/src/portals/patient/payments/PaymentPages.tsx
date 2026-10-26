@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from 'react-router'
 import { Badge, ErrorState, Loading } from '../../../components/ui'
 import { useT } from '../../../i18n/I18nContext'
 import type { CaseDetail } from '../../../lib/cases'
-import { browserTimeZone, DOCTOR_TIME_ZONE, useFormat } from '../../../lib/format'
+import { browserTimeZone, DEFAULT_TIME_ZONE, useFormat, zoneCity } from '../../../lib/format'
 import type { Consultation, TreatmentOption } from '../../../lib/types'
 import { useApi } from '../../../lib/useApi'
 import { Checkout } from './Checkout'
@@ -118,7 +118,7 @@ export function ConsultationPaymentPage() {
         <>
           <section className="card stack">
             <h2>{t('onlineConsultation')}</h2>
-            {slot && <SlotTimes start={slot.slotTime} />}
+            {slot && <SlotTimes start={slot.slotTime} zone={c.doctorTimeZone} />}
             <div className="row-between">
               <span>{t('consultationFee')}</span>
               <strong>{format.money(c.feeAud)}</strong>
@@ -137,15 +137,16 @@ export function ConsultationPaymentPage() {
   )
 }
 
-/** A slot in Brisbane time, plus the patient's own time zone when different. */
-export function SlotTimes({ start }: { start: string }) {
+/** A slot in the doctor's time zone, plus the patient's own time zone when different. */
+export function SlotTimes({ start, zone = DEFAULT_TIME_ZONE }: { start: string; zone?: string }) {
   const format = useFormat()
+  const t = useT('consultation')
   const local = browserTimeZone()
   return (
     <span className="slot-times">
-      <strong>{format.dateTime(start, DOCTOR_TIME_ZONE)}</strong>{' '}
-      <span className="muted small">(Brisbane Time)</span>
-      {local !== DOCTOR_TIME_ZONE && (
+      <strong>{format.dateTime(start, zone)}</strong>{' '}
+      <span className="muted small">({t('zoneTime', { city: zoneCity(zone) })})</span>
+      {local !== zone && (
         <span className="muted small block">
           {format.dateTime(start, local)} ({local})
         </span>

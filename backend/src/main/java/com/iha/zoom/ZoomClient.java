@@ -7,6 +7,7 @@ import java.time.Instant;
 public interface ZoomClient {
 
 	/** @return the join URL, or null when no Zoom account is configured */
-	String createMeeting(String topic, Instant start, Duration duration);
+	/** @param timeZone IANA zone the meeting is shown in (the start is an instant either way) */
+	String createMeeting(String topic, Instant start, Duration duration, String timeZone);
 
 }

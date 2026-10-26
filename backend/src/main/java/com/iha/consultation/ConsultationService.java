@@ -17,6 +17,7 @@ import com.iha.cases.CaseService;
 import com.iha.cases.CaseStatus;
 import com.iha.cases.MedicalCase;
 import com.iha.common.ApiException;
+import com.iha.common.AustralianTimeZones;
 import com.iha.notification.NotificationService;
 import com.iha.patient.Patient;
 import com.iha.patient.PatientRepository;
@@ -206,7 +207,8 @@ public class ConsultationService {
 				String joinUrl = null;
 				try {
 					joinUrl = zoom.createMeeting("MTA consultation — case " + reference, slot.getSlotTime(),
-							Duration.between(slot.getSlotTime(), slot.getSlotEndTime()));
+							Duration.between(slot.getSlotTime(), slot.getSlotEndTime()),
+							doctorOf(request).map(Doctor::getTimeZone).orElse(AustralianTimeZones.DEFAULT));
 				}
 				catch (RuntimeException ex) {
 					// Payment already succeeded; the coordinator can add the link manually.
@@ -333,15 +335,20 @@ public class ConsultationService {
 					.stream()
 					.collect(Collectors.toMap(Payment::getConsultationRequestId, Payment::getAmountAud, (newest, older) -> newest));
 		BigDecimal currentFee = list.isEmpty() ? null : fees.consultationFeeAud();
-		return list.stream()
-			.map(r -> new RequestView(r, slotsByRequest.getOrDefault(r.getId(), List.of()),
-					doctorOf(r).map(Doctor::getFullName).orElse(null), charged.getOrDefault(r.getId(), currentFee)))
-			.toList();
+		return list.stream().map(r -> {
+			Optional<Doctor> doctor = doctorOf(r);
+			return new RequestView(r, slotsByRequest.getOrDefault(r.getId(), List.of()),
+					doctor.map(Doctor::getFullName).orElse(null), charged.getOrDefault(r.getId(), currentFee),
+					doctor.map(Doctor::getTimeZone).orElse(AustralianTimeZones.DEFAULT));
+		}).toList();
 	}
 
-	/** {@code feeAud}: what was charged once a payment exists, otherwise the current consultation fee. */
+	/**
+	 * {@code feeAud}: what was charged once a payment exists, otherwise the current consultation fee.
+	 * {@code doctorTimeZone}: the zone the doctor proposed the times in.
+	 */
 	public record RequestView(ConsultationRequest request, List<ConsultationSlot> slots, String doctorName,
-			BigDecimal feeAud) {
+			BigDecimal feeAud, String doctorTimeZone) {
 	}
 
 }

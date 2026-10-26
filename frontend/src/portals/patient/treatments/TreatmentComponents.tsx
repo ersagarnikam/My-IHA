@@ -382,7 +382,7 @@ export function ConsultationPanel({
                 checked={selected === s.id}
                 onChange={() => setSelected(s.id)}
               />
-              <SlotTimes start={s.slotTime} />
+              <SlotTimes start={s.slotTime} zone={consultation.doctorTimeZone} />
             </label>
           ))}
         </div>
@@ -414,7 +414,7 @@ export function ConsultationPanel({
     body = (
       <>
         <p>{t('selectedTimeLabel')}</p>
-        {slot && <SlotTimes start={slot.slotTime} />}
+        {slot && <SlotTimes start={slot.slotTime} zone={consultation.doctorTimeZone} />}
         <p className="muted small">{t('payFeeText', { fee })}</p>
         <div className="row-end">
           <button type="button" className="button-secondary" onClick={() => setChanging(true)}>
@@ -466,7 +466,7 @@ function ScheduledConsultation({ consultation }: { consultation: Consultation })
   return (
     <>
       <p>{t('scheduledForLabel')}</p>
-      <SlotTimes start={slot.slotTime} />
+      <SlotTimes start={slot.slotTime} zone={consultation.doctorTimeZone} />
       {now > end ? (
         <p className="muted">{t('consultationEnded')}</p>
       ) : consultation.zoomLink && joinable ? (

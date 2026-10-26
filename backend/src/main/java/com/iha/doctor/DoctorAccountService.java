@@ -18,6 +18,7 @@ import com.iha.auth.AppUser;
 import com.iha.auth.AuthService;
 import com.iha.auth.CurrentUser;
 import com.iha.auth.Role;
+import com.iha.common.AustralianTimeZones;
 import com.iha.common.ApiException;
 import com.iha.notification.AlertPreferences;
 import com.iha.provider.Doctor;
@@ -97,6 +98,7 @@ public class DoctorAccountService implements AlertPreferences {
 		}
 		Doctor doctor = Doctor.registered(user.id(), input.fullName().trim());
 		apply(user, doctor, input, files, List.of(), true);
+		doctor.setTimeZone(input.timeZone());
 		doctor = doctors.save(doctor);
 		replaceAffiliations(doctor, input.hospitalIds());
 		providerMessages.ensureThread(account(doctor));
@@ -113,6 +115,9 @@ public class DoctorAccountService implements AlertPreferences {
 			throw ApiException.conflict("not_resubmittable", "Your registration is not awaiting changes.");
 		}
 		apply(user, doctor, input, files, documents(doctor), false);
+		if (input.timeZone() != null) {
+			doctor.setTimeZone(input.timeZone());
+		}
 		replaceAffiliations(doctor, input.hospitalIds());
 		audit.record(user.id(), user.email(), "doctor", "registration.resubmitted", "doctor", doctor.getId(), Map.of());
 		return doctor;
@@ -329,6 +334,16 @@ public class DoctorAccountService implements AlertPreferences {
 		return doctor;
 	}
 
+	/** Consultation times are entered and shown in this zone; existing slots keep their instant. */
+	@Transactional
+	public Doctor updateTimeZone(CurrentUser user, String timeZone) {
+		Doctor doctor = requireActive(user);
+		doctor.setTimeZone(AustralianTimeZones.valid(timeZone));
+		audit.record(user.id(), user.email(), "doctor", "doctor.time_zone_updated", "doctor", doctor.getId(),
+				Map.of("time_zone", doctor.getTimeZone()));
+		return doctor;
+	}
+
 	@Transactional
 	public Doctor updateNotificationPreferences(CurrentUser user, boolean email, boolean sms) {
 		Doctor doctor = requireActive(user);
@@ -445,10 +460,20 @@ public class DoctorAccountService implements AlertPreferences {
 		return Character.toUpperCase(s.charAt(0)) + s.substring(1);
 	}
 
+	/** {@code timeZone}: one of {@link AustralianTimeZones#SUPPORTED}; null keeps the default (Brisbane). */
 	public record RegistrationInput(String fullName, String contactPhone, List<String> specialties,
 			String qualifications, int yearsOfExperience, String licenseNumber, String bio,
 			List<String> languagesSpoken, String department, String role, List<UUID> hospitalIds,
-			List<String> workingDays) {
+			List<String> workingDays, String timeZone) {
+
+		public RegistrationInput(String fullName, String contactPhone, List<String> specialties,
+				String qualifications, int yearsOfExperience, String licenseNumber, String bio,
+				List<String> languagesSpoken, String department, String role, List<UUID> hospitalIds,
+				List<String> workingDays) {
+			this(fullName, contactPhone, specialties, qualifications, yearsOfExperience, licenseNumber, bio,
+					languagesSpoken, department, role, hospitalIds, workingDays, null);
+		}
+
 	}
 
 	public record RegistrationFiles(MultipartFile photo, MultipartFile medicalLicense, MultipartFile degreeCertificate,

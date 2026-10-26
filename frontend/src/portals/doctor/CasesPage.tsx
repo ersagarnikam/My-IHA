@@ -6,7 +6,14 @@ import { CasesTable } from './DashboardPage'
 import { PillTabs, SearchBox, usePaged } from './shared'
 import type { CaseRow } from './types'
 
-type Tab = 'all' | 'new' | 'evaluation' | 'plan_submitted' | 'plan_confirmed' | 'completed' | 'declined'
+type Tab =
+  | 'all'
+  | 'new'
+  | 'evaluation'
+  | 'plan_submitted'
+  | 'plan_confirmed'
+  | 'completed'
+  | 'declined'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -56,7 +63,8 @@ function inTab(tab: Tab, c: CaseRow) {
       return (
         !declined &&
         a.status === 'accepted' &&
-        ((c.caseStatus === 'evaluation' && !!a.planSubmittedAt) || c.caseStatus === 'treatment_plan')
+        ((c.caseStatus === 'evaluation' && !!a.planSubmittedAt) ||
+          c.caseStatus === 'treatment_plan')
       )
     case 'plan_confirmed':
       return !declined && PLAN_CONFIRMED.has(c.caseStatus)

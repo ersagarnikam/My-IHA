@@ -2,10 +2,18 @@ import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { ArrowLeft, Search } from 'lucide-react'
 import { Badge } from '../../components/ui'
-import { DOCTOR_TIME_ZONE } from '../../lib/format'
+import { AU_TIME_ZONES, providerTimeZone, zoneCity } from '../../lib/format'
 import { CONSULTATION_LABELS, caseBadge, consultationStage, type DoctorConsultation } from './types'
 
-export function BackHeader({ to, title, subtitle }: { to: string; title: string; subtitle?: ReactNode }) {
+export function BackHeader({
+  to,
+  title,
+  subtitle,
+}: {
+  to: string
+  title: string
+  subtitle?: ReactNode
+}) {
   return (
     <div className="dr-back">
       <Link to={to} aria-label="Back">
@@ -29,7 +37,10 @@ export function CaseBadge(props: Parameters<typeof caseBadge>[0]) {
 }
 
 export function ConsultationBadge({ consultation }: { consultation: DoctorConsultation }) {
-  const [label, tone] = CONSULTATION_LABELS[consultationStage(consultation)] ?? [consultation.status, 'muted']
+  const [label, tone] = CONSULTATION_LABELS[consultationStage(consultation)] ?? [
+    consultation.status,
+    'muted',
+  ]
   return (
     <Badge tone={tone} small>
       {label}
@@ -121,7 +132,11 @@ export function usePaged<T>(rows: T[], pageSize = 15) {
   }
 }
 
-const dateFormat = new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+const dateFormat = new Intl.DateTimeFormat('en-AU', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+})
 
 /** "21 Oct 2026". Accepts ISO instants and plain yyyy-mm-dd dates (read as calendar dates). */
 export function formatDate(value: string | null | undefined) {
@@ -130,44 +145,70 @@ export function formatDate(value: string | null | undefined) {
   return dateFormat.format(date)
 }
 
-/** "3 November 2026" in Brisbane. */
+/** "3 November 2026" in the doctor's time zone. */
 export function formatLongDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-AU', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    timeZone: DOCTOR_TIME_ZONE,
+    timeZone: providerTimeZone(),
   })
 }
 
-/** "12:30 pm - 1:30 pm (Brisbane Time)". */
+/** "12:30 pm - 1:30 pm (Sydney Time)", in the doctor's time zone. */
 export function formatSlotTime(start: string, end: string) {
   const time = (iso: string) =>
     new Date(iso).toLocaleTimeString('en-AU', {
       hour: 'numeric',
       minute: '2-digit',
-      timeZone: DOCTOR_TIME_ZONE,
+      timeZone: providerTimeZone(),
     })
-  return `${time(start)} - ${time(end)} (Brisbane Time)`
+  return `${time(start)} - ${time(end)} (${zoneTimeLabel()})`
 }
 
-/** "Tue, 3 Nov 2026, 12:30 pm - 1:30 pm (Brisbane Time)". */
+/** "Tue, 3 Nov 2026, 12:30 pm - 1:30 pm (Sydney Time)". */
 export function formatSlot(start: string, end: string) {
   const day = new Date(start).toLocaleDateString('en-AU', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-    timeZone: DOCTOR_TIME_ZONE,
+    timeZone: providerTimeZone(),
   })
   return `${day}, ${formatSlotTime(start, end)}`
 }
 
-/** Today's date in Brisbane as yyyy-mm-dd (for date inputs). */
-export function brisbaneToday() {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: DOCTOR_TIME_ZONE }).format(new Date())
+/** Today's date in the doctor's or hospital's zone as yyyy-mm-dd (for date inputs). */
+export function providerToday() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: providerTimeZone() }).format(new Date())
+}
+
+/** "Sydney Time": the label next to times entered or shown in the provider's zone. */
+export function zoneTimeLabel() {
+  return `${zoneCity(providerTimeZone())} Time`
 }
 
 export function money(amount: number | null | undefined) {
   return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount ?? 0)
+}
+
+/** Australian time zone picker (doctor and hospital registration and settings). */
+export function TimeZoneSelect({
+  value,
+  onChange,
+  name,
+}: {
+  value: string
+  onChange: (zone: string) => void
+  name?: string
+}) {
+  return (
+    <select name={name} value={value} onChange={(e) => onChange(e.target.value)}>
+      {AU_TIME_ZONES.map((z) => (
+        <option key={z.id} value={z.id}>
+          {z.label}
+        </option>
+      ))}
+    </select>
+  )
 }

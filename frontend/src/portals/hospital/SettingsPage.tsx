@@ -5,9 +5,11 @@ import { useToast } from '../../components/Toasts'
 import { Field, FormError, fieldError } from '../../components/ui'
 import { ApiError, apiPut } from '../../lib/api'
 import type { Specialty } from '../../lib/cases'
+import { AU_TIME_ZONES } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { Group } from '../doctor/registration/RegistrationForm'
 import { KV, SecurityTab, Toggle } from '../doctor/settings/AccountSettingsPage'
+import { TimeZoneSelect } from '../doctor/shared'
 import { useHospital } from './HospitalContext'
 import { HOSPITAL_TYPES, type HospitalProfile } from './types'
 
@@ -82,6 +84,7 @@ function BasicInfoCard() {
   const hospital = useHospital()
   const toast = useToast()
   const [editing, setEditing] = useState(false)
+  const [zone, setZone] = useState(hospital.timeZone)
   const [error, setError] = useState<unknown>(null)
   const [pending, setPending] = useState(false)
 
@@ -135,6 +138,10 @@ function BasicInfoCard() {
           <KV label="State / City" value={hospital.city} />
           <KV label="Country" value={hospital.country} />
           <KV label="Zip / postcode" value={hospital.zipCode} />
+          <KV
+            label="Time zone"
+            value={AU_TIME_ZONES.find((z) => z.id === hospital.timeZone)?.label}
+          />
         </div>
       ) : (
         <form className="stack" onSubmit={submit}>
@@ -166,6 +173,9 @@ function BasicInfoCard() {
           </div>
           <Field label="Full address" error={fieldErr('address')}>
             <input name="address" defaultValue={hospital.address ?? ''} />
+          </Field>
+          <Field label="Time zone" error={fieldErr('timeZone', 'invalid_time_zone')}>
+            <TimeZoneSelect name="timeZone" value={zone} onChange={setZone} />
           </Field>
           <p className="muted small" style={{ margin: 0 }}>
             The contact email is your login email: {hospital.contactEmail}.

@@ -45,6 +45,7 @@ erDiagram
 | `patients` | Patient profile: personal details, encrypted DOB and medical background, emergency contact, avatar, alert preferences, Stripe customer, deletion schedule. |
 | `doctors` | Doctor profile: registration details, encrypted DOB and licence, specialties, languages, working days, availability (JSON), registration documents (JSON), approval status, fee dates, alert preferences. |
 | `doctor_hospital_affiliations` | Hospitals a doctor works with (plan hospitals come from here). |
+| `doctors.time_zone`, `hospitals.time_zone` | The Australian IANA zone the account works in (V9, default `Australia/Brisbane`). |
 | `hospitals` | Hospital accounts: seeded reference hospitals (no login, approved) and hospitals registered through the hospital portal (`status` pending → approved / rejected / more_info_requested, registration and licence numbers and ABN encrypted, `certificates` JSON list of registration documents, notification preferences). |
 | `lawyers` | Visa lawyer accounts (portal not ported yet). |
 | `cases` | A patient's medical case: reference `MTA-<year>-<seq>`, specialty, description, status, travel-assistance flags. |

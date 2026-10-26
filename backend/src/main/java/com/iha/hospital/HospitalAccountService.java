@@ -86,6 +86,7 @@ public class HospitalAccountService implements AlertPreferences {
 				input.basic().country().trim());
 		hospital.applyRegistration(basicInfo(user, input.basic()), details(input.details()),
 				certificates(user, files, List.of(), true));
+		hospital.setTimeZone(input.basic().timeZone());
 		hospital = hospitals.save(hospital);
 		providerMessages.ensureThread(account(hospital));
 		audit.record(user.id(), user.email(), "hospital", "registration.hospital_submitted", "hospital",
@@ -102,6 +103,9 @@ public class HospitalAccountService implements AlertPreferences {
 		}
 		hospital.applyRegistration(basicInfo(user, input.basic()), details(input.details()),
 				certificates(user, files, documents(hospital), false));
+		if (input.basic().timeZone() != null) {
+			hospital.setTimeZone(input.basic().timeZone());
+		}
 		audit.record(user.id(), user.email(), "hospital", "registration.resubmitted", "hospital", hospital.getId(),
 				Map.of());
 		return hospital;
@@ -162,6 +166,9 @@ public class HospitalAccountService implements AlertPreferences {
 	public Hospital updateBasicInfo(CurrentUser user, BasicInput input) {
 		Hospital hospital = requireApproved(user);
 		hospital.updateBasicInfo(basicInfo(user, input));
+		if (input.timeZone() != null) {
+			hospital.setTimeZone(input.timeZone());
+		}
 		audit.record(user.id(), user.email(), "hospital", "hospital.profile_updated", "hospital", hospital.getId(),
 				Map.of());
 		return hospital;
@@ -313,8 +320,15 @@ public class HospitalAccountService implements AlertPreferences {
 		return file == null || file.isEmpty();
 	}
 
+	/** {@code timeZone}: one of {@link com.iha.common.AustralianTimeZones#SUPPORTED}; null keeps the current one. */
 	public record BasicInput(String name, String registrationNumber, String abnNumber, String phone, String country,
-			String city, String address, String zipCode) {
+			String city, String address, String zipCode, String timeZone) {
+
+		public BasicInput(String name, String registrationNumber, String abnNumber, String phone, String country,
+				String city, String address, String zipCode) {
+			this(name, registrationNumber, abnNumber, phone, country, city, address, zipCode, null);
+		}
+
 	}
 
 	public record DetailsInput(String registrationType, List<String> specialties, Integer bedCount,

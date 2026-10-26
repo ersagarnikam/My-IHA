@@ -1,6 +1,6 @@
 # Doctor portal
 
-Area: `/doctor/**` · Code: `frontend/src/portals/doctor/`, backend packages `doctor`, `provider`, `providerchat` · Language: English · Times: Brisbane (AEST, no daylight saving).
+Area: `/doctor/**` · Code: `frontend/src/portals/doctor/`, backend packages `doctor`, `provider`, `providerchat` · Language: English · Times: the doctor's own Australian time zone (chosen at registration, changed under Account & Settings → Availability; existing accounts default to Brisbane).
 
 The screens follow the live dev doctor portal (https://dev.doctor.medicaltourismaustralia.com).
 
@@ -80,7 +80,7 @@ flowchart LR
   H --> I[Treatment · mark completed]
 ```
 
-**The initial Zoom consultation is required before the plan.** During evaluation the doctor offers up to three times (Brisbane time); the patient picks one and pays the AUD 200 consultation fee; the Zoom meeting is created on payment. *Submit Plan* stays locked until the consultation's time has come. When a consultation really isn't needed (e.g. they already spoke), the doctor can skip it with a reason MTA can see. Drafting the plan is allowed at any time.
+**The initial Zoom consultation is required before the plan.** During evaluation the doctor offers up to three times (in their time zone); the patient picks one and pays the AUD 200 consultation fee; the Zoom meeting is created on payment. *Submit Plan* stays locked until the consultation's time has come. When a consultation really isn't needed (e.g. they already spoke), the doctor can skip it with a reason MTA can see. Drafting the plan is allowed at any time.
 
 The patient can still ask for a **follow-up consultation** about a published plan before choosing; it works the same way and doesn't block anything.
 

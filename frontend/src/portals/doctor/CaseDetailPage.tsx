@@ -9,7 +9,7 @@ import { useApi } from '../../lib/useApi'
 import { DevDoctorPanel } from './DevPanel'
 import { initial } from './DoctorLayout'
 import { InitialConsultationCard } from './InitialConsultationCard'
-import { BackHeader, brisbaneToday, CaseBadge, formatDate } from './shared'
+import { BackHeader, providerToday, CaseBadge, formatDate } from './shared'
 import { DOCUMENT_TYPE_LABELS, GENDER_LABELS, specialtyLabel, type CaseDetail } from './types'
 
 const COMPLETABLE = ['payment_confirmed', 'visa_processing', 'travel_ready']
@@ -27,16 +27,35 @@ export function CaseDetailPage() {
 
   const dev: { label: string; path: string }[] = []
   if (pendingRequests)
-    dev.push({ label: 'Upload the requested documents (patient)', path: `/api/dev/doctor/cases/${c.caseId}/upload-requested` })
+    dev.push({
+      label: 'Upload the requested documents (patient)',
+      path: `/api/dev/doctor/cases/${c.caseId}/upload-requested`,
+    })
   const initialId = c.initialConsultation?.consultationId
   if (initialId && c.initialConsultation?.state === 'slots_proposed')
-    dev.push({ label: 'Choose the first time and pay (patient)', path: `/api/dev/doctor/consultations/${initialId}/select-and-pay` })
+    dev.push({
+      label: 'Choose the first time and pay (patient)',
+      path: `/api/dev/doctor/consultations/${initialId}/select-and-pay`,
+    })
   if (initialId && c.initialConsultation?.state === 'scheduled')
-    dev.push({ label: 'Fast-forward: the consultation has taken place', path: `/api/dev/doctor/consultations/${initialId}/mark-held` })
+    dev.push({
+      label: 'Fast-forward: the consultation has taken place',
+      path: `/api/dev/doctor/consultations/${initialId}/mark-held`,
+    })
   if (c.planStatus === 'submitted_to_iha')
-    dev.push({ label: 'Approve plan and send it to the patient (admin)', path: `/api/dev/doctor/cases/${c.caseId}/publish-plan` })
-  if (c.planStatus === 'presented_to_patient' && c.caseStatus === 'treatment_plan' && !c.consultations.some((x) => x.kind === 'option'))
-    dev.push({ label: 'Request an online consultation (patient)', path: `/api/dev/doctor/cases/${c.caseId}/request-consultation` })
+    dev.push({
+      label: 'Approve plan and send it to the patient (admin)',
+      path: `/api/dev/doctor/cases/${c.caseId}/publish-plan`,
+    })
+  if (
+    c.planStatus === 'presented_to_patient' &&
+    c.caseStatus === 'treatment_plan' &&
+    !c.consultations.some((x) => x.kind === 'option')
+  )
+    dev.push({
+      label: 'Request an online consultation (patient)',
+      path: `/api/dev/doctor/cases/${c.caseId}/request-consultation`,
+    })
 
   return (
     <div className="dr-page">
@@ -61,7 +80,10 @@ export function CaseDetailPage() {
           <div className="dr-facts">
             <Fact label="Medical Condition" value={specialtyLabel(c)} />
             <Fact label="Date of Birth" value={formatDate(c.patient.dateOfBirth)} />
-            <Fact label="Gender" value={c.patient.gender ? (GENDER_LABELS[c.patient.gender] ?? c.patient.gender) : '—'} />
+            <Fact
+              label="Gender"
+              value={c.patient.gender ? (GENDER_LABELS[c.patient.gender] ?? c.patient.gender) : '—'}
+            />
             <Fact
               label={
                 <>
@@ -86,22 +108,35 @@ export function CaseDetailPage() {
       </section>
 
       {/* SENSITIVE: medical history is shown to the assigned doctor only; never log it. */}
-      {c.patient && (c.patient.medicalHistory || c.patient.allergies?.length || c.patient.currentMedications?.length) ? (
+      {c.patient &&
+      (c.patient.medicalHistory ||
+        c.patient.allergies?.length ||
+        c.patient.currentMedications?.length) ? (
         <section className="dr-card stack">
           <h2 className="dr-subtitle">Medical History</h2>
-          {c.patient.medicalHistory && <p className="prewrap muted" style={{ margin: 0 }}>{c.patient.medicalHistory}</p>}
-          {!!c.patient.allergies?.length && <Fact label="Allergies" value={c.patient.allergies.join(', ')} />}
+          {c.patient.medicalHistory && (
+            <p className="prewrap muted" style={{ margin: 0 }}>
+              {c.patient.medicalHistory}
+            </p>
+          )}
+          {!!c.patient.allergies?.length && (
+            <Fact label="Allergies" value={c.patient.allergies.join(', ')} />
+          )}
           {!!c.patient.currentMedications?.length && (
             <Fact label="Current Medications" value={c.patient.currentMedications.join(', ')} />
           )}
-          {c.patient.pastSurgeries && <Fact label="Past Surgeries" value={c.patient.pastSurgeries} />}
+          {c.patient.pastSurgeries && (
+            <Fact label="Past Surgeries" value={c.patient.pastSurgeries} />
+          )}
         </section>
       ) : null}
 
       <section className="dr-card">
         <div className="dr-card-head">
           <h2 className="dr-subtitle">Uploaded Documents</h2>
-          {canRequestDocuments && <RequestDocumentsButton caseId={c.caseId} onSent={detail.reload} />}
+          {canRequestDocuments && (
+            <RequestDocumentsButton caseId={c.caseId} onSent={detail.reload} />
+          )}
         </div>
         <DocumentList caseId={c.caseId} documents={c.documents} />
       </section>
@@ -118,13 +153,21 @@ export function CaseDetailPage() {
                   <FileClock size={16} />
                 </span>
                 <div className="dr-file-body">
-                  <p className="dr-file-name">{DOCUMENT_TYPE_LABELS[r.documentType] ?? r.documentType}</p>
+                  <p className="dr-file-name">
+                    {DOCUMENT_TYPE_LABELS[r.documentType] ?? r.documentType}
+                  </p>
                   <p className="muted small" style={{ margin: 0 }}>
                     Requested {formatDate(r.requestedAt)}
-                    {r.receivedAt ? ` · Received ${formatDate(r.receivedAt)}` : r.message ? ` — ${r.message}` : ''}
+                    {r.receivedAt
+                      ? ` · Received ${formatDate(r.receivedAt)}`
+                      : r.message
+                        ? ` — ${r.message}`
+                        : ''}
                   </p>
                 </div>
-                <span className={`badge badge-sm ${r.status === 'pending' ? 'badge-warn' : 'badge-good'}`}>
+                <span
+                  className={`badge badge-sm ${r.status === 'pending' ? 'badge-warn' : 'badge-good'}`}
+                >
                   {r.status === 'pending' ? 'Pending' : 'Received'}
                 </span>
               </li>
@@ -142,11 +185,13 @@ export function CaseDetailPage() {
             The patient asked to discuss your published treatment plan before choosing.
           </p>
           <div className="dr-actions">
-            {c.consultations.filter((r) => r.kind === 'option').map((r) => (
-              <Link key={r.id} className="button" to={`/doctor/consultations/${r.id}`}>
-                View Consultation
-              </Link>
-            ))}
+            {c.consultations
+              .filter((r) => r.kind === 'option')
+              .map((r) => (
+                <Link key={r.id} className="button" to={`/doctor/consultations/${r.id}`}>
+                  View Consultation
+                </Link>
+              ))}
           </div>
         </section>
       )}
@@ -167,7 +212,13 @@ function Fact({ label, value }: { label: React.ReactNode; value: React.ReactNode
   )
 }
 
-function DocumentList({ caseId, documents }: { caseId: string; documents: CaseDetail['documents'] }) {
+function DocumentList({
+  caseId,
+  documents,
+}: {
+  caseId: string
+  documents: CaseDetail['documents']
+}) {
   const format = useFormat()
   const toast = useToast()
   if (documents.length === 0) return <p className="muted">No documents uploaded.</p>
@@ -191,7 +242,12 @@ function DocumentList({ caseId, documents }: { caseId: string; documents: CaseDe
                 {format.bytes(d.fileSizeBytes)}
               </p>
             </div>
-            <button type="button" className="dr-icon-button" aria-label={`View ${d.fileName}`} onClick={() => open(d.id)}>
+            <button
+              type="button"
+              className="dr-icon-button"
+              aria-label={`View ${d.fileName}`}
+              onClick={() => open(d.id)}
+            >
               <Eye size={16} />
             </button>
             <button
@@ -236,7 +292,10 @@ function RequestDocumentsButton({ caseId, onSent }: { caseId: string; onSent: ()
     setPending(true)
     setError(null)
     try {
-      await apiPost(`/api/doctor/cases/${caseId}/document-requests`, { documentTypes: selected, message })
+      await apiPost(`/api/doctor/cases/${caseId}/document-requests`, {
+        documentTypes: selected,
+        message,
+      })
       toast({ title: 'The patient has been notified.', tone: 'good' })
       setPending(false)
       close()
@@ -265,7 +324,9 @@ function RequestDocumentsButton({ caseId, onSent }: { caseId: string; onSent: ()
                     type="checkbox"
                     checked={selected.includes(type)}
                     onChange={() =>
-                      setSelected((s) => (s.includes(type) ? s.filter((x) => x !== type) : [...s, type]))
+                      setSelected((s) =>
+                        s.includes(type) ? s.filter((x) => x !== type) : [...s, type],
+                      )
                     }
                   />
                   {label}
@@ -356,7 +417,9 @@ function WorkflowActions({ detail, onChanged }: { detail: CaseDetail; onChanged:
   } else if (a.status === 'accepted') {
     const s = detail.caseStatus
     const canComplete =
-      COMPLETABLE.includes(s) && !!detail.treatmentEndDate && detail.treatmentEndDate <= brisbaneToday()
+      COMPLETABLE.includes(s) &&
+      !!detail.treatmentEndDate &&
+      detail.treatmentEndDate <= providerToday()
     if (!a.evaluationStartedAt && (s === 'doctor_assigned' || s === 'evaluation')) {
       buttons.push(
         <button
@@ -364,7 +427,12 @@ function WorkflowActions({ detail, onChanged }: { detail: CaseDetail; onChanged:
           type="button"
           disabled={!!pending}
           onClick={() =>
-            run('start', `/api/doctor/cases/${detail.caseId}/start-evaluation`, undefined, 'Evaluation started.')
+            run(
+              'start',
+              `/api/doctor/cases/${detail.caseId}/start-evaluation`,
+              undefined,
+              'Evaluation started.',
+            )
           }
         >
           {pending === 'start' ? 'Starting…' : 'Start Evaluation'}
@@ -404,9 +472,15 @@ function WorkflowActions({ detail, onChanged }: { detail: CaseDetail; onChanged:
       <div className="dr-actions">{buttons}</div>
       <FormError error={error} />
 
-      <Modal open={declineOpen} onClose={() => !pending && setDeclineOpen(false)} title="Decline this case">
+      <Modal
+        open={declineOpen}
+        onClose={() => !pending && setDeclineOpen(false)}
+        title="Decline this case"
+      >
         <div className="stack">
-          <p className="muted">You can optionally let MTA Admin know why — this helps them route the case elsewhere.</p>
+          <p className="muted">
+            You can optionally let MTA Admin know why — this helps them route the case elsewhere.
+          </p>
           <textarea
             rows={4}
             maxLength={500}
@@ -415,31 +489,55 @@ function WorkflowActions({ detail, onChanged }: { detail: CaseDetail; onChanged:
             onChange={(e) => setReason(e.target.value)}
           />
           <div className="row-end">
-            <button type="button" className="button-secondary" onClick={() => setDeclineOpen(false)} disabled={!!pending}>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => setDeclineOpen(false)}
+              disabled={!!pending}
+            >
               Cancel
             </button>
-            <button type="button" className="button-danger" disabled={!!pending} onClick={() => respond('declined')}>
+            <button
+              type="button"
+              className="button-danger"
+              disabled={!!pending}
+              onClick={() => respond('declined')}
+            >
               {pending === 'declined' ? 'Declining…' : 'Decline Case'}
             </button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={completeOpen} onClose={() => !pending && setCompleteOpen(false)} title="Mark case as completed">
+      <Modal
+        open={completeOpen}
+        onClose={() => !pending && setCompleteOpen(false)}
+        title="Mark case as completed"
+      >
         <div className="stack">
           <p className="muted">
-            Confirm the patient has undergone treatment. This updates the case status to Completed and notifies the
-            patient — it can't be undone.
+            Confirm the patient has undergone treatment. This updates the case status to Completed
+            and notifies the patient — it can't be undone.
           </p>
           <div className="row-end">
-            <button type="button" className="button-secondary" onClick={() => setCompleteOpen(false)} disabled={!!pending}>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => setCompleteOpen(false)}
+              disabled={!!pending}
+            >
               Cancel
             </button>
             <button
               type="button"
               disabled={!!pending}
               onClick={() =>
-                run('complete', `/api/doctor/cases/${detail.caseId}/complete`, undefined, 'Case marked as completed.')
+                run(
+                  'complete',
+                  `/api/doctor/cases/${detail.caseId}/complete`,
+                  undefined,
+                  'Case marked as completed.',
+                )
               }
             >
               {pending === 'complete' ? 'Saving…' : 'Mark as Completed'}

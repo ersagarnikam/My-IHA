@@ -63,7 +63,7 @@ useRealtime<Message>('provider_message', (m) => …)   // doctor chat; 'chat_mes
 
 ## Dates, times and money
 
-`lib/format.ts` (`useFormat`) formats dates, money (AUD) and relative times for the patient's language. Consultation times are proposed and shown in **Brisbane time** (`DOCTOR_TIME_ZONE = 'Australia/Brisbane'`, no daylight saving); the patient also sees their own time zone when it differs. The doctor portal's helpers are in `portals/doctor/shared.tsx` (`formatSlot` → "Tue, 3 Nov 2026, 12:30 pm - 1:30 pm (Brisbane Time)").
+`lib/format.ts` (`useFormat`) formats dates, money (AUD) and relative times for the patient's language. Doctors and hospitals each work in their own Australian time zone (`AU_TIME_ZONES` in `lib/format.ts`). `DoctorProvider` and `HospitalProvider` call `setProviderTimeZone(...)`; the helpers in `portals/doctor/shared.tsx` (`formatSlot` → "Tue, 3 Nov 2026, 12:30 pm - 1:30 pm (Sydney Time)", `providerToday`, `zoneTimeLabel`, `TimeZoneSelect`) use `providerTimeZone()`. Patients see slots in the consultation's `doctorTimeZone` plus their own zone (`SlotTimes`). The admin layout resets the zone to Brisbane, MTA's own.
 
 ## Styling
 

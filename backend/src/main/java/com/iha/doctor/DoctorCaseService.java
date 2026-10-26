@@ -21,6 +21,7 @@ import com.iha.cases.CaseService;
 import com.iha.cases.CaseStatus;
 import com.iha.cases.CaseStatusService;
 import com.iha.cases.MedicalCase;
+import com.iha.common.AustralianTimeZones;
 import com.iha.common.ApiException;
 import com.iha.consultation.ConsultationRequest;
 import com.iha.notification.NotificationService;
@@ -227,7 +228,7 @@ public class DoctorCaseService {
 			throw ApiException.conflict("invalid_transition",
 					"This case is no longer in the right stage for that action.");
 		}
-		LocalDate today = LocalDate.now(ZoneId.of("Australia/Brisbane"));
+		LocalDate today = LocalDate.now(AustralianTimeZones.zone(doctor.getTimeZone()));
 		plans.findByCaseIdAndDoctorId(caseId, doctor.getId())
 			.map(TreatmentPlan::getTreatmentEndDate)
 			.filter(end -> end.isAfter(today))

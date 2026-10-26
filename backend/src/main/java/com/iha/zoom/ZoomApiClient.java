@@ -32,7 +32,7 @@ class ZoomApiClient implements ZoomClient {
 	}
 
 	@Override
-	public String createMeeting(String topic, Instant start, Duration duration) {
+	public String createMeeting(String topic, Instant start, Duration duration, String timeZone) {
 		if (!properties.isConfigured()) {
 			log.warn("Zoom is not configured (iha.zoom.*); no meeting created for '{}'", topic);
 			return null;
@@ -48,7 +48,7 @@ class ZoomApiClient implements ZoomClient {
 			.uri("https://api.zoom.us/v2/users/me/meetings")
 			.header("Authorization", "Bearer " + token.accessToken())
 			.contentType(MediaType.APPLICATION_JSON)
-			.body(Map.of("topic", topic, "type", 2, "start_time", start.toString(), "timezone", "UTC", "duration",
+			.body(Map.of("topic", topic, "type", 2, "start_time", start.toString(), "timezone", timeZone, "duration",
 					Math.max(15, duration.toMinutes()), "settings", Map.of("join_before_host", true)))
 			.retrieve()
 			.body(MeetingResponse.class);

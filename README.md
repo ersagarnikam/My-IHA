@@ -75,7 +75,7 @@ The public website **https://medicaltourismaustralia.com** is the home page; the
 | Area | Status |
 |---|---|
 | Patient portal | **Ported** — registration, onboarding, dashboard, cases and documents, treatment options, consultations, payments and invoices, visa wizard, chat, live notifications, English/Chinese. |
-| Doctor portal | **Ported** — sign-up and registration wizard, approval gate with resubmission, registration and annual fees, performance dashboard (earnings, funnel, benchmark), cases with document requests, **required initial Zoom consultation before the treatment plan**, plan builder, follow-up consultations (Brisbane time), chat, settings. |
+| Doctor portal | **Ported** — sign-up and registration wizard, approval gate with resubmission, registration and annual fees, performance dashboard (earnings, funnel, benchmark), cases with document requests, **required initial Zoom consultation before the treatment plan**, plan builder, follow-up consultations (in the doctor's own Australian time zone), chat, settings. |
 | Admin portal | **Started** — dashboard, doctor approvals, case assignment, plan review (publish with MTA's fee or decline), patient and provider support inbox, platform fee settings, payments with full/partial refunds. See [documentation/admin-portal.md](documentation/admin-portal.md). |
 | Hospital portal | **Ported** — sign-up and registration wizard, MTA approval with resubmission, dashboard, cases, patients, affiliated doctors, visa letters (generate PDF, send to patient), chat, notifications, settings. See [documentation/hospital-portal.md](documentation/hospital-portal.md). |
 | Visa lawyer portal | Not yet. |

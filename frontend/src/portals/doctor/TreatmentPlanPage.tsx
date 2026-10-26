@@ -6,7 +6,7 @@ import { ErrorState, Field, FormError, fieldError, Loading } from '../../compone
 import { ApiError, apiPost, apiPut } from '../../lib/api'
 import { drafts } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
-import { BackHeader, brisbaneToday, money } from './shared'
+import { BackHeader, providerToday, money } from './shared'
 import { SPECIALIST_TYPE_LABELS, TREATMENT_TYPE_LABELS, type Plan, type PlanStatus } from './types'
 
 const QUICK_ITEMS = [
@@ -20,8 +20,10 @@ const QUICK_ITEMS = [
 /** Why Submit is locked, by initial consultation state. */
 const CONSULTATION_HINT: Record<string, string> = {
   none: 'Hold the initial Zoom consultation with the patient before submitting the plan.',
-  slots_proposed: 'The patient hasn\'t chosen a consultation time yet; you can submit once the consultation has taken place.',
-  slot_selected: 'The patient chose a consultation time and is paying; you can submit once it has taken place.',
+  slots_proposed:
+    "The patient hasn't chosen a consultation time yet; you can submit once the consultation has taken place.",
+  slot_selected:
+    'The patient chose a consultation time and is paying; you can submit once it has taken place.',
   scheduled: 'The initial consultation is booked; you can submit once it has taken place.',
 }
 
@@ -32,7 +34,8 @@ const READ_ONLY_TEXT: Partial<Record<PlanStatus, string>> = {
     'This treatment plan has been submitted and is awaiting MTA Admin review — it can no longer be edited.',
   iha_approved: 'This treatment plan has been approved by MTA Admin and is no longer editable.',
   rejected_by_iha: 'This treatment plan was rejected by MTA Admin and is no longer editable.',
-  presented_to_patient: 'This treatment plan has been sent to the patient and is no longer editable.',
+  presented_to_patient:
+    'This treatment plan has been sent to the patient and is no longer editable.',
   patient_confirmed: 'The patient has confirmed this treatment plan. It is no longer editable.',
   not_selected: 'The patient chose another treatment option. This plan is no longer editable.',
 }
@@ -124,7 +127,10 @@ function toPayload(f: Form) {
     costItems: f.costItems.map((i) => ({ label: i.label.trim(), amount: num(i.amount) ?? 0 })),
     costNotes: orNull(f.costNotes),
     patientInstructions: orNull(f.patientInstructions),
-    aftercare: f.aftercare.split('\n').map((l) => l.trim()).filter(Boolean),
+    aftercare: f.aftercare
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean),
     specialists: f.specialists.map((x) => ({
       specialistType: x.specialistType,
       specialistName: orNull(x.specialistName),
@@ -162,20 +168,24 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
   const navigate = useNavigate()
   const toast = useToast()
   const readOnly = plan.status !== null && plan.status !== 'draft'
-  const consultationDone = plan.initialConsultation === 'held' || plan.initialConsultation === 'skipped'
+  const consultationDone =
+    plan.initialConsultation === 'held' || plan.initialConsultation === 'skipped'
   const draftName = `treatment-plan:${plan.caseId}`
-  const [form, setForm] = useState<Form>(() => (!readOnly && drafts.load<Form>(draftName)) || fromPlan(plan))
+  const [form, setForm] = useState<Form>(
+    () => (!readOnly && drafts.load<Form>(draftName)) || fromPlan(plan),
+  )
   const [confirmed, setConfirmed] = useState(false)
   const [pending, setPending] = useState<'draft' | 'submit' | null>(null)
   const [error, setError] = useState<unknown>(null)
-  const today = brisbaneToday()
+  const today = providerToday()
 
   // Unsaved typing survives a refresh (cleared on save, submit and sign-out).
   useEffect(() => {
     if (!readOnly) drafts.save(draftName, form)
   }, [form, readOnly, draftName])
 
-  const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((f) => ({ ...f, [key]: value }))
+  const set = <K extends keyof Form>(key: K, value: Form[K]) =>
+    setForm((f) => ({ ...f, [key]: value }))
   const err = (field: string) => fieldError(error, field)
   const hospital = plan.hospitals.find((h) => h.id === form.hospitalId)
   const days = durationDays(form.treatmentStartDate, form.treatmentEndDate)
@@ -206,8 +216,20 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
     }
   }
 
-  const text = (key: keyof Form, label: ReactNode, opts: { placeholder?: string; required?: boolean } = {}) => (
-    <Field label={<>{label}{opts.required && <span className="required"> *</span>}</>} error={err(key)}>
+  const text = (
+    key: keyof Form,
+    label: ReactNode,
+    opts: { placeholder?: string; required?: boolean } = {},
+  ) => (
+    <Field
+      label={
+        <>
+          {label}
+          {opts.required && <span className="required"> *</span>}
+        </>
+      }
+      error={err(key)}
+    >
       <input
         value={form[key] as string}
         disabled={readOnly}
@@ -217,7 +239,15 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
     </Field>
   )
   const area = (key: keyof Form, label: ReactNode, rows = 3, required = false) => (
-    <Field label={<>{label}{required && <span className="required"> *</span>}</>} error={err(key)}>
+    <Field
+      label={
+        <>
+          {label}
+          {required && <span className="required"> *</span>}
+        </>
+      }
+      error={err(key)}
+    >
       <textarea
         rows={rows}
         value={form[key] as string}
@@ -228,27 +258,48 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
   )
 
   return (
-    <form className="dr-page" onSubmit={(e) => e.preventDefault()} style={{ paddingBottom: '2rem' }}>
-      <BackHeader to={`/doctor/cases/${plan.caseId}`} title="Treatment Plan" subtitle={`Case ID: ${plan.referenceNumber}`} />
+    <form
+      className="dr-page"
+      onSubmit={(e) => e.preventDefault()}
+      style={{ paddingBottom: '2rem' }}
+    >
+      <BackHeader
+        to={`/doctor/cases/${plan.caseId}`}
+        title="Treatment Plan"
+        subtitle={`Case ID: ${plan.referenceNumber}`}
+      />
 
       {readOnly && plan.status && (
-        <div className="dr-banner">{READ_ONLY_TEXT[plan.status] ?? 'This treatment plan can no longer be edited.'}</div>
+        <div className="dr-banner">
+          {READ_ONLY_TEXT[plan.status] ?? 'This treatment plan can no longer be edited.'}
+        </div>
       )}
       {!readOnly && !plan.evaluationStartedAt && (
-        <div className="dr-banner info">Start your evaluation from the case page before submitting this plan.</div>
+        <div className="dr-banner info">
+          Start your evaluation from the case page before submitting this plan.
+        </div>
       )}
       {!readOnly && plan.evaluationStartedAt && !consultationDone && (
         <div className="dr-banner info">
-          {CONSULTATION_HINT[plan.initialConsultation] ?? CONSULTATION_HINT.none} You can keep drafting in the
-          meantime.{' '}
-          <Link to={`/doctor/cases/${plan.caseId}#initial-consultation`}>Go to the consultation</Link>
+          {CONSULTATION_HINT[plan.initialConsultation] ?? CONSULTATION_HINT.none} You can keep
+          drafting in the meantime.{' '}
+          <Link to={`/doctor/cases/${plan.caseId}#initial-consultation`}>
+            Go to the consultation
+          </Link>
         </div>
       )}
 
       <Section title="Diagnosis">{area('diagnosis', 'Primary Diagnosis', 3, true)}</Section>
 
       <Section title="Treatment / Procedure">
-        <Group label={<>Treatment Type<span className="required"> *</span></>} error={err('treatmentType')}>
+        <Group
+          label={
+            <>
+              Treatment Type<span className="required"> *</span>
+            </>
+          }
+          error={err('treatmentType')}
+        >
           <div className="dr-radios">
             {Object.entries(TREATMENT_TYPE_LABELS).map(([value, label]) => (
               <label key={value}>
@@ -275,7 +326,14 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
 
       <Section title="Timeline & Recovery">
         <div className="dr-grid-2">
-          <Field label={<>Treatment Start Date<span className="required"> *</span></>} error={err('treatmentStartDate')}>
+          <Field
+            label={
+              <>
+                Treatment Start Date<span className="required"> *</span>
+              </>
+            }
+            error={err('treatmentStartDate')}
+          >
             <input
               type="date"
               min={today}
@@ -284,7 +342,14 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
               onChange={(e) => set('treatmentStartDate', e.target.value)}
             />
           </Field>
-          <Field label={<>Treatment End Date<span className="required"> *</span></>} error={err('treatmentEndDate')}>
+          <Field
+            label={
+              <>
+                Treatment End Date<span className="required"> *</span>
+              </>
+            }
+            error={err('treatmentEndDate')}
+          >
             <input
               type="date"
               min={form.treatmentStartDate || today}
@@ -300,15 +365,27 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
           </p>
         )}
         {text('recoveryTime', 'Recovery Time', { placeholder: 'e.g. 4-6 weeks' })}
-        {text('estimatedLengthOfStay', 'Estimated Hospital Stay', { placeholder: 'e.g. 3 nights', required: true })}
+        {text('estimatedLengthOfStay', 'Estimated Hospital Stay', {
+          placeholder: 'e.g. 3 nights',
+          required: true,
+        })}
       </Section>
 
       <Section title="Hospital Information">
-        <Field label={<>Select Hospital<span className="required"> *</span></>} error={err('hospitalId')}>
+        <Field
+          label={
+            <>
+              Select Hospital<span className="required"> *</span>
+            </>
+          }
+          error={err('hospitalId')}
+        >
           <select
             value={form.hospitalId}
             disabled={readOnly}
-            onChange={(e) => setForm((f) => ({ ...f, hospitalId: e.target.value, roomCategory: '' }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, hospitalId: e.target.value, roomCategory: '' }))
+            }
           >
             <option value="">Select a hospital</option>
             {plan.hospitals.map((h) => (
@@ -320,7 +397,8 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
         </Field>
         {plan.hospitals.length === 0 && (
           <p className="muted small" style={{ margin: 0 }}>
-            You have no affiliated hospitals yet — add one in Account &amp; Settings before building a plan.
+            You have no affiliated hospitals yet — add one in Account &amp; Settings before building
+            a plan.
           </p>
         )}
         {text('department', 'Department', { placeholder: 'e.g. Cardiology' })}
@@ -341,7 +419,9 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
               ))}
             </div>
           ) : (
-            <span className="muted small">Select a hospital to see its available room categories.</span>
+            <span className="muted small">
+              Select a hospital to see its available room categories.
+            </span>
           )}
         </Group>
         {area('specialRequirements', 'Special Requirements', 2)}
@@ -349,7 +429,14 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
 
       <Section title="Cost Estimation">
         <div className="dr-grid-2">
-          <Field label={<>Doctor Fees (AUD)<span className="required"> *</span></>} error={err('doctorFeesAud')}>
+          <Field
+            label={
+              <>
+                Doctor Fees (AUD)<span className="required"> *</span>
+              </>
+            }
+            error={err('doctorFeesAud')}
+          >
             <input
               type="number"
               min={0}
@@ -359,7 +446,14 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
               onChange={(e) => set('doctorFeesAud', e.target.value)}
             />
           </Field>
-          <Field label={<>Hospital Fees (AUD)<span className="required"> *</span></>} error={err('hospitalFeesAud')}>
+          <Field
+            label={
+              <>
+                Hospital Fees (AUD)<span className="required"> *</span>
+              </>
+            }
+            error={err('hospitalFeesAud')}
+          >
             <input
               type="number"
               min={0}
@@ -391,10 +485,17 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
                         placeholder="e.g. Surgery Charge"
                         aria-label="Item"
                         onChange={(e) =>
-                          set('costItems', form.costItems.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
+                          set(
+                            'costItems',
+                            form.costItems.map((x, j) =>
+                              j === i ? { ...x, label: e.target.value } : x,
+                            ),
+                          )
                         }
                       />
-                      {err(`costItems.${i}.label`) && <span className="field-error">{err(`costItems.${i}.label`)}</span>}
+                      {err(`costItems.${i}.label`) && (
+                        <span className="field-error">{err(`costItems.${i}.label`)}</span>
+                      )}
                     </td>
                     <td>
                       <input
@@ -405,7 +506,12 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
                         disabled={readOnly}
                         aria-label="Amount"
                         onChange={(e) =>
-                          set('costItems', form.costItems.map((x, j) => (j === i ? { ...x, amount: e.target.value } : x)))
+                          set(
+                            'costItems',
+                            form.costItems.map((x, j) =>
+                              j === i ? { ...x, amount: e.target.value } : x,
+                            ),
+                          )
                         }
                       />
                     </td>
@@ -415,7 +521,12 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
                           type="button"
                           className="dr-icon-button"
                           aria-label="Remove item"
-                          onClick={() => set('costItems', form.costItems.filter((_, j) => j !== i))}
+                          onClick={() =>
+                            set(
+                              'costItems',
+                              form.costItems.filter((_, j) => j !== i),
+                            )
+                          }
                         >
                           <Trash2 size={16} />
                         </button>
@@ -428,16 +539,18 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
           )}
           {!readOnly && (
             <div className="dr-chips">
-              {QUICK_ITEMS.filter((label) => !form.costItems.some((i) => i.label === label)).map((label) => (
-                <button
-                  key={label}
-                  type="button"
-                  className="dr-chip"
-                  onClick={() => set('costItems', [...form.costItems, { label, amount: '' }])}
-                >
-                  + {label}
-                </button>
-              ))}
+              {QUICK_ITEMS.filter((label) => !form.costItems.some((i) => i.label === label)).map(
+                (label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className="dr-chip"
+                    onClick={() => set('costItems', [...form.costItems, { label, amount: '' }])}
+                  >
+                    + {label}
+                  </button>
+                ),
+              )}
               <button
                 type="button"
                 className="dr-chip"
@@ -467,7 +580,10 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
               <tbody>
                 {form.specialists.map((x, i) => {
                   const update = (patch: Partial<Person>) =>
-                    set('specialists', form.specialists.map((y, j) => (j === i ? { ...y, ...patch } : y)))
+                    set(
+                      'specialists',
+                      form.specialists.map((y, j) => (j === i ? { ...y, ...patch } : y)),
+                    )
                   return (
                     <tr key={i}>
                       <td>
@@ -485,7 +601,9 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
                           ))}
                         </select>
                         {err(`specialists.${i}.specialistType`) && (
-                          <span className="field-error">{err(`specialists.${i}.specialistType`)}</span>
+                          <span className="field-error">
+                            {err(`specialists.${i}.specialistType`)}
+                          </span>
                         )}
                       </td>
                       <td>
@@ -526,7 +644,12 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
                             type="button"
                             className="dr-icon-button"
                             aria-label="Remove specialist"
-                            onClick={() => set('specialists', form.specialists.filter((_, j) => j !== i))}
+                            onClick={() =>
+                              set(
+                                'specialists',
+                                form.specialists.filter((_, j) => j !== i),
+                              )
+                            }
                           >
                             <Trash2 size={16} />
                           </button>
@@ -545,7 +668,10 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
             className="button-secondary"
             style={{ alignSelf: 'flex-start' }}
             onClick={() =>
-              set('specialists', [...form.specialists, { specialistType: '', specialistName: '', costAud: '', notes: '' }])
+              set('specialists', [
+                ...form.specialists,
+                { specialistType: '', specialistName: '', costAud: '', notes: '' },
+              ])
             }
           >
             <Plus size={14} /> Add Specialist
@@ -555,7 +681,10 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
 
       <Section title="Doctor Notes">
         {area('patientInstructions', 'Instructions for Patient')}
-        <Field label="Aftercare Instructions" hint={readOnly ? undefined : 'One instruction per line.'}>
+        <Field
+          label="Aftercare Instructions"
+          hint={readOnly ? undefined : 'One instruction per line.'}
+        >
           <textarea
             rows={3}
             value={form.aftercare}
@@ -574,15 +703,30 @@ function PlanForm({ plan, onSaved }: { plan: Plan; onSaved: (p: Plan) => void })
         <section className="dr-card stack">
           <h2 className="dr-subtitle">Ready to submit?</h2>
           <label className="check-row">
-            <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+            />
             I confirm this treatment plan is accurate
           </label>
-          <FormError error={error instanceof ApiError && error.code === 'validation_failed' ? null : error} />
+          <FormError
+            error={error instanceof ApiError && error.code === 'validation_failed' ? null : error}
+          />
           <div className="row-end">
-            <button type="button" className="button-secondary" onClick={() => navigate(`/doctor/cases/${plan.caseId}`)}>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => navigate(`/doctor/cases/${plan.caseId}`)}
+            >
               Cancel
             </button>
-            <button type="button" className="button-secondary" disabled={!!pending} onClick={() => save('draft')}>
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={!!pending}
+              onClick={() => save('draft')}
+            >
               {pending === 'draft' ? 'Saving…' : 'Save Draft'}
             </button>
             <button
@@ -613,7 +757,15 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** Like Field, but a <div role="group">: a <label> around several radios would forward clicks to the first one. */
-function Group({ label, error, children }: { label: ReactNode; error?: string; children: ReactNode }) {
+function Group({
+  label,
+  error,
+  children,
+}: {
+  label: ReactNode
+  error?: string
+  children: ReactNode
+}) {
   return (
     <div className="field" role="group">
       <span className="field-label">{label}</span>

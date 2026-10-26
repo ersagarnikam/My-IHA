@@ -35,6 +35,7 @@ export type HospitalProfile = {
   accreditationBody: string | null
   emailNotificationsEnabled: boolean
   smsNotificationsEnabled: boolean
+  timeZone: string
   createdAt: string
   documents: HospitalDocument[]
 }

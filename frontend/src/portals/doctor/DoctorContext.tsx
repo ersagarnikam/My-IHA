@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { ErrorState, Loading } from '../../components/ui'
+import { setProviderTimeZone } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import type { DoctorAccount, DoctorProfile } from './types'
 
@@ -17,6 +18,7 @@ export function DoctorProvider({ children }: { children: ReactNode }) {
   const account = useApi<DoctorAccount>('/api/doctor/account')
   if (account.error) return <ErrorState error={account.error} onRetry={account.reload} />
   if (!account.data) return <Loading />
+  setProviderTimeZone(account.data.doctor?.timeZone)
   return (
     <DoctorContext.Provider
       value={{ account: account.data, reload: account.reload, setAccount: account.setData }}
@@ -33,7 +35,10 @@ export function useDoctorAccount() {
 }
 
 /** For pages behind the gate, where the doctor is known to be registered and active. */
-export function useDoctor(): DoctorProfile & { reload: () => Promise<void>; update: (d: DoctorProfile) => void } {
+export function useDoctor(): DoctorProfile & {
+  reload: () => Promise<void>
+  update: (d: DoctorProfile) => void
+} {
   const { account, reload, setAccount } = useDoctorAccount()
   return {
     ...account.doctor!,

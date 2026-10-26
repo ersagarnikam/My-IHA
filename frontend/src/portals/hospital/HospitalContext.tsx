@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { ErrorState, Loading } from '../../components/ui'
+import { setProviderTimeZone } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import type { HospitalAccount, HospitalProfile } from './types'
 
@@ -17,6 +18,7 @@ export function HospitalProvider({ children }: { children: ReactNode }) {
   const account = useApi<HospitalAccount>('/api/hospital/account')
   if (account.error) return <ErrorState error={account.error} onRetry={account.reload} />
   if (!account.data) return <Loading />
+  setProviderTimeZone(account.data.hospital?.timeZone)
   return (
     <HospitalContext.Provider
       value={{ account: account.data, reload: account.reload, setAccount: account.setData }}

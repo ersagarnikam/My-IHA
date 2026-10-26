@@ -8,7 +8,8 @@ import { useApi } from '../../lib/useApi'
 import { DevDoctorPanel } from './DevPanel'
 import {
   BackHeader,
-  brisbaneToday,
+  providerToday,
+  zoneTimeLabel,
   ConsultationBadge,
   formatDate,
   formatSlot,
@@ -43,7 +44,9 @@ export function ConsultationsPage() {
       (tab === 'slots_proposed' && stage === 'slot_selected')
     return (
       inTab &&
-      (!q || (c.caseReference ?? '').toLowerCase().includes(q) || (c.patientName ?? '').toLowerCase().includes(q))
+      (!q ||
+        (c.caseReference ?? '').toLowerCase().includes(q) ||
+        (c.patientName ?? '').toLowerCase().includes(q))
     )
   })
   const paged = usePaged(filtered)
@@ -101,7 +104,9 @@ export function ConsultationsPage() {
                       {c.caseReference}
                     </Link>
                   </td>
-                  <td>{c.kind === 'initial' ? 'Initial consultation' : (c.procedureName ?? '—')}</td>
+                  <td>
+                    {c.kind === 'initial' ? 'Initial consultation' : (c.procedureName ?? '—')}
+                  </td>
                   <td>{formatDate(c.requestedAt)}</td>
                   <td>
                     <ConsultationBadge consultation={c} />
@@ -185,7 +190,9 @@ export function ConsultationDetailPage() {
       </section>
 
       {c.status === 'cancelled' && c.cancellationReason && (
-        <div className="dr-banner bad">This consultation was cancelled. Reason: {c.cancellationReason}</div>
+        <div className="dr-banner bad">
+          This consultation was cancelled. Reason: {c.cancellationReason}
+        </div>
       )}
 
       {c.slots.length > 0 && (
@@ -218,19 +225,33 @@ export function ConsultationDetailPage() {
 }
 
 /** Live 15 minutes before the start until the end (same window as the patient's button). */
-export function JoinZoom({ link, start, end }: { link: string | null; start: string; end: string }) {
+export function JoinZoom({
+  link,
+  start,
+  end,
+}: {
+  link: string | null
+  start: string
+  end: string
+}) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60_000)
     return () => clearInterval(timer)
   }, [])
   const opens = new Date(start).getTime() - 15 * 60_000
-  if (now > new Date(end).getTime()) return <p className="muted small">This consultation has ended.</p>
+  if (now > new Date(end).getTime())
+    return <p className="muted small">This consultation has ended.</p>
   if (!link) return <p className="muted small">The meeting link will be added by MTA shortly.</p>
   if (now < opens)
     return (
       <div className="stack" style={{ gap: '0.35rem' }}>
-        <button type="button" className="button-secondary" disabled style={{ alignSelf: 'flex-start' }}>
+        <button
+          type="button"
+          className="button-secondary"
+          disabled
+          style={{ alignSelf: 'flex-start' }}
+        >
           <Video size={14} /> Join Zoom
         </button>
         <p className="muted small" style={{ margin: 0 }}>
@@ -239,7 +260,13 @@ export function JoinZoom({ link, start, end }: { link: string | null; start: str
       </div>
     )
   return (
-    <a className="button" href={link} target="_blank" rel="noopener noreferrer" style={{ alignSelf: 'flex-start' }}>
+    <a
+      className="button"
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ alignSelf: 'flex-start' }}
+    >
       <Video size={14} /> Join Zoom
     </a>
   )
@@ -255,7 +282,7 @@ const TIMES = Array.from({ length: 48 }, (_, i) => {
   return { value, label }
 })
 
-/** 1-3 date/start/end rows in Brisbane time; used for initial and follow-up consultations. */
+/** 1-3 date/start/end rows in the doctor's time zone; used for initial and follow-up consultations. */
 export function SlotProposalForm({
   title,
   description,
@@ -272,7 +299,7 @@ export function SlotProposalForm({
   const [rows, setRows] = useState<SlotRow[]>([{ date: '', startTime: '10:00', endTime: '10:30' }])
   const [error, setError] = useState<unknown>(null)
   const [pending, setPending] = useState(false)
-  const today = brisbaneToday()
+  const today = providerToday()
 
   async function send() {
     setPending(true)
@@ -313,7 +340,10 @@ export function SlotProposalForm({
             </label>
             <label className="field">
               <span className="field-label small">Start</span>
-              <select value={row.startTime} onChange={(e) => update(i, { startTime: e.target.value })}>
+              <select
+                value={row.startTime}
+                onChange={(e) => update(i, { startTime: e.target.value })}
+              >
                 {TIMES.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
@@ -379,18 +409,26 @@ function ProposeSlots({
         title={updating ? 'Update Proposed Times' : 'Propose Consultation Times'}
         description={
           <>
-            Offer up to three times (Brisbane Time). The patient picks one and pays the consultation fee.
-            {maxDate && ` Times must be on or before the treatment start date (${formatDate(maxDate)}).`}
+            Offer up to three times ({zoneTimeLabel()}). The patient picks one and pays the
+            consultation fee.
+            {maxDate &&
+              ` Times must be on or before the treatment start date (${formatDate(maxDate)}).`}
             {updating && ' New times replace the ones you offered before.'}
           </>
         }
         submitLabel={updating ? 'Update Times' : 'Send to Patient'}
         maxDate={maxDate}
         onSubmit={async (rows) => {
-          const saved = await apiPost<DoctorConsultation>(`/api/doctor/consultations/${consultation.id}/slots`, {
-            slots: rows,
+          const saved = await apiPost<DoctorConsultation>(
+            `/api/doctor/consultations/${consultation.id}/slots`,
+            {
+              slots: rows,
+            },
+          )
+          toast({
+            title: updating ? 'Updated the proposed times.' : 'Proposed times sent to the patient.',
+            tone: 'good',
           })
-          toast({ title: updating ? 'Updated the proposed times.' : 'Proposed times sent to the patient.', tone: 'good' })
           onSaved(saved)
         }}
       />
@@ -416,9 +454,12 @@ function CancelConsultation({
     setPending(true)
     setError(null)
     try {
-      const saved = await apiPost<DoctorConsultation>(`/api/doctor/consultations/${consultation.id}/cancel`, {
-        reason,
-      })
+      const saved = await apiPost<DoctorConsultation>(
+        `/api/doctor/consultations/${consultation.id}/cancel`,
+        {
+          reason,
+        },
+      )
       toast({ title: 'Consultation cancelled. The patient has been notified.', tone: 'good' })
       setOpen(false)
       onCancelled(saved)
@@ -438,7 +479,9 @@ function CancelConsultation({
       </div>
       <Modal open={open} onClose={() => !pending && setOpen(false)} title="Cancel Consultation">
         <div className="stack">
-          <p className="muted">The patient will be told the consultation was cancelled, with your reason.</p>
+          <p className="muted">
+            The patient will be told the consultation was cancelled, with your reason.
+          </p>
           <textarea
             rows={3}
             maxLength={500}
@@ -447,14 +490,26 @@ function CancelConsultation({
             onChange={(e) => setReason(e.target.value)}
           />
           {reason && tooShort && (
-            <p className="field-error">Please provide a brief reason for cancelling (min. 5 characters).</p>
+            <p className="field-error">
+              Please provide a brief reason for cancelling (min. 5 characters).
+            </p>
           )}
           <FormError error={error} />
           <div className="row-end">
-            <button type="button" className="button-secondary" onClick={() => setOpen(false)} disabled={pending}>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => setOpen(false)}
+              disabled={pending}
+            >
               Keep Consultation
             </button>
-            <button type="button" className="button-danger" disabled={tooShort || pending} onClick={cancel}>
+            <button
+              type="button"
+              className="button-danger"
+              disabled={tooShort || pending}
+              onClick={cancel}
+            >
               {pending ? 'Cancelling…' : 'Cancel Consultation'}
             </button>
           </div>

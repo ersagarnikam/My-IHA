@@ -19,7 +19,11 @@ import type { CaseVisa, Consultation, TreatmentOption, VisaDocument } from '../.
 import { useApi } from '../../lib/useApi'
 import { DevCasePanel } from './DevPanel'
 import { usePatient } from './PatientContext'
-import { ConsultationPanel, TreatmentDetailModal, TreatmentOptionCard } from './treatments/TreatmentComponents'
+import {
+  ConsultationPanel,
+  TreatmentDetailModal,
+  TreatmentOptionCard,
+} from './treatments/TreatmentComponents'
 
 export function CaseDetailPage() {
   const t = useT('caseDetail')

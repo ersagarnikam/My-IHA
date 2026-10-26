@@ -136,7 +136,8 @@ class DevDataSeeder implements ApplicationRunner {
 		CurrentUser user = verified(HOSPITAL_EMAIL, Role.HOSPITAL);
 		Hospital hospital = hospitalAccounts.register(user, hospitalInput("St Vincent's Hospital Sydney",
 				"390 Victoria Street, Darlinghurst", "Sydney", "2010", "+61 2 8382 1111", "HOSP-NSW-0390",
-				"LIC-NSW-77812", List.of("Cardiology", "Orthopaedics & Joint Replacement", "Oncology (Cancer Treatment)"), 420),
+				"LIC-NSW-77812", List.of("Cardiology", "Orthopaedics & Joint Replacement", "Oncology (Cancer Treatment)"), 420,
+				"Australia/Sydney"),
 				hospitalFiles());
 		return hospitalAdmin.review(null, hospital.getId(), Hospital.APPROVED, null);
 	}
@@ -147,15 +148,16 @@ class DevDataSeeder implements ApplicationRunner {
 		CurrentUser user = verified("pending.hospital@demo.local", Role.HOSPITAL);
 		hospitalAccounts.register(user, hospitalInput("Gold Coast Private Hospital", "14 Hill Street, Southport",
 				"Gold Coast", "4215", "+61 7 5530 0300", "HOSP-QLD-0014", "LIC-QLD-55120",
-				List.of("Orthopaedics & Joint Replacement", "General Surgery"), 284), hospitalFiles());
+				List.of("Orthopaedics & Joint Replacement", "General Surgery"), 284, "Australia/Brisbane"), hospitalFiles());
 	}
 
 	private static HospitalAccountService.RegistrationInput hospitalInput(String name, String address, String city,
-			String zip, String phone, String registration, String licence, List<String> specialties, int beds) {
+			String zip, String phone, String registration, String licence, List<String> specialties, int beds,
+			String timeZone) {
 		// 51 824 753 556 is the ATO's published example ABN (valid checksum).
 		return new HospitalAccountService.RegistrationInput(
 				new HospitalAccountService.BasicInput(name, registration, "51824753556", phone, "Australia", city,
-						address, zip),
+						address, zip, timeZone),
 				new HospitalAccountService.DetailsInput(Hospital.MULTI_SPECIALTY, specialties, beds,
 						List.of("Standard", "Private", "Deluxe Suite"), licence, "Australian Council on Healthcare Standards"));
 	}
@@ -176,9 +178,12 @@ class DevDataSeeder implements ApplicationRunner {
 		return user;
 	}
 
+	/** Dr. Chen works in Sydney (daylight saving); the peers keep the Brisbane default. */
 	private CurrentUser doctor(List<Hospital> affiliated) {
-		return doctor(DOCTOR_EMAIL, "Dr. Amelia Chen", "MED0001234560",
+		CurrentUser user = doctor(DOCTOR_EMAIL, "Dr. Amelia Chen", "MED0001234560",
 				List.of("Cardiology", "Orthopaedics & Joint Replacement"), affiliated);
+		doctorAccounts.updateTimeZone(user, "Australia/Sydney");
+		return user;
 	}
 
 	CurrentUser doctor(String email, String name, String licence, List<String> specialtyNames,

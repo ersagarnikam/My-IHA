@@ -20,7 +20,7 @@ import { useApi } from '../../../lib/useApi'
 import { Checkout } from '../../patient/payments/Checkout'
 import { useDoctor } from '../DoctorContext'
 import { initial } from '../DoctorLayout'
-import { formatDate, money } from '../shared'
+import { formatDate, money, TimeZoneSelect, zoneTimeLabel } from '../shared'
 import {
   GENDER_LABELS,
   LANGUAGE_OPTIONS,
@@ -68,7 +68,12 @@ export function AccountSettingsPage() {
         </nav>
         <div className="dr-settings-body">
           {tab === 'profile' && <ProfileTab />}
-          {tab === 'availability' && <AvailabilityTab />}
+          {tab === 'availability' && (
+            <>
+              <TimeZoneCard />
+              <AvailabilityTab />
+            </>
+          )}
           {tab === 'billing' && <BillingTab />}
           {tab === 'invoices' && <InvoicesTab />}
           {tab === 'security' && <SecurityTab />}
@@ -464,6 +469,45 @@ const HOURS = Array.from({ length: 48 }, (_, i) => {
   }
 })
 
+function TimeZoneCard() {
+  const doctor = useDoctor()
+  const toast = useToast()
+  const [zone, setZone] = useState(doctor.timeZone)
+  const [pending, setPending] = useState(false)
+
+  async function save() {
+    setPending(true)
+    try {
+      doctor.update(
+        await apiPut<DoctorProfile>('/api/doctor/profile/time-zone', { timeZone: zone }),
+      )
+      toast({ title: 'Time zone updated.', tone: 'good' })
+    } catch (err) {
+      toast({ title: err instanceof ApiError ? err.message : 'Could not save.', tone: 'bad' })
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <section className="dr-card stack">
+      <div>
+        <h2 className="dr-subtitle">Time zone</h2>
+        <p className="muted small" style={{ margin: 0 }}>
+          Consultation times you propose, and the times you see, are in this zone. Patients also see
+          their own local time.
+        </p>
+      </div>
+      <div className="row-start" style={{ gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <TimeZoneSelect value={zone} onChange={setZone} />
+        <button type="button" disabled={pending || zone === doctor.timeZone} onClick={save}>
+          {pending ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+    </section>
+  )
+}
+
 function AvailabilityTab() {
   const doctor = useDoctor()
   const toast = useToast()
@@ -491,7 +535,7 @@ function AvailabilityTab() {
       <div>
         <h2 className="dr-subtitle">Availability</h2>
         <p className="muted small" style={{ margin: 0 }}>
-          Set the hours you're available each day of the week (Brisbane Time).
+          Set the hours you're available each day of the week ({zoneTimeLabel()}).
         </p>
       </div>
       <div>

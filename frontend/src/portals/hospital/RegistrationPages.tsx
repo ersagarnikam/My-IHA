@@ -5,10 +5,12 @@ import { Field, FormError, fieldError, Stepper } from '../../components/ui'
 import { useT } from '../../i18n/I18nContext'
 import { ApiError, apiPost, apiPut } from '../../lib/api'
 import type { Specialty } from '../../lib/cases'
+import { guessAustralianZone } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { AuthShell } from '../../pages/auth/AuthShell'
 import { FilePicker, Group } from '../doctor/registration/RegistrationForm'
 import { GateShell } from '../doctor/registration/RegistrationPages'
+import { TimeZoneSelect } from '../doctor/shared'
 import { useHospitalAccount } from './HospitalContext'
 import { HOSPITAL_TYPES, type HospitalProfile } from './types'
 import '../doctor/doctor.css'
@@ -182,6 +184,7 @@ type Values = {
   city: string
   address: string
   zipCode: string
+  timeZone: string
   registrationType: string
   specialties: string[]
   bedCount: string
@@ -200,7 +203,7 @@ const STEPS = ['Basic Information', 'Location', 'Hospital Details', 'Documents &
 
 const STEP_FIELDS: string[][] = [
   ['name', 'registrationNumber', 'abnNumber', 'phone'],
-  ['country', 'city', 'address', 'zipCode'],
+  ['country', 'city', 'address', 'zipCode', 'timeZone'],
   [
     'registrationType',
     'specialties',
@@ -247,6 +250,7 @@ function initialValues(h: HospitalProfile | null): Values {
     city: h?.city ?? '',
     address: h?.address ?? '',
     zipCode: h?.zipCode ?? '',
+    timeZone: h?.timeZone ?? guessAustralianZone(),
     registrationType: h?.registrationType ?? '',
     specialties: h?.specialties ?? [],
     bedCount: h?.bedCount != null ? String(h.bedCount) : '',
@@ -358,6 +362,7 @@ export function HospitalRegistrationForm({
       'city',
       'address',
       'zipCode',
+      'timeZone',
       'registrationType',
       'bedCount',
       'licenseNumber',
@@ -472,6 +477,13 @@ export function HospitalRegistrationForm({
               autoComplete="postal-code"
               onChange={(e) => set('zipCode', e.target.value)}
             />
+          </Field>
+          <Field
+            label="Time zone"
+            error={err('timeZone')}
+            hint="Dates on your letters and in your portal use this zone."
+          >
+            <TimeZoneSelect value={values.timeZone} onChange={(z) => set('timeZone', z)} />
           </Field>
         </>
       )}

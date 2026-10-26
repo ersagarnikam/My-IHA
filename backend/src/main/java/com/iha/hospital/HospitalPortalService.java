@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -25,6 +24,7 @@ import com.iha.cases.CaseRepository;
 import com.iha.cases.CaseStatus;
 import com.iha.cases.MedicalCase;
 import com.iha.common.ApiException;
+import com.iha.common.AustralianTimeZones;
 import com.iha.doctor.DoctorAccountService;
 import com.iha.notification.NotificationService;
 import com.iha.patient.Patient;
@@ -69,8 +69,6 @@ public class HospitalPortalService {
 
 	static final Map<String, String> LETTER_LABELS = Map.of(VisaDocument.HOSPITAL_INVITATION,
 			"Hospital Invitation Letter", VisaDocument.APPOINTMENT_CONFIRMATION, "Appointment Confirmation Letter");
-
-	private static final ZoneId ZONE = ZoneId.of("Australia/Brisbane");
 
 	private final HospitalAccountService accounts;
 	private final TreatmentPlanRepository plans;
@@ -117,7 +115,7 @@ public class HospitalPortalService {
 	public Dashboard dashboard(CurrentUser user) {
 		Hospital hospital = accounts.requireApproved(user);
 		List<CaseRow> rows = caseRows(hospital);
-		LocalDate today = LocalDate.now(ZONE);
+		LocalDate today = LocalDate.now(AustralianTimeZones.zone(hospital.getTimeZone()));
 		List<CaseRow> confirmed = rows.stream().filter(CaseRow::chosen).toList();
 		List<CaseRow> upcoming = confirmed.stream()
 			.filter(r -> r.admissionDate() != null && !r.admissionDate().isBefore(today)
@@ -252,7 +250,7 @@ public class HospitalPortalService {
 		Doctor doctor = doctors.findById(plan.getDoctorId()).orElse(null);
 		HospitalLetterRenderer.LetterInput input = new HospitalLetterRenderer.LetterInput(hospital.getName(),
 				hospital.getAddress(), hospital.getCity(), hospital.getCountry(), hospital.getZipCode(),
-				hospital.getPhone(), hospital.getContactEmail(), c.getReferenceNumber(), condition(c),
+				hospital.getPhone(), hospital.getContactEmail(), hospital.getTimeZone(), c.getReferenceNumber(), condition(c),
 				patient.getFullName(), patient.getDateOfBirth(), patient.getCountryOfResidence(),
 				doctor == null ? null : doctor.getFullName(), plan.getDiagnosis(), plan.getProcedureName(),
 				plan.getDepartment(), plan.getTreatmentStartDate(), plan.getTreatmentEndDate(),

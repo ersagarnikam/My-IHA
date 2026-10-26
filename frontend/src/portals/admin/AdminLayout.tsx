@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
+import { DEFAULT_TIME_ZONE, setProviderTimeZone } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { LogoutDialog } from '../doctor/DoctorLayout'
 import '../doctor/doctor.css'
@@ -57,6 +58,8 @@ export type AdminOutletContext = { refreshCounts: () => void }
 
 /** Shell for MTA staff, same look as the doctor portal. */
 export function AdminLayout() {
+  // MTA works in Brisbane time; don't inherit a doctor's zone from an earlier sign-in in this tab.
+  setProviderTimeZone(DEFAULT_TIME_ZONE)
   const { user } = useAuth()
   const overview = useApi<Overview>('/api/admin/overview')
   const [collapsed, setCollapsed] = useState(false)

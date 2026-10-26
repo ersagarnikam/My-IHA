@@ -3,6 +3,7 @@ package com.iha.provider;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.iha.common.AustralianTimeZones;
 import com.iha.crypto.EncryptedStringConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -98,6 +99,10 @@ public class Hospital {
 	@Column(name = "sms_notifications_enabled", nullable = false)
 	private boolean smsNotificationsEnabled;
 
+	/** IANA zone the account works in; see {@link AustralianTimeZones}. */
+	@Column(name = "time_zone", nullable = false)
+	private String timeZone = AustralianTimeZones.DEFAULT;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -170,6 +175,10 @@ public class Hospital {
 		this.status = status;
 		this.rejectionReason = REJECTED.equals(status) ? reason : null;
 		this.moreInfoMessage = MORE_INFO_REQUESTED.equals(status) ? reason : null;
+	}
+
+	public void setTimeZone(String timeZone) {
+		this.timeZone = AustralianTimeZones.valid(timeZone);
 	}
 
 	public void setNotificationPreferences(boolean email, boolean sms) {
@@ -267,6 +276,10 @@ public class Hospital {
 
 	public boolean isEmailNotificationsEnabled() {
 		return emailNotificationsEnabled;
+	}
+
+	public String getTimeZone() {
+		return timeZone;
 	}
 
 	public boolean isSmsNotificationsEnabled() {

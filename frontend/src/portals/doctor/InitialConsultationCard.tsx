@@ -6,7 +6,7 @@ import { FormError, Modal } from '../../components/ui'
 import { apiPost } from '../../lib/api'
 import { useApi } from '../../lib/useApi'
 import { JoinZoom, SlotProposalForm } from './ConsultationPages'
-import { formatSlot } from './shared'
+import { formatSlot, zoneTimeLabel } from './shared'
 import type { CaseDetail, DoctorConsultation } from './types'
 
 /**
@@ -84,7 +84,7 @@ function ProposeInitial({ caseId, onChanged }: { caseId: string; onChanged: () =
       </p>
       <SlotProposalForm
         title="Propose consultation times"
-        description="Times are in Brisbane Time (AEST)."
+        description={`Times are in your time zone (${zoneTimeLabel()}).`}
         submitLabel="Send times to patient"
         onSubmit={async (rows) => {
           await apiPost<DoctorConsultation>(`/api/doctor/cases/${caseId}/initial-consultation`, {

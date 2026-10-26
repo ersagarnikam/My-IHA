@@ -374,6 +374,7 @@
     "successToast": "Treatment option confirmed. Redirecting to payment…"
   },
   "consultation": {
+    "zoneTime": "{city} time",
     "onlineConsultation": "Online Consultation",
     "preRequestText": "Want to discuss this treatment option with the doctor before deciding? Request a free online consultation and the doctor will share a few suitable times.",
     "requesting": "Requesting…",

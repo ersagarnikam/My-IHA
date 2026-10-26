@@ -20,6 +20,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.iha.auth.CurrentUser;
+import com.iha.common.AustralianTimeZones;
 import com.iha.cases.CaseRepository;
 import com.iha.cases.CaseStatus;
 import com.iha.cases.MedicalCase;
@@ -114,7 +115,8 @@ public class DoctorInsightsService {
 		BigDecimal awaitingTreatment = BigDecimal.ZERO;
 		BigDecimal treated = BigDecimal.ZERO;
 		Map<YearMonth, BigDecimal> monthly = new LinkedHashMap<>();
-		YearMonth thisMonth = YearMonth.now(ZONE);
+		ZoneId zone = AustralianTimeZones.zone(doctor.getTimeZone());
+		YearMonth thisMonth = YearMonth.now(zone);
 		for (int i = 8; i >= 0; i--) {
 			monthly.put(thisMonth.minusMonths(i), BigDecimal.ZERO);
 		}
@@ -131,7 +133,7 @@ public class DoctorInsightsService {
 			else {
 				awaitingTreatment = awaitingTreatment.add(fee);
 			}
-			monthly.computeIfPresent(YearMonth.from(paidAt.atZone(ZONE)), (m, v) -> v.add(fee));
+			monthly.computeIfPresent(YearMonth.from(paidAt.atZone(zone)), (m, v) -> v.add(fee));
 		}
 		BigDecimal feesPaid = feePayments.findByDoctorIdOrderByCreatedAtDesc(doctor.getId()).stream()
 			.filter(p -> DoctorFeePayment.COMPLETED.equals(p.getStatus()))

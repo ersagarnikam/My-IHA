@@ -374,6 +374,7 @@
     "successToast": "治疗方案已确认，正在跳转至付款页面…"
   },
   "consultation": {
+    "zoneTime": "{city}时间",
     "onlineConsultation": "在线会诊",
     "preRequestText": "想在决定前与医生讨论此治疗方案？申请免费在线会诊，医生将提供几个合适的时间。",
     "requesting": "申请中…",

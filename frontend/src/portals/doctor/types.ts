@@ -46,6 +46,8 @@ export type DoctorProfile = {
   smsNotificationsEnabled: boolean
   registrationFeePaidAt: string | null
   annualFeeNextDueAt: string | null
+  /** IANA zone the doctor works in (consultation times are entered and shown in it). */
+  timeZone: string
   documents: RegistrationDocument[]
 }
 

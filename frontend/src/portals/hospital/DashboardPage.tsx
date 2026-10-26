@@ -43,8 +43,8 @@ export function HospitalDashboardPage() {
               {d.lettersToIssue} paid {d.lettersToIssue === 1 ? 'case is' : 'cases are'} waiting for
               visa letters.
             </strong>{' '}
-            Patients can't apply for their visa until you send the Hospital Invitation and Appointment
-            Confirmation letters.
+            Patients can't apply for their visa until you send the Hospital Invitation and
+            Appointment Confirmation letters.
           </span>
           <span className="hp-attention-go">Open Documents →</span>
         </Link>

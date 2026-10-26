@@ -127,7 +127,7 @@ Everything below requires an **active** doctor (approved and registration fee pa
 | POST | `/api/doctor/assignments/{assignmentId}/respond` | `{status: accepted|declined|withdrawn, declineReason?}`. Accepting moves `under_review` → `doctor_assigned`. |
 | POST | `/api/doctor/cases/{caseId}/start-evaluation` | `doctor_assigned` → `evaluation`; records this doctor's start. |
 | POST | `/api/doctor/cases/{caseId}/document-requests` | `{documentTypes[], message?}` (evaluation only). Notifies + alerts the patient. |
-| POST | `/api/doctor/cases/{caseId}/initial-consultation` | `{slots: [...]}` — book the initial Zoom consultation (1–3 slots, Brisbane time) during evaluation. Patient is notified to choose a time. |
+| POST | `/api/doctor/cases/{caseId}/initial-consultation` | `{slots: [...]}` — book the initial Zoom consultation (1–3 slots, in the doctor's time zone) during evaluation. Patient is notified to choose a time. |
 | POST | `/api/doctor/cases/{caseId}/initial-consultation/skip` | `{reason}` (≥10 chars) — record why it isn't needed; cancels an unpaid one. Not possible once paid. |
 | POST | `/api/doctor/cases/{caseId}/complete` | From `payment_confirmed`/`visa_processing`/`travel_ready`, after the plan's end date → `completed`. |
 | GET | `/api/doctor/cases/{caseId}/treatment-plan` | The doctor's plan (or empty) + affiliated hospitals with room types. |
@@ -149,7 +149,7 @@ Required to submit: hospital, diagnosis (≥10 chars), treatment type, procedure
 |---|---|---|
 | GET | `/api/doctor/consultations` | The doctor's consultations: `kind` `initial` (before the plan) or `option` (follow-up about a published plan). |
 | GET | `/api/doctor/consultations/{id}` | Detail with slots, selected slot, Zoom link. |
-| POST | `/api/doctor/consultations/{id}/slots` | `{slots: [{date: "2026-11-02", startTime: "09:30", endTime: "10:00"}]}` — 1–3 slots, Brisbane time, future, on or before the treatment start date. Replaces earlier proposals. |
+| POST | `/api/doctor/consultations/{id}/slots` | `{slots: [{date: "2026-11-02", startTime: "09:30", endTime: "10:00"}]}` — 1–3 slots, wall-clock times in the doctor's time zone, future, on or before the treatment start date. Replaces earlier proposals. |
 | POST | `/api/doctor/consultations/{id}/cancel` | `{reason}` (≥5 chars); not once scheduled (paid). |
 
 ### Billing, messages, settings
@@ -168,6 +168,7 @@ Required to submit: hospital, diagnosis (≥10 chars), treatment type, procedure
 | PUT | `/api/doctor/profile/personal` | `{fullName, contactPhone, dateOfBirth, gender}`. |
 | PUT | `/api/doctor/profile/professional` | Specialties, qualifications, experience, licence, bio, languages, department, role, hospitalIds. |
 | PUT | `/api/doctor/profile/availability` | Seven `{day, enabled, start_time, end_time}` entries, Monday–Sunday. |
+| PUT | `/api/doctor/profile/time-zone` | `{timeZone}` — one of the Australian zones (`invalid_time_zone` otherwise). Registration also takes `timeZone`; the profile returns it. |
 | PUT | `/api/doctor/profile/notification-preferences` | `{emailNotificationsEnabled, smsNotificationsEnabled}`. |
 | PUT / GET | `/api/doctor/profile/photo` | Upload (*multipart* `file`) / download. |
 

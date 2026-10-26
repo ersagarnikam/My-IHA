@@ -102,6 +102,8 @@ export type Consultation = {
   requestedAt: string
   updatedAt: string
   feeAud: number
+  /** The zone the doctor proposed the times in. */
+  doctorTimeZone: string
   slots: { id: string; slotTime: string; slotEndTime: string }[]
 }
 

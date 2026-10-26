@@ -22,7 +22,7 @@ The partner hospital's workspace at `/hospital` (role `HOSPITAL`, API under `/ap
 | Doctor Management | Affiliated doctors with specialties, department/role, contact, experience, cases here and status; doctor page with professional details, affiliations, weekly schedule and their cases here. |
 | Documents | Every paid case's letters in one table (*Waiting for letters* / *All*), with generate, view, download and send per letter. |
 | Messages, Notifications | The support chat with MTA (same as the doctor portal's) and the full notification list. |
-| Account & Settings | Hospital profile (basic information, hospital details — view/edit), Security (password), Notifications (email/SMS toggles). |
+| Account & Settings | Hospital profile (basic information incl. the hospital's time zone, used for letter dates and "today", hospital details — view/edit), Security (password), Notifications (email/SMS toggles). |
 
 ## Visa letters
 

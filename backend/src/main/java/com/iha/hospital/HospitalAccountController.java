@@ -102,7 +102,7 @@ public class HospitalAccountController {
 				h.getContactEmail(), h.getCountry(), h.getCity(), h.getAddress(), h.getZipCode(),
 				h.getRegistrationType(), list(h.getSpecialties()), h.getBedCount(), list(h.getRoomTypes()),
 				h.getLicenseNumber(), h.getAccreditationBody(), h.isEmailNotificationsEnabled(),
-				h.isSmsNotificationsEnabled(), h.getCreatedAt(),
+				h.isSmsNotificationsEnabled(), h.getTimeZone(), h.getCreatedAt(),
 				IntStream.range(0, docs.size())
 					.mapToObj(i -> new DocumentResponse(i, docs.get(i).fileName(), docs.get(i).category(),
 							docs.get(i).mimeType(), docs.get(i).fileSizeBytes()))
@@ -139,7 +139,7 @@ public class HospitalAccountController {
 			@NotBlank(message = "Country is required") @Size(max = 80) String country,
 			@NotBlank(message = "State/City is required") @Size(max = 120) String city,
 			@NotBlank(message = "Full address is required") @Size(max = 300) String address,
-			@NotBlank(message = "Zip code is required") @Size(max = 20) String zipCode,
+			@NotBlank(message = "Zip code is required") @Size(max = 20) String zipCode, String timeZone,
 			@NotBlank(message = "Select a hospital type") String registrationType,
 			@NotEmpty(message = "Select at least one specialty") List<String> specialties,
 			@NotNull(message = "Number of beds is required") @Min(value = 1, message = "Number of beds must be greater than 0") @Max(100000) Integer bedCount,
@@ -151,7 +151,7 @@ public class HospitalAccountController {
 		HospitalAccountService.RegistrationInput input() {
 			return new HospitalAccountService.RegistrationInput(
 					new HospitalAccountService.BasicInput(name, registrationNumber, abnNumber, phone, country, city,
-							address, zipCode),
+							address, zipCode, timeZone),
 					new HospitalAccountService.DetailsInput(registrationType, specialties, bedCount, roomTypes,
 							licenseNumber, accreditationBody));
 		}
@@ -170,11 +170,11 @@ public class HospitalAccountController {
 			@NotBlank(message = "Country is required") @Size(max = 80) String country,
 			@NotBlank(message = "State/City is required") @Size(max = 120) String city,
 			@NotBlank(message = "Full address is required") @Size(max = 300) String address,
-			@NotBlank(message = "Zip code is required") @Size(max = 20) String zipCode) {
+			@NotBlank(message = "Zip code is required") @Size(max = 20) String zipCode, String timeZone) {
 
 		HospitalAccountService.BasicInput input() {
 			return new HospitalAccountService.BasicInput(name, registrationNumber, abnNumber, phone, country, city,
-					address, zipCode);
+					address, zipCode, timeZone);
 		}
 
 	}
@@ -207,7 +207,7 @@ public class HospitalAccountController {
 			String contactEmail, String country, String city, String address, String zipCode, String registrationType,
 			List<String> specialties, Integer bedCount, List<String> roomTypes, String licenseNumber,
 			String accreditationBody, boolean emailNotificationsEnabled, boolean smsNotificationsEnabled,
-			Instant createdAt, List<DocumentResponse> documents) {
+			String timeZone, Instant createdAt, List<DocumentResponse> documents) {
 	}
 
 }
