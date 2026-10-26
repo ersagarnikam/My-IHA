@@ -22,6 +22,7 @@ import com.iha.provider.Doctor;
 import com.iha.provider.DoctorCaseAssignment;
 import com.iha.provider.Hospital;
 import com.iha.treatment.TreatmentPlan;
+import com.iha.lawyer.LawyerAdminService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -51,9 +52,11 @@ public class AdminController {
 	private final DoctorAccountService doctorAccounts;
 	private final AdminInsightsService insights;
 	private final HospitalAdminService hospitalAdmin;
+	private final LawyerAdminService lawyerAdmin;
 
 	AdminController(AdminService admin, DoctorAdminService doctorAdmin, DoctorAccountService doctorAccounts,
-			AdminInsightsService insights, HospitalAdminService hospitalAdmin) {
+			AdminInsightsService insights, HospitalAdminService hospitalAdmin, LawyerAdminService lawyerAdmin) {
+		this.lawyerAdmin = lawyerAdmin;
 		this.admin = admin;
 		this.doctorAdmin = doctorAdmin;
 		this.doctorAccounts = doctorAccounts;
@@ -64,7 +67,8 @@ public class AdminController {
 	@GetMapping("/overview")
 	public OverviewResponse overview() {
 		AdminService.Overview o = admin.overview();
-		return new OverviewResponse(o.pendingDoctors(), hospitalAdmin.pendingCount(), o.casesNeedingDoctor(),
+		return new OverviewResponse(o.pendingDoctors(), hospitalAdmin.pendingCount(), lawyerAdmin.pendingCount(),
+				lawyerAdmin.unassignedCount(), o.casesNeedingDoctor(),
 				o.plansToReview(), o.chatsWaiting(),
 				o.totalCases(), o.recentCases().stream().map(CaseRowResponse::of).toList());
 	}
@@ -212,7 +216,8 @@ public class AdminController {
 	public record RejectRequest(@NotBlank @Size(max = 1000) String reason) {
 	}
 
-	public record OverviewResponse(long pendingDoctors, long pendingHospitals, long casesNeedingDoctor, long plansToReview,
+	public record OverviewResponse(long pendingDoctors, long pendingHospitals, long pendingLawyers,
+			long visaCasesUnassigned, long casesNeedingDoctor, long plansToReview,
 			long chatsWaiting, long totalCases, List<CaseRowResponse> recentCases) {
 	}
 

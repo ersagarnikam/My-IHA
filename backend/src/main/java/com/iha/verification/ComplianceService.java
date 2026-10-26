@@ -12,6 +12,8 @@ import com.iha.provider.Doctor;
 import com.iha.provider.DoctorRepository;
 import com.iha.provider.Hospital;
 import com.iha.provider.HospitalRepository;
+import com.iha.provider.Lawyer;
+import com.iha.provider.LawyerRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,8 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Registrations, insurance, accreditation and licences of approved providers
  * that have lapsed or lapse within {@link #WARN_DAYS} days, for the admin
- * dashboard: the latest AHPRA / accreditation / licence check, a doctor's
- * indemnity declaration and a hospital's declared expiry dates.
+ * dashboard: the latest AHPRA / accreditation / licence / MARN / practising
+ * certificate check, a doctor's indemnity declaration and the expiry dates
+ * hospitals and lawyers declared.
  */
 @Service
 public class ComplianceService {
@@ -31,11 +34,14 @@ public class ComplianceService {
 
 	private final DoctorRepository doctors;
 	private final HospitalRepository hospitals;
+	private final LawyerRepository lawyers;
 	private final VerificationService verification;
 
-	ComplianceService(DoctorRepository doctors, HospitalRepository hospitals, VerificationService verification) {
+	ComplianceService(DoctorRepository doctors, HospitalRepository hospitals, LawyerRepository lawyers,
+			VerificationService verification) {
 		this.doctors = doctors;
 		this.hospitals = hospitals;
+		this.lawyers = lawyers;
 		this.verification = verification;
 	}
 
@@ -70,6 +76,14 @@ public class ComplianceService {
 			dated(alerts, ProviderVerification.HOSPITAL, h.getId(), h.getName(), "licence_declared",
 					"Declared licence", h.getLicenceExpiresOn(), today);
 		}
+		for (Lawyer l : lawyers.findAll()) {
+			if (l.getUserId() == null || !l.isApproved()) {
+				continue;
+			}
+			checks(alerts, ProviderVerification.LAWYER, l.getId(), l.getName(), today);
+			dated(alerts, ProviderVerification.LAWYER, l.getId(), l.getName(), "credential_declared",
+					"Declared credential", l.getCredentialExpiresOn(), today);
+		}
 		alerts.sort(Comparator.comparing((Alert a) -> !"expired".equals(a.status()))
 			.thenComparing(Alert::date, Comparator.nullsFirst(Comparator.naturalOrder()))
 			.thenComparing(Alert::name));
@@ -77,7 +91,7 @@ public class ComplianceService {
 	}
 
 	private void checks(List<Alert> alerts, String type, UUID id, String name, LocalDate today) {
-		Map<String, String> labels = VerificationService.REQUIRED.get(type);
+		Map<String, String> labels = verification.required(type, id);
 		verification.current(type, id).forEach((check, v) -> {
 			if (v == null) {
 				alerts.add(new Alert(type, id, name, check, labels.get(check), "missing", null));

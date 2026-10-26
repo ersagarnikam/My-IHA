@@ -9,6 +9,8 @@ import com.iha.auth.CurrentUser;
 import com.iha.common.ApiException;
 import com.iha.provider.DoctorRepository;
 import com.iha.provider.HospitalRepository;
+import com.iha.provider.Lawyer;
+import com.iha.provider.LawyerRepository;
 import com.iha.verification.ProviderVerification;
 import com.iha.verification.VerificationService;
 import jakarta.validation.Valid;
@@ -24,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Register checks MTA staff record on doctors (AHPRA) and hospitals (accreditation, licence). */
+/** Register checks MTA staff record on doctors (AHPRA), hospitals (accreditation, licence) and lawyers (MARN or practising certificate). */
 @RestController
 @RequestMapping("/api/admin/verifications/{providerType}/{providerId}")
 public class AdminVerificationController {
@@ -32,12 +34,14 @@ public class AdminVerificationController {
 	private final VerificationService verification;
 	private final DoctorRepository doctors;
 	private final HospitalRepository hospitals;
+	private final LawyerRepository lawyers;
 
 	AdminVerificationController(VerificationService verification, DoctorRepository doctors,
-			HospitalRepository hospitals) {
+			HospitalRepository hospitals, LawyerRepository lawyers) {
 		this.verification = verification;
 		this.doctors = doctors;
 		this.hospitals = hospitals;
+		this.lawyers = lawyers;
 	}
 
 	@GetMapping
@@ -61,19 +65,41 @@ public class AdminVerificationController {
 		List<RequiredCheck> required = verification.current(providerType, providerId)
 			.entrySet()
 			.stream()
-			.map(e -> new RequiredCheck(e.getKey(), VerificationService.REQUIRED.get(providerType).get(e.getKey()),
+			.map(e -> new RequiredCheck(e.getKey(), verification.required(providerType, providerId).get(e.getKey()),
 					e.getValue() != null && e.getValue().passes(today),
 					e.getValue() == null ? null : CheckResponse.of(e.getValue())))
 			.toList();
 		return new VerificationsResponse(required, required.stream().allMatch(RequiredCheck::passing),
 				verification.history(providerId).stream().map(CheckResponse::of).toList(),
-				ProviderVerification.DOCTOR.equals(providerType) ? VerificationService.AHPRA_REGISTER_URL : null);
+				registerUrl(providerType, providerId), registerLabel(providerType, providerId));
+	}
+
+	private String registerUrl(String providerType, UUID providerId) {
+		if (ProviderVerification.DOCTOR.equals(providerType)) {
+			return VerificationService.AHPRA_REGISTER_URL;
+		}
+		return isMarn(providerType, providerId) ? VerificationService.OMARA_REGISTER_URL : null;
+	}
+
+	private String registerLabel(String providerType, UUID providerId) {
+		if (ProviderVerification.DOCTOR.equals(providerType)) {
+			return "AHPRA public register";
+		}
+		return isMarn(providerType, providerId) ? "OMARA register of migration agents" : null;
+	}
+
+	private boolean isMarn(String providerType, UUID providerId) {
+		return ProviderVerification.LAWYER.equals(providerType) && lawyers.findById(providerId)
+			.map(Lawyer::getCredentialType)
+			.filter(Lawyer.MARN::equals)
+			.isPresent();
 	}
 
 	private void requireProvider(String providerType, UUID providerId) {
 		boolean exists = switch (providerType) {
 			case ProviderVerification.DOCTOR -> doctors.existsById(providerId);
 			case ProviderVerification.HOSPITAL -> hospitals.existsById(providerId);
+			case ProviderVerification.LAWYER -> lawyers.existsById(providerId);
 			default -> false;
 		};
 		if (!exists) {
@@ -99,7 +125,7 @@ public class AdminVerificationController {
 	}
 
 	public record VerificationsResponse(List<RequiredCheck> required, boolean allPassing, List<CheckResponse> history,
-			String registerUrl) {
+			String registerUrl, String registerLabel) {
 	}
 
 }

@@ -118,6 +118,7 @@ Spring Boot tests that boot the whole API on H2, run every migration, validate t
 | `DoctorPortalFlowTests` | Doctor sign-up, registration, approval gate, fee, case through to submitted plan, document requests, consultation slots, chat, settings. |
 | `AdminPortalFlowTests` | Admin access, doctor approval, case assignment, plan publish/decline, patient and provider chats. |
 | `RefundTests` | Admin refunds: validation, partial and full refunds with the card fee deducted once, credit notes, waived fees, a refunded consultation cancelled, doctor fee refunds, dashboard net of refunds. |
+| `LawyerPortalFlowTests` | Lawyer sign-up with consent, registration with a MARN, more-info and resubmission, the OMARA check and approval, assignment of the demo visa case, the status workflow with notifications and case status, document requests, notes, the visa grant, chat. |
 | `HospitalPortalFlowTests` | Hospital sign-up, registration, MTA review and resubmission, the gate, settings; what the demo hospital sees, issuing and sending both visa letters and the patient's visa application unlocking. |
 | `TimeZoneTests` | A Sydney doctor's slots across daylight saving (10:00 → 23:00 UTC in January, 00:00 UTC in July), the patient getting the doctor's zone, only Australian zones accepted, hospital zones. |
 | `patient.PrivacyTests` | Consent is required and recorded with its version; admin privacy settings validation; a deleted account is closed after the grace period (login and contact erased, records kept for the retention years) and purged afterwards. |
@@ -145,6 +146,7 @@ API_LOG=../api.log node journey.mjs          # patient: register → visa applic
 API_LOG=../api.log node doctor-journey.mjs   # doctor: sign-up → scheduled consultation
 node admin-journey.mjs                       # admin: approve, assign, publish/decline, chat (needs a freshly started API)
 API_LOG=../api.log node hospital-journey.mjs # hospital: sign-up, wizard, MTA review, visa letters
+API_LOG=../api.log node lawyer-journey.mjs   # lawyer: sign-up, wizard, register check, assignment, visa workflow (fresh API)
 node smoke.mjs                               # opens every patient/doctor/admin page at desktop and phone width
 ```
 

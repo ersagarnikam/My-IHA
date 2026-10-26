@@ -41,7 +41,7 @@ erDiagram
 | `email_verification_codes` | 6-digit codes for email verification and password reset (hashed, expiring, attempt-limited). |
 | `specialties` | Medical specialties (English/Chinese labels, sort order). |
 | `platform_fee_settings` | Admin-editable fees, one row per key (`fees/FeeSettingsService` holds the catalogue): `doctor_registration_fee` (default AUD 5,000), `doctor_annual_fee` (2,000), `consultation_fee` (200), `mta_service_fee_pct` (10, a percentage), `lawyer_*` and `hospital_*` registration/annual fees (0, not charged yet). `updated_by` records the last admin. |
-| `provider_verifications` | Register checks MTA recorded on a doctor (AHPRA) or hospital (accreditation, licence): outcome, valid until, details, who and when (V11). The latest per kind is current. |
+| `provider_verifications` | Register checks MTA recorded on a doctor (AHPRA), hospital (accreditation, licence) or lawyer (MARN, practising certificate — V13): outcome, valid until, details, who and when (V11). The latest per kind is current. |
 | `consents` | What each user agreed to at sign-up (`terms_and_privacy`, patients also `health_information`) and the consent version (V12). |
 | `business_settings` | Privacy policy and terms links, consent version and retention years (V12); MTA's legal name, ABN, address, billing email, GST registration and per-charge GST classification (key/value, V10). |
 | `platform_fee_changes` | History of fee changes: key, old and new amount, reason, who, when (V7). |
@@ -50,7 +50,7 @@ erDiagram
 | `doctor_hospital_affiliations` | Hospitals a doctor works with (plan hospitals come from here). |
 | `doctors.time_zone`, `hospitals.time_zone` | The Australian IANA zone the account works in (V9, default `Australia/Brisbane`). |
 | `hospitals` | Hospital accounts: seeded reference hospitals (no login, approved) and hospitals registered through the hospital portal (`status` pending → approved / rejected / more_info_requested, registration and licence numbers and ABN encrypted, `certificates` JSON list of registration documents, notification preferences, declared accreditation and licence expiry dates — V11). |
-| `lawyers` | Visa lawyer accounts (portal not ported yet). |
+| `lawyers` | Visa lawyer accounts: individual or law firm, encrypted ABN and credential number, credential type (`marn` / `practising_certificate`), practising state, credential expiry, contact, registration documents (JSON), approval status, alert preferences, time zone (V13). |
 | `cases` | A patient's medical case: reference `MTA-<year>-<seq>`, specialty, description, status, travel-assistance flags. |
 | `case_documents` | Medical documents (and standalone uploads not yet linked to a case). |
 | `case_document_requests` | Documents a doctor requested during evaluation; `pending` until the patient adds one of that type, then `received`. |
@@ -62,7 +62,7 @@ erDiagram
 | `payments`, `payment_methods` | Patient payments (treatment, consultation fee) and saved cards. |
 | `doctor_fee_payments` | Doctor registration and annual fees (status `pending`, `completed`, `failed`, `refunded`). |
 | `payment_refunds` | Admin refunds of either kind of payment (`payment_kind` `patient`/`doctor`): amount, card fee deducted (`fee_source` `stripe`, `estimate`, `waived` or `none`), amount back to the card, reason and note, provider refund id and status (`pending`, `succeeded`, `failed`), who and when (V8). A payment refunded in full gets status `refunded`. |
-| `visa_submissions`, `visa_documents`, `visa_document_requests`, `visa_case_notes` | Visa application, its documents (patient uploads; hospital letters — `source = hospital_generated`, `hospital_id`, one per case and category, visible to the patient once `sent_to_patient_at` is set; approved visa), lawyer requests and notes. |
+| `visa_submissions`, `visa_documents`, `visa_document_requests`, `visa_case_notes` | Visa application, its documents (patient uploads; hospital letters — `source = hospital_generated`, `hospital_id`, one per case and category, visible to the patient once `sent_to_patient_at` is set; approved visa), lawyer requests (category, what is needed, instructions) and the lawyer's confidential notes. `assigned_lawyer_id` is set by MTA admin; the lawyer issues the approved visa (`source = lawyer_issued`, one per case). |
 | `chat_threads`, `chat_messages` | Patient ↔ coordinator chat. |
 | `provider_message_threads`, `provider_messages` | Doctor/hospital/lawyer ↔ admin chat (one thread per provider account). |
 | `notifications` | In-portal notifications (title, message, type, case). |

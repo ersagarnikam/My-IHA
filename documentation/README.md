@@ -13,6 +13,7 @@ Documentation for the **new stack**: the Spring Boot API in `backend/` and the R
 | [Data model](data-model.md) | Look up a table or a lifecycle: cases, assignments, plans, consultations, payments, visas. |
 | [Patient portal](patient-portal.md) | See what patients can do and how each flow works end to end. |
 | [Doctor portal](doctor-portal.md) | See what doctors can do and how each flow works end to end. |
+| [Visa lawyer portal](lawyer-portal.md) | See what visa lawyers can do: registration with a MARN or practising certificate, visa cases, document requests, notes, the visa grant. |
 | [Hospital portal](hospital-portal.md) | See what partner hospitals can do: registration, cases, patients, doctors, visa letters. |
 | [Admin portal](admin-portal.md) | See what MTA coordinators can do: approvals, case assignment, plan review, support chats. |
 | [Deployment](deployment.md) | Run it for real: PostgreSQL, secrets, Stripe, Zoom, storage, the website links, a go-live checklist. |

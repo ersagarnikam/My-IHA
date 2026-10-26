@@ -1,4 +1,4 @@
-// Opens every page of the patient, doctor, hospital and admin portals as the demo accounts (needs the
+// Opens every page of the patient, doctor, hospital, lawyer and admin portals as the demo accounts (needs the
 // API on :8080 in the dev profile and Vite on :5173) and fails on crashes, console errors,
 // failed API calls, error panels or "not found" pages. Desktop and phone widths. Usage:
 //   node smoke.mjs
@@ -31,6 +31,7 @@ const patient = await login('patient@demo.local')
 const doctor = await login('doctor@demo.local')
 const admin = await login('admin@demo.local')
 const hospital = await login('hospital@demo.local')
+const lawyer = await login('lawyer@demo.local')
 
 const patientCase = first(await api('/api/patient/cases', patient.accessToken), 'patient cases')
 const visas = await api('/api/patient/visa-submissions', patient.accessToken)
@@ -44,9 +45,23 @@ const adminPlan = first(await api('/api/admin/plans', admin.accessToken), 'plans
 const adminPayment = first(await api('/api/admin/payments', admin.accessToken), 'payments')
 const adminHospital = first(await api('/api/admin/hospitals', admin.accessToken), 'hospitals')
 const hospitalCase = first(await api('/api/hospital/cases', hospital.accessToken), 'hospital cases')
+const adminLawyer = first(await api('/api/admin/lawyers', admin.accessToken), 'lawyers')
+const lawyerCase = first(await api('/api/lawyer/cases', lawyer.accessToken), 'lawyer cases')
 const hospitalDoctor = first(await api('/api/hospital/doctors', hospital.accessToken), 'hospital doctors')
 
 const portals = [
+  {
+    session: lawyer,
+    pages: [
+      '/lawyer/dashboard',
+      '/lawyer/cases',
+      `/lawyer/cases/${lawyerCase.caseId}`,
+      '/lawyer/documents',
+      '/lawyer/messages',
+      '/lawyer/notifications',
+      '/lawyer/account-settings',
+    ],
+  },
   {
     session: hospital,
     pages: [
@@ -101,6 +116,9 @@ const portals = [
       '/admin/doctors',
       '/admin/hospitals',
       `/admin/hospitals/${adminHospital.id}`,
+      '/admin/lawyers',
+      `/admin/lawyers/${adminLawyer.id}`,
+      '/admin/visa-cases',
       `/admin/doctors/${adminDoctor.id}`,
       '/admin/cases',
       `/admin/cases/${adminCase.id}`,

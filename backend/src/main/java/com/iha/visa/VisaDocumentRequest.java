@@ -36,7 +36,13 @@ public class VisaDocumentRequest {
 	protected VisaDocumentRequest() {
 	}
 
-	/** Used by the visa portal port and tests. */
+	/** A request from the lawyer portal: the category, what exactly is needed and how. */
+	public VisaDocumentRequest(UUID caseId, UUID lawyerId, String category, String documentType, String instructions) {
+		this(caseId, lawyerId, category, instructions);
+		this.documentType = documentType;
+	}
+
+	/** For tests: the document type is the category. */
 	public VisaDocumentRequest(UUID caseId, UUID lawyerId, String category, String instructions) {
 		this.id = UUID.randomUUID();
 		this.caseId = caseId;

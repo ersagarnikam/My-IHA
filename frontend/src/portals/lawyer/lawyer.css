@@ -1,0 +1,64 @@
+/* Visa lawyer portal (lw-*); shares the doctor portal's dr-* and dash-* classes. */
+
+.lw-stack-radios {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.lw-status-bar {
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.lw-subhead {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0;
+}
+
+.lw-collapsible {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 0.5rem;
+}
+
+.lw-collapsible-head {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lw-collapsible-head:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.lw-collapsible-head svg {
+  transition: transform 0.15s;
+}
+
+.lw-rotated {
+  transform: rotate(180deg);
+}
+
+.lw-collapsible-body {
+  padding: 0 1rem 1rem;
+}
+
+.lw-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.lw-notes li {
+  border-left: 3px solid var(--primary);
+  padding: 0.25rem 0 0.25rem 0.75rem;
+}

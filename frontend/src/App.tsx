@@ -3,7 +3,6 @@ import { Link, Navigate, Outlet, createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { AuthProvider, ROLE_HOME, useAuth } from './auth/AuthContext'
 import { RequireRole } from './auth/RequireRole'
-import { ComingSoon, PortalLayout } from './components/PortalLayout'
 import { ToastProvider } from './components/Toasts'
 import { I18nProvider, useT } from './i18n/I18nContext'
 import { goHome } from './lib/site'
@@ -75,6 +74,26 @@ import {
 } from './portals/hospital/RegistrationPages'
 import { HospitalSettingsPage } from './portals/hospital/SettingsPage'
 import { AdminHospitalDetailPage, AdminHospitalsPage } from './portals/admin/HospitalPages'
+import {
+  AdminLawyerDetailPage,
+  AdminLawyersPage,
+  AdminVisaCasesPage,
+} from './portals/admin/LawyerPages'
+import { LawyerCaseDetailPage, LawyerCasesPage } from './portals/lawyer/CasePages'
+import { LawyerDashboardPage } from './portals/lawyer/DashboardPage'
+import { LawyerDocumentsPage } from './portals/lawyer/DocumentsPage'
+import {
+  LawyerGateStep,
+  LawyerProvider,
+  RequireApprovedLawyer,
+} from './portals/lawyer/LawyerContext'
+import { LawyerLayout, lawyerNotificationHref } from './portals/lawyer/LawyerLayout'
+import {
+  LawyerPendingApprovalPage,
+  LawyerRegisterPage,
+  LawyerSignUpPage,
+} from './portals/lawyer/RegistrationPages'
+import { LawyerSettingsPage } from './portals/lawyer/SettingsPage'
 import { AdminCaseDetailPage, AdminCasesPage } from './portals/admin/CasePages'
 import { AdminDashboardPage } from './portals/admin/DashboardPage'
 import { AdminDoctorDetailPage, AdminDoctorsPage } from './portals/admin/DoctorPages'
@@ -125,6 +144,14 @@ function RouteError() {
   )
 }
 
+function LawyerRoot() {
+  return (
+    <LawyerProvider>
+      <Outlet />
+    </LawyerProvider>
+  )
+}
+
 function HospitalRoot() {
   return (
     <HospitalProvider>
@@ -160,6 +187,7 @@ const router = createBrowserRouter([
       { path: '/register', element: <RegisterPage /> },
       { path: '/register/doctor', element: <DoctorSignUpPage /> },
       { path: '/register/hospital', element: <HospitalSignUpPage /> },
+      { path: '/register/lawyer', element: <LawyerSignUpPage /> },
       { path: '/verify', element: <VerifyPage /> },
       { path: '/forgot-password', element: <ForgotPasswordPage /> },
       { path: '/reset-password', element: <ResetPasswordPage /> },
@@ -317,7 +345,59 @@ const router = createBrowserRouter([
           },
         ],
       },
-      portal('/lawyer', 'LAWYER', 'MTA Visa Lawyer Portal'),
+      {
+        path: '/lawyer',
+        element: <RequireRole role="LAWYER" />,
+        children: [
+          {
+            element: <LawyerRoot />,
+            children: [
+              {
+                path: 'register',
+                element: (
+                  <LawyerGateStep path="/lawyer/register">
+                    <LawyerRegisterPage />
+                  </LawyerGateStep>
+                ),
+              },
+              {
+                path: 'pending-approval',
+                element: (
+                  <LawyerGateStep path="/lawyer/pending-approval">
+                    <LawyerPendingApprovalPage />
+                  </LawyerGateStep>
+                ),
+              },
+              {
+                element: <RequireApprovedLawyer />,
+                children: [
+                  {
+                    element: <LawyerLayout />,
+                    children: [
+                      { index: true, element: <Navigate to="dashboard" replace /> },
+                      { path: 'dashboard', element: <LawyerDashboardPage /> },
+                      { path: 'cases', element: <LawyerCasesPage /> },
+                      { path: 'cases/:caseId', element: <LawyerCaseDetailPage /> },
+                      { path: 'documents', element: <LawyerDocumentsPage /> },
+                      {
+                        path: 'messages',
+                        element: (
+                          <DoctorMessagesPage api="/api/lawyer/messages" devChatPath={null} />
+                        ),
+                      },
+                      {
+                        path: 'notifications',
+                        element: <DoctorNotificationsPage hrefFor={lawyerNotificationHref} />,
+                      },
+                      { path: 'account-settings', element: <LawyerSettingsPage /> },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
       {
         path: '/admin',
         element: <RequireRole role="ADMIN" />,
@@ -331,6 +411,9 @@ const router = createBrowserRouter([
               { path: 'doctors/:doctorId', element: <AdminDoctorDetailPage /> },
               { path: 'hospitals', element: <AdminHospitalsPage /> },
               { path: 'hospitals/:hospitalId', element: <AdminHospitalDetailPage /> },
+              { path: 'lawyers', element: <AdminLawyersPage /> },
+              { path: 'lawyers/:lawyerId', element: <AdminLawyerDetailPage /> },
+              { path: 'visa-cases', element: <AdminVisaCasesPage /> },
               { path: 'cases', element: <AdminCasesPage /> },
               { path: 'cases/:caseId', element: <AdminCaseDetailPage /> },
               { path: 'plans', element: <AdminPlansPage /> },
@@ -347,20 +430,6 @@ const router = createBrowserRouter([
     ],
   },
 ])
-
-/** Placeholder area for a role whose screens haven't been ported yet. */
-function portal(path: string, role: 'LAWYER', title: string) {
-  return {
-    path,
-    element: <RequireRole role={role} />,
-    children: [
-      {
-        element: <PortalLayout title={title} nav={[]} />,
-        children: [{ index: true, element: <ComingSoon area={title} /> }],
-      },
-    ],
-  }
-}
 
 export function App() {
   return (

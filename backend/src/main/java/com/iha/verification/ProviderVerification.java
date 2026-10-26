@@ -16,10 +16,13 @@ public class ProviderVerification {
 
 	public static final String DOCTOR = "doctor";
 	public static final String HOSPITAL = "hospital";
+	public static final String LAWYER = "lawyer";
 
 	public static final String AHPRA = "ahpra";
 	public static final String ACCREDITATION = "accreditation";
 	public static final String LICENCE = "licence";
+	public static final String MARN = "marn";
+	public static final String PRACTISING_CERTIFICATE = "practising_certificate";
 
 	public static final String VERIFIED = "verified";
 	public static final String VERIFIED_WITH_CONDITIONS = "verified_with_conditions";

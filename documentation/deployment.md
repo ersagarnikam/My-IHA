@@ -56,6 +56,7 @@ The portal's home is https://medicaltourismaustralia.com. Point the website's bu
 | Forgot password | `https://portal.example.com/forgot-password` |
 | Doctor registration | `https://portal.example.com/register/doctor` |
 | Hospital registration | `https://portal.example.com/register/hospital` |
+| Visa lawyer registration | `https://portal.example.com/register/lawyer` |
 | Doctor, hospital or lawyer login | `https://portal.example.com/login` |
 
 ## Not production-ready yet

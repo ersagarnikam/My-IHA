@@ -68,7 +68,7 @@ GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the A
 
 ## Website and portal
 
-The public website **https://medicaltourismaustralia.com** is the home page; the portal has no landing page of its own. Signed-out visitors to `/` and anyone who signs out go back to the website (`VITE_HOME_URL` overrides it per environment). Website buttons link to `/login`, `/register`, `/register/doctor` and deep pages — see [Deployment](documentation/deployment.md#the-public-website) for the link table.
+The public website **https://medicaltourismaustralia.com** is the home page; the portal has no landing page of its own. Signed-out visitors to `/` and anyone who signs out go back to the website (`VITE_HOME_URL` overrides it per environment). Website buttons link to `/login`, `/register`, `/register/doctor`, `/register/hospital`, `/register/lawyer` and deep pages — see [Deployment](documentation/deployment.md#the-public-website) for the link table.
 
 ## Porting status
 
@@ -76,9 +76,9 @@ The public website **https://medicaltourismaustralia.com** is the home page; the
 |---|---|
 | Patient portal | **Ported** — registration (with recorded consent; deleted accounts are closed and their records retained, then purged), onboarding, dashboard, cases and documents, treatment options, consultations, payments and invoices, visa wizard, chat, live notifications, English/Chinese. |
 | Doctor portal | **Ported** — sign-up and registration wizard, approval gate with resubmission, registration and annual fees, performance dashboard (earnings, funnel, benchmark), cases with document requests, **required initial Zoom consultation before the treatment plan**, plan builder, follow-up consultations (in the doctor's own Australian time zone, after an indemnity & telehealth declaration), chat, settings. |
-| Admin portal | **Started** — dashboard (with compliance alerts), privacy/consent/retention settings, doctor and hospital approvals gated on recorded AHPRA / accreditation / licence checks, case assignment, plan review (publish with MTA's fee or decline), patient and provider support inbox, platform fee settings, payments with full/partial refunds. See [documentation/admin-portal.md](documentation/admin-portal.md). |
+| Admin portal | **Started** — dashboard (with compliance alerts), privacy/consent/retention settings, doctor, hospital and lawyer approvals gated on recorded AHPRA / accreditation / licence / MARN / practising certificate checks, visa case assignment, case assignment, plan review (publish with MTA's fee or decline), patient and provider support inbox, platform fee settings, payments with full/partial refunds. See [documentation/admin-portal.md](documentation/admin-portal.md). |
 | Hospital portal | **Ported** — sign-up and registration wizard, MTA approval with resubmission, dashboard, cases, patients, affiliated doctors, visa letters (generate PDF, send to patient), chat, notifications, settings. See [documentation/hospital-portal.md](documentation/hospital-portal.md). |
-| Visa lawyer portal | Not yet. |
+| Visa lawyer portal | **Ported** — sign-up and registration (MARN or practising certificate, checked by MTA before approval), assigned visa cases with the status workflow, document requests, confidential notes, issuing the visa grant, chat, notifications, settings. See [documentation/lawyer-portal.md](documentation/lawyer-portal.md). |
 | Email / SMS delivery | Not yet — alerts and codes are logged. |
 | Multi-instance live updates | Not yet — the realtime hub is in memory. |
 | Data migration from Supabase | Not yet. |

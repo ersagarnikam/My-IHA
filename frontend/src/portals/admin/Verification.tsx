@@ -22,6 +22,7 @@ export type Verifications = {
   allPassing: boolean
   history: Check[]
   registerUrl: string | null
+  registerLabel: string | null
 }
 
 const OUTCOME: Record<CheckOutcome, string> = {
@@ -37,6 +38,9 @@ const HINT: Record<string, string> = {
     'Check the NSQHS accreditation certificate (from the accrediting agency, e.g. ACHS) and its expiry date.',
   licence:
     "Check the private hospital licence on the state or territory health department's register and its expiry date.",
+  marn: 'Search the OMARA register of migration agents by MARN. Check the agent is currently registered and note any sanctions or conditions.',
+  practising_certificate:
+    'Check the practising certificate with the issuing state or territory law society or legal services board (its register of practitioners), including its type, expiry and any conditions.',
 }
 
 /**
@@ -49,7 +53,7 @@ export function VerificationCard({
   data,
   onChange,
 }: {
-  providerType: 'doctor' | 'hospital'
+  providerType: 'doctor' | 'hospital' | 'lawyer'
   providerId: string
   data: Verifications
   onChange: () => void
@@ -62,7 +66,7 @@ export function VerificationCard({
         <h2 className="dr-subtitle">Register checks</h2>
         {data.registerUrl && (
           <a href={data.registerUrl} target="_blank" rel="noreferrer" className="small">
-            AHPRA public register <ExternalLink size={12} />
+            {data.registerLabel ?? 'Public register'} <ExternalLink size={12} />
           </a>
         )}
       </div>

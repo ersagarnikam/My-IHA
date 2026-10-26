@@ -17,4 +17,8 @@ public interface VisaSubmissionRepository extends JpaRepository<VisaSubmission, 
 
 	List<VisaSubmission> findByCaseIdIn(Collection<UUID> caseIds);
 
+	List<VisaSubmission> findByAssignedLawyerIdOrderByUpdatedAtDesc(UUID lawyerId);
+
+	List<VisaSubmission> findByStatusNotOrderByUpdatedAtDesc(String status);
+
 }

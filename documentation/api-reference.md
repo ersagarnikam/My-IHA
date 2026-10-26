@@ -204,6 +204,27 @@ See the [hospital portal](hospital-portal.md) guide. Everything except the accou
 | POST | `/api/hospital/cases/{planId}/letters/{type}/send` | Send to the patient (notifies them); `not_generated`. |
 | GET / POST | `/api/hospital/messages` (+ `/unread-count`, `/read`, `/reopen-request`) | Support chat with MTA, same shape as the doctor's. |
 
+## Visa lawyer (`LAWYER` role)
+
+See the [lawyer portal](lawyer-portal.md) guide. Everything except the account, registration and registration documents needs an approved lawyer (`403 lawyer_not_approved`, `lawyer_profile_missing`); cases not assigned to the lawyer answer 404.
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/api/auth/register/lawyer` | Public. `{email, password, acceptTerms}` → emails a 6-digit code. |
+| GET | `/api/lawyer/account` | `{registered, lawyer}` — status, review messages, profile, credential, documents. |
+| POST / PUT | `/api/lawyer/registration` | Multipart: lawyerType, name, abnNumber, phone, address, city, zipCode, experience?, timeZone?, credentialType (`marn` \| `practising_certificate`), credentialNumber, practisingState (certificates), credentialExpiresOn, credentialCertificate (required on POST), indemnityInsurance?, otherDocuments*. PUT resubmits. `invalid_marn`, `invalid_practising_certificate`, `invalid_practising_state`, `invalid_credential_expiry`, `invalid_abn`, `documents_required`, `already_registered`, `not_resubmittable`. |
+| GET | `/api/lawyer/registration/documents/{index}` | A registration document. |
+| PUT | `/api/lawyer/profile` · `/profile/credential` · `/profile/notification-preferences` | Settings. |
+| GET | `/api/lawyer/dashboard` | `{newCases, inProgress, approved, docsPending, recent}`. |
+| GET | `/api/lawyer/cases` · `/cases/{caseId}` | Assigned visa cases (`bucket` new / under_review / docs_pending / in_progress / approved / rejected); the detail adds patient, form (snake_case), documents, requests, notes, plan, `nextStatuses`, `canRequestDocuments`. |
+| POST | `/api/lawyer/cases/{caseId}/status` | `{status, rejectionReason?}` → detail. `invalid_transition`, `rejection_reason_required`. |
+| POST | `/api/lawyer/cases/{caseId}/document-requests` | `{category, documentType, instructions?}` → detail. `case_not_under_review`, `invalid_category`. |
+| POST | `/api/lawyer/cases/{caseId}/notes` | `{body}` (1–5000) → the note. |
+| GET | `/api/lawyer/cases/{caseId}/documents/{documentId}` | A case document (`?download=true`). |
+| POST | `/api/lawyer/cases/{caseId}/approved-visa` | Multipart `file` → the visa grant (replaces an earlier one). `visa_not_approved`. |
+| GET | `/api/lawyer/approved-visas` | Approved cases with the issued visa, if any. |
+| GET / POST | `/api/lawyer/messages` (+ `/unread-count`, `/read`, `/reopen-request`) | Support chat with MTA. |
+
 ## Admin (`ADMIN` role)
 
 See the [admin portal](admin-portal.md) guide.
@@ -217,7 +238,11 @@ See the [admin portal](admin-portal.md) guide.
 | GET | `/api/admin/doctors/{id}/performance` | One doctor's stats, membership fees paid and the cases they were invited to. |
 | GET | `/api/admin/doctors/{id}/documents/{index}` | A registration document (`?download=true` to download). |
 | POST | `/api/admin/doctors/{id}/review` | `{outcome: approved|rejected|more_info_requested, reason}`; reason required unless approving; `not_pending` otherwise. |
-| GET / POST | `/api/admin/verifications/{doctor\|hospital}/{id}` | Register checks: `{required: [{checkType, label, passing, current}], allPassing, history, registerUrl}`. POST `{checkType: ahpra\|accreditation\|licence, outcome: verified\|verified_with_conditions\|failed, validUntil, details}` records one (`invalid_check`, `invalid_outcome`, `valid_until_required`, `details_required`). Approving a doctor or hospital without passing checks: `409 verification_required`. Hospital registration/details take `accreditationExpiresOn` and `licenceExpiresOn` (`invalid_accreditation_expiry`, `invalid_licence_expiry`). `GET /api/admin/insights` adds `complianceAlerts`. |
+| GET | `/api/admin/lawyers` · `/lawyers/{id}` · `/lawyers/{id}/documents/{index}` | Lawyer registrations, detail with credential, documents. |
+| POST | `/api/admin/lawyers/{id}/review` | `{outcome, reason?}` like hospitals; approval needs a passing MARN / practising certificate check (`verification_required`). |
+| GET | `/api/admin/visa-cases` | Submitted visa applications (unassigned first) with their lawyer. |
+| POST | `/api/admin/visa-cases/{caseId}/lawyer` | `{lawyerId}` assigns or reassigns an approved lawyer (notified) → the list. `lawyer_not_approved`, `already_assigned`. The overview adds `pendingLawyers` and `visaCasesUnassigned`. |
+| GET / POST | `/api/admin/verifications/{doctor\|hospital\|lawyer}/{id}` | Register checks: `{required: [{checkType, label, passing, current}], allPassing, history, registerUrl}`. POST `{checkType: ahpra\|accreditation\|licence, outcome: verified\|verified_with_conditions\|failed, validUntil, details}` records one (`invalid_check`, `invalid_outcome`, `valid_until_required`, `details_required`). Approving a doctor or hospital without passing checks: `409 verification_required`. Hospital registration/details take `accreditationExpiresOn` and `licenceExpiresOn` (`invalid_accreditation_expiry`, `invalid_licence_expiry`). `GET /api/admin/insights` adds `complianceAlerts`. |
 | GET | `/api/admin/hospitals` | Hospitals registered through the portal, with status, affiliated doctors and plans. |
 | GET | `/api/admin/hospitals/{id}` | Registration detail with documents and review messages. |
 | GET | `/api/admin/hospitals/{id}/documents/{index}` | A registration document (`?download=true`). |

@@ -20,6 +20,9 @@ import com.iha.hospital.HospitalAccountService;
 import com.iha.hospital.HospitalAdminService;
 import com.iha.provider.Hospital;
 import com.iha.provider.HospitalRepository;
+import com.iha.provider.Lawyer;
+import com.iha.lawyer.LawyerAccountService;
+import com.iha.lawyer.LawyerAdminService;
 import com.iha.verification.ProviderVerification;
 import com.iha.verification.VerificationService;
 
@@ -49,6 +52,7 @@ class DevDataSeeder implements ApplicationRunner {
 	static final String DOCTOR_EMAIL = "doctor@demo.local";
 	static final String ADMIN_EMAIL = "admin@demo.local";
 	static final String HOSPITAL_EMAIL = "hospital@demo.local";
+	static final String LAWYER_EMAIL = "lawyer@demo.local";
 
 	private static final Logger log = LoggerFactory.getLogger(DevDataSeeder.class);
 
@@ -66,14 +70,21 @@ class DevDataSeeder implements ApplicationRunner {
 	private final HospitalAdminService hospitalAdmin;
 	private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 	private final VerificationService verification;
+	private final LawyerAccountService lawyerAccounts;
+	private final LawyerAdminService lawyerAdmin;
+	private final DevVisaCase visaCase;
 
 	DevDataSeeder(AppUserRepository users, HospitalRepository hospitals, DoctorRepository doctors,
 			PatientService patients, CaseService cases, DoctorAccountService doctorAccounts,
 			DoctorAdminService doctorAdmin, DoctorCaseService doctorCases, DoctorFeeService doctorFees,
 			DevHistory history, HospitalAccountService hospitalAccounts, HospitalAdminService hospitalAdmin,
 			org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
-			VerificationService verification) {
+			VerificationService verification, LawyerAccountService lawyerAccounts, LawyerAdminService lawyerAdmin,
+			DevVisaCase visaCase) {
 		this.verification = verification;
+		this.lawyerAccounts = lawyerAccounts;
+		this.lawyerAdmin = lawyerAdmin;
+		this.visaCase = visaCase;
 		this.history = history;
 		this.hospitalAccounts = hospitalAccounts;
 		this.hospitalAdmin = hospitalAdmin;
@@ -124,9 +135,14 @@ class DevDataSeeder implements ApplicationRunner {
 		pendingHospital();
 		history.seed(patient, doctor, seeded,
 				(email, name, licence) -> doctor(email, name, licence, List.of("Cardiology"), seeded));
+		Lawyer lawyer = lawyer();
+		pendingLawyer();
+		Hospital stVincents = seeded.get(0);
+		visaCase.seed(patient, doctor, new CurrentUser(stVincents.getUserId(), HOSPITAL_EMAIL, Role.HOSPITAL),
+				stVincents.getId(), lawyer.getId());
 
-		log.info("Dev demo data ready. Sign in as {}, {}, {} or {} with password {}", PATIENT_EMAIL, DOCTOR_EMAIL,
-				HOSPITAL_EMAIL, ADMIN_EMAIL, PASSWORD);
+		log.info("Dev demo data ready. Sign in as {}, {}, {}, {} or {} with password {}", PATIENT_EMAIL, DOCTOR_EMAIL,
+				HOSPITAL_EMAIL, LAWYER_EMAIL, ADMIN_EMAIL, PASSWORD);
 	}
 
 	private Hospital hospital(String name, String city) {
@@ -211,6 +227,37 @@ class DevDataSeeder implements ApplicationRunner {
 		doctorAccounts.declareIndemnity(user, new DoctorAccountService.IndemnityInput("MDA National",
 				"MDA-" + licence, LocalDate.now().plusMonths(9), true, true));
 		return user;
+	}
+
+	/** James Whitfield, a registered migration agent in Sydney: the lawyer demo login. */
+	private Lawyer lawyer() {
+		lawyerAccounts.createAccount(LAWYER_EMAIL, PASSWORD);
+		CurrentUser user = verified(LAWYER_EMAIL, Role.LAWYER);
+		Lawyer lawyer = lawyerAccounts.register(user, new LawyerAccountService.RegistrationInput(
+				new LawyerAccountService.ProfileInput(Lawyer.INDIVIDUAL, "James Whitfield", "51824753556",
+						"+61 2 9000 4400", "Level 5, 60 Martin Place", "Sydney NSW", "2000",
+						"Twelve years of medical treatment (subclass 602) and visitor visa applications.",
+						"Australia/Sydney"),
+				new LawyerAccountService.CredentialInput(Lawyer.MARN, "1712345", null, LocalDate.now().plusMonths(10))),
+				new LawyerAccountService.RegistrationFiles(BytesMultipartFile.pdf("credentialCertificate",
+						"MARN registration"), BytesMultipartFile.pdf("indemnityInsurance", "Professional indemnity"),
+						List.of()));
+		verification.recordDemoChecks(ProviderVerification.LAWYER, lawyer.getId());
+		return lawyerAdmin.review(null, lawyer.getId(), Lawyer.APPROVED, null);
+	}
+
+	/** A law firm waiting in the admin portal's Lawyer Approvals (practising certificate, Victoria). */
+	private void pendingLawyer() {
+		lawyerAccounts.createAccount("pending.lawyer@demo.local", PASSWORD);
+		CurrentUser user = verified("pending.lawyer@demo.local", Role.LAWYER);
+		lawyerAccounts.register(user, new LawyerAccountService.RegistrationInput(
+				new LawyerAccountService.ProfileInput(Lawyer.LAW_FIRM, "Harbourside Immigration Lawyers",
+						"51824753556", "+61 3 9000 5500", "120 Collins Street", "Melbourne VIC", "3000",
+						"Firm of four practitioners; health and visitor visas.", "Australia/Melbourne"),
+				new LawyerAccountService.CredentialInput(Lawyer.PRACTISING_CERTIFICATE, "PC-VIC-48211", "VIC",
+						LocalDate.now().plusMonths(8))),
+				new LawyerAccountService.RegistrationFiles(BytesMultipartFile.pdf("credentialCertificate",
+						"Practising certificate"), null, List.of()));
 	}
 
 	/** The coordinator account for the admin portal. */

@@ -120,7 +120,7 @@ public class HospitalAccountController {
 					.toList());
 	}
 
-	static ResponseEntity<Resource> inline(Resource resource) {
+	public static ResponseEntity<Resource> inline(Resource resource) {
 		return ResponseEntity.ok()
 			.contentType(MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM))
 			.cacheControl(CacheControl.noStore().cachePrivate())

@@ -11,6 +11,8 @@ import java.util.UUID;
 import com.iha.audit.AuditService;
 import com.iha.auth.CurrentUser;
 import com.iha.common.ApiException;
+import com.iha.provider.Lawyer;
+import com.iha.provider.LawyerRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,18 +22,24 @@ import org.springframework.transaction.annotation.Transactional;
  * and again when registrations renew: a doctor's entry on the AHPRA public
  * register (there is no public AHPRA API, so staff search it and record what
  * they found), a hospital's NSQHS accreditation and its state private-hospital
- * licence. The latest check of each kind is the current one.
+ * licence, and a visa lawyer's MARN on the OMARA register or practising
+ * certificate on the state law society's register (whichever the lawyer holds).
+ * The latest check of each kind is the current one.
  */
 @Service
 public class VerificationService {
 
-	/** The checks each kind of provider needs, with their labels. */
+	/** The checks each kind of provider may need, with their labels (a lawyer needs the one matching their credential). */
 	public static final Map<String, Map<String, String>> REQUIRED = Map.of(
 			ProviderVerification.DOCTOR, label(ProviderVerification.AHPRA, "AHPRA registration"),
-			ProviderVerification.HOSPITAL, labels());
+			ProviderVerification.HOSPITAL, labels(),
+			ProviderVerification.LAWYER, lawyerLabels());
 
 	/** The AHPRA public register search. */
 	public static final String AHPRA_REGISTER_URL = "https://www.ahpra.gov.au/Registration/Registers-of-Practitioners.aspx";
+
+	/** The OMARA register of migration agents. */
+	public static final String OMARA_REGISTER_URL = "https://portal.mara.gov.au/search-the-register-of-migration-agents/";
 
 	static final Set<String> OUTCOMES = Set.of(ProviderVerification.VERIFIED,
 			ProviderVerification.VERIFIED_WITH_CONDITIONS, ProviderVerification.FAILED);
@@ -39,18 +47,34 @@ public class VerificationService {
 	private static final ZoneId ZONE = ZoneId.of("Australia/Brisbane");
 
 	private final ProviderVerificationRepository verifications;
+	private final LawyerRepository lawyers;
 	private final AuditService audit;
 
-	VerificationService(ProviderVerificationRepository verifications, AuditService audit) {
+	VerificationService(ProviderVerificationRepository verifications, LawyerRepository lawyers, AuditService audit) {
 		this.verifications = verifications;
+		this.lawyers = lawyers;
 		this.audit = audit;
+	}
+
+	/** The checks this provider needs: a lawyer only the one for the credential they hold. */
+	@Transactional(readOnly = true)
+	public Map<String, String> required(String providerType, UUID providerId) {
+		Map<String, String> all = REQUIRED.get(providerType);
+		if (all == null) {
+			throw ApiException.badRequest("invalid_check", "Unknown check for this provider.");
+		}
+		if (!ProviderVerification.LAWYER.equals(providerType)) {
+			return all;
+		}
+		String credential = lawyers.findById(providerId).map(Lawyer::getCredentialType).orElse(null);
+		return all.containsKey(credential) ? label(credential, all.get(credential)) : all;
 	}
 
 	@Transactional
 	public ProviderVerification record(CurrentUser actor, String providerType, UUID providerId, String checkType,
 			String outcome, LocalDate validUntil, String details) {
-		Map<String, String> required = REQUIRED.get(providerType);
-		if (required == null || !required.containsKey(checkType)) {
+		Map<String, String> required = required(providerType, providerId);
+		if (!required.containsKey(checkType)) {
 			throw ApiException.badRequest("invalid_check", "Unknown check for this provider.");
 		}
 		if (!OUTCOMES.contains(outcome)) {
@@ -75,7 +99,7 @@ public class VerificationService {
 	public Map<String, ProviderVerification> current(String providerType, UUID providerId) {
 		List<ProviderVerification> all = verifications.findByProviderIdOrderByCheckedAtDesc(providerId);
 		Map<String, ProviderVerification> latest = new LinkedHashMap<>();
-		for (String check : REQUIRED.get(providerType).keySet()) {
+		for (String check : required(providerType, providerId).keySet()) {
 			latest.put(check, all.stream().filter(v -> v.getCheckType().equals(check)).findFirst().orElse(null));
 		}
 		return latest;
@@ -84,7 +108,7 @@ public class VerificationService {
 	/** Seed data and dev stand-ins only: passing checks, as if MTA had looked the provider up. */
 	@Transactional
 	public void recordDemoChecks(String providerType, UUID providerId) {
-		for (String check : REQUIRED.get(providerType).keySet()) {
+		for (String check : required(providerType, providerId).keySet()) {
 			record(null, providerType, providerId, check, ProviderVerification.VERIFIED,
 					LocalDate.now(ZONE).plusYears(1), "Demo data");
 		}
@@ -102,7 +126,7 @@ public class VerificationService {
 		current(providerType, providerId).forEach((check, v) -> {
 			if (v == null || !v.passes(today)) {
 				throw ApiException.conflict("verification_required", "Record a passing "
-						+ REQUIRED.get(providerType).get(check) + " check before approving.");
+						+ required(providerType, providerId).get(check) + " check before approving.");
 			}
 		});
 	}
@@ -110,6 +134,13 @@ public class VerificationService {
 	private static Map<String, String> label(String key, String value) {
 		Map<String, String> m = new LinkedHashMap<>();
 		m.put(key, value);
+		return m;
+	}
+
+	private static Map<String, String> lawyerLabels() {
+		Map<String, String> m = new LinkedHashMap<>();
+		m.put(ProviderVerification.MARN, "MARN (OMARA register)");
+		m.put(ProviderVerification.PRACTISING_CERTIFICATE, "Practising certificate");
 		return m;
 	}
 

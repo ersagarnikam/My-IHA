@@ -43,7 +43,9 @@
     "areYouHospital": "Represent a hospital?",
     "registerHospital": "Register your hospital",
     "consentTerms": "I agree to the <terms>terms of use</terms> and <privacy>privacy policy</privacy>.",
-    "consentHealthInfo": "I consent to MTA collecting my health information and sharing it with the doctors, hospitals and visa lawyers who arrange my treatment, some of whom may be outside Australia."
+    "consentHealthInfo": "I consent to MTA collecting my health information and sharing it with the doctors, hospitals and visa lawyers who arrange my treatment, some of whom may be outside Australia.",
+    "areYouLawyer": "Visa lawyer or migration agent?",
+    "registerLawyer": "Register as a visa lawyer"
   },
   "zh": {
     "brand": "MTA",
@@ -89,6 +91,8 @@
     "areYouHospital": "代表医院？",
     "registerHospital": "注册您的医院",
     "consentTerms": "我同意<terms>使用条款</terms>和<privacy>隐私政策</privacy>。",
-    "consentHealthInfo": "我同意MTA收集我的健康信息，并将其提供给为我安排治疗的医生、医院和签证律师（其中部分可能位于澳大利亚境外）。"
+    "consentHealthInfo": "我同意MTA收集我的健康信息，并将其提供给为我安排治疗的医生、医院和签证律师（其中部分可能位于澳大利亚境外）。",
+    "areYouLawyer": "签证律师或移民代理？",
+    "registerLawyer": "注册为签证律师"
   }
 }

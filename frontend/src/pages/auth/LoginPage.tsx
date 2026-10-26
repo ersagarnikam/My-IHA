@@ -60,6 +60,8 @@ export function LoginPage() {
         {t('areYouDoctor')} <Link to="/register/doctor">{t('registerAsDoctor')}</Link>
         <br />
         {t('areYouHospital')} <Link to="/register/hospital">{t('registerHospital')}</Link>
+        <br />
+        {t('areYouLawyer')} <Link to="/register/lawyer">{t('registerLawyer')}</Link>
       </p>
     </AuthShell>
   )

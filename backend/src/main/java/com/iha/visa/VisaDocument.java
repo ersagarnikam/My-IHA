@@ -115,6 +115,25 @@ public class VisaDocument {
 		return doc;
 	}
 
+	/** The approved visa the lawyer uploads; the patient sees it straight away. */
+	public static VisaDocument lawyerIssued(UUID patientId, UUID caseId, UUID visaSubmissionId, String fileName,
+			String filePath, long fileSizeBytes, String mimeType) {
+		VisaDocument doc = new VisaDocument(UUID.randomUUID(), patientId, caseId, visaSubmissionId, APPROVED_VISA,
+				fileName, filePath, fileSizeBytes, mimeType, false);
+		doc.source = LAWYER_ISSUED;
+		doc.sentToPatientAt = Instant.now();
+		return doc;
+	}
+
+	/** Replacing the approved visa: a new file, re-sent to the patient. */
+	public void reissue(String fileName, String filePath, long fileSizeBytes, String mimeType) {
+		this.fileName = fileName;
+		this.filePath = filePath;
+		this.fileSizeBytes = fileSizeBytes;
+		this.mimeType = mimeType;
+		this.sentToPatientAt = Instant.now();
+	}
+
 	/** Regenerating a letter replaces its file; whether it was sent is kept. */
 	public void replaceFile(String fileName, String filePath, long fileSizeBytes) {
 		this.fileName = fileName;

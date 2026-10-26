@@ -119,7 +119,7 @@ class DevHistory {
 		doctorCases.markCompleted(doctor, caseId);
 	}
 
-	private UUID paid(CurrentUser patient, CurrentUser doctor, UUID hospital, String specialty, String procedure,
+	UUID paid(CurrentUser patient, CurrentUser doctor, UUID hospital, String specialty, String procedure,
 			int doctorFee, int hospitalFee, int monthsAgo, int responseHours) {
 		UUID caseId = acceptedCase(patient, doctor, specialty, responseHours);
 		UUID planId = submitPlan(doctor, caseId, hospital, procedure, doctorFee, hospitalFee);

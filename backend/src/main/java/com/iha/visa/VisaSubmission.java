@@ -1,6 +1,7 @@
 package com.iha.visa;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,12 +24,29 @@ public class VisaSubmission {
 
 	public static final String NOT_STARTED = "not_started";
 	public static final String DOCUMENTS_SUBMITTED = "documents_submitted";
+	public static final String UNDER_REVIEW = "under_review";
+	public static final String ADDITIONAL_DOCS_REQUESTED = "additional_docs_requested";
+	public static final String APPLICATION_SUBMITTED = "application_submitted";
 	public static final String PROCESSING = "processing";
 	public static final String APPROVED = "approved";
 	public static final String REJECTED = "rejected";
 
 	/** The patient can no longer add documents once the lawyer has lodged the application. */
 	public static final Set<String> UPLOAD_LOCKED = Set.of("application_submitted", PROCESSING, APPROVED, REJECTED);
+
+	/**
+	 * What the lawyer may move a submission to (old {@code update_visa_submission_status};
+	 * {@code application_submitted} is a legacy source state only).
+	 */
+	public static final Map<String, Set<String>> TRANSITIONS = Map.of(
+			DOCUMENTS_SUBMITTED, Set.of(UNDER_REVIEW),
+			UNDER_REVIEW, Set.of(PROCESSING),
+			ADDITIONAL_DOCS_REQUESTED, Set.of(UNDER_REVIEW, PROCESSING),
+			APPLICATION_SUBMITTED, Set.of(PROCESSING, APPROVED, REJECTED),
+			PROCESSING, Set.of(APPROVED, REJECTED));
+
+	/** Document requests are open while the lawyer is reviewing. */
+	public static final Set<String> REQUESTS_OPEN = Set.of(UNDER_REVIEW, ADDITIONAL_DOCS_REQUESTED);
 
 	@Id
 	private UUID id;
@@ -85,9 +103,22 @@ public class VisaSubmission {
 		this.status = DOCUMENTS_SUBMITTED;
 	}
 
-	/** Used by the visa portal port and tests. */
+	/** MTA admin assigns (or reassigns) the visa lawyer. */
 	public void assignLawyer(UUID lawyerId) {
 		this.assignedLawyerId = lawyerId;
+	}
+
+	/** The lawyer moves the application on; callers check {@link #TRANSITIONS} first. */
+	public void changeStatus(String status, String rejectionReason) {
+		this.status = status;
+		if (REJECTED.equals(status)) {
+			this.rejectionReason = rejectionReason;
+		}
+	}
+
+	/** A document request moves the application to Docs Pending. */
+	public void documentsRequested() {
+		this.status = ADDITIONAL_DOCS_REQUESTED;
 	}
 
 	public UUID getId() {
