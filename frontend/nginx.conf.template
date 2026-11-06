@@ -2,6 +2,11 @@ server {
     listen 80;
     root /usr/share/nginx/html;
 
+    # Look the API up on each request: a variable in proxy_pass makes nginx use this resolver instead of
+    # the address from startup, which goes stale whenever the API container is replaced.
+    resolver ${DNS_RESOLVER} valid=10s;
+    set $api_upstream http://${API_UPSTREAM};
+
     # Matches spring.servlet.multipart.max-request-size.
     client_max_body_size 50m;
 
@@ -11,7 +16,7 @@ server {
 
     # Server-sent events: never buffered, and open for as long as the browser stays.
     location = /api/realtime {
-        proxy_pass http://${API_UPSTREAM};
+        proxy_pass $api_upstream;
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $http_host;
@@ -23,7 +28,7 @@ server {
     }
 
     location /api/ {
-        proxy_pass http://${API_UPSTREAM};
+        proxy_pass $api_upstream;
         proxy_set_header Host $http_host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;

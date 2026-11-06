@@ -1,0 +1,59 @@
+# Throwaway stack for the e2e journeys: the real API image (Java 21) on real PostgreSQL, talking to the
+# local mailbox instead of Resend and Twilio. The dev profile is what seeds the demo accounts and the
+# dev simulation endpoints the journeys use. Test values only; never point this at real data.
+# See documentation/development.md.
+name: iha-e2e
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: iha
+      POSTGRES_USER: iha
+      POSTGRES_PASSWORD: e2e-only
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iha -d iha"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mailbox:
+    image: node:24-alpine
+    command: node /app/server.mjs
+    volumes:
+      - ./tools/mailbox:/app:ro
+    ports:
+      - "127.0.0.1:8025:8025"
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+      mailbox:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/iha
+      SPRING_DATASOURCE_USERNAME: iha
+      SPRING_DATASOURCE_PASSWORD: e2e-only
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: 1800000
+      SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT: 600000
+      IHA_PORTAL_URL: http://localhost:5174
+      RESEND_API_KEY: re_local_mailbox
+      RESEND_BASE_URL: http://mailbox:8025/resend
+      RESEND_FROM_ADDRESS: MTA <noreply@medicaltourismaustralia.com>
+      TWILIO_ACCOUNT_SID: AClocalmailbox
+      TWILIO_AUTH_TOKEN: local-mailbox
+      TWILIO_PHONE_NUMBER: "+61400000000"
+      TWILIO_BASE_URL: http://mailbox:8025/twilio
+    ports:
+      - "127.0.0.1:8081:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s

@@ -39,9 +39,11 @@ services:
       IHA_PORTAL_URL: ${PUBLIC_URL}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_ADDRESS: ${RESEND_FROM_ADDRESS:-MTA <onboarding@resend.dev>}
+      RESEND_BASE_URL: ${RESEND_BASE_URL:-https://api.resend.com}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+      TWILIO_BASE_URL: ${TWILIO_BASE_URL:-https://api.twilio.com}
       IHA_ADMIN_EMAIL: ${IHA_ADMIN_EMAIL:-}
       IHA_ADMIN_PASSWORD: ${IHA_ADMIN_PASSWORD:-}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
@@ -70,6 +72,17 @@ services:
         condition: service_healthy
     ports:
       - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8090}:80"
+
+  # Stands in for Resend and Twilio: COMPOSE_PROFILES=mailbox in .env. Never in production.
+  mailbox:
+    profiles: [mailbox]
+    image: node:24-alpine
+    restart: unless-stopped
+    command: node /app/server.mjs
+    volumes:
+      - ./tools/mailbox:/app:ro
+    ports:
+      - "127.0.0.1:8026:8025"
 
 volumes:
   db-data:

@@ -152,6 +152,19 @@ node smoke.mjs                               # opens every patient/doctor/admin 
 
 `smoke.mjs` signs in as the demo accounts and fails on page crashes, console errors, failed API calls, error panels, missing headings, redirects or horizontal scrolling. Screenshots go to `e2e/shots/` (git-ignored). The scripts expect Chrome at `C:/Program Files/Google/Chrome/Application/chrome.exe`; change `executablePath` elsewhere.
 
+## Test everything on the production stack
+
+`docker-compose.e2e.yml` runs the real API image (Java 21) on PostgreSQL with demo data, and `tools/mailbox` in place of Resend and Twilio. It accepts the same requests and refuses the same mistakes, shows every message at http://localhost:8025, and delivers nothing.
+
+```bash
+docker compose -f docker-compose.e2e.yml up -d --build --wait
+docker compose -f docker-compose.e2e.yml logs -f --no-log-prefix api > api.log &
+PORT=5174 API_URL=http://localhost:8081 npm --prefix frontend run dev
+cd e2e && API_LOG=../api.log E2E_BASE=http://localhost:5174 node journey.mjs
+```
+
+`POST http://localhost:8025/api/fail?count=3` makes the next three sends fail, to test an outage. Each hospital-journey run uses up a paid demo case, so recreate the stack (`up -d --force-recreate`) for repeat runs. The database lives in memory and is lost when the stack stops. This is also the setup for demos: see `docs/demo/`.
+
 ## Continuous integration
 
 GitHub Actions ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs on every push to `main` and every pull request:

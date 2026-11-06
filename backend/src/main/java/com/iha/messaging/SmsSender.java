@@ -56,7 +56,7 @@ public class SmsSender {
 		form.add("Body", message);
 		try {
 			http.post()
-				.uri("https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json", twilio.accountSid())
+				.uri(twilio.baseUrl() + "/2010-04-01/Accounts/{sid}/Messages.json", twilio.accountSid())
 				.headers(headers -> headers.setBasicAuth(twilio.accountSid(), twilio.authToken()))
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.body(form)

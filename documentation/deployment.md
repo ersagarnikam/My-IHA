@@ -7,7 +7,7 @@ The platform is two deployables:
 | API | `cd backend && ./mvnw -DskipTests package` | `backend/target/iha-api-0.0.1-SNAPSHOT.jar` (run with Java 21: `java -jar …`) |
 | Web app | `cd frontend && npm ci && npm run build` | static files in `frontend/dist/` |
 
-Serve `frontend/dist/` from any static host or CDN with a fallback to `index.html` (client-side routing), and route `/api/**` on the same origin to the API (or allow the web origin with `IHA_CORS_ORIGINS`). Keep `/api/realtime` unbuffered — it's a server-sent-events stream (e.g. `proxy_buffering off` in nginx).
+Serve `frontend/dist/` from any static host or CDN with a fallback to `index.html` (client-side routing), and route `/api/**` on the same origin to the API (or allow the web origin with `IHA_CORS_ORIGINS`). The Docker image's nginx re-resolves the API on each request, so replacing the API container doesn't need an nginx restart; outside Docker set `DNS_RESOLVER` to that host's resolver. Keep `/api/realtime` unbuffered — it's a server-sent-events stream (e.g. `proxy_buffering off` in nginx).
 
 ## Docker environment
 
@@ -69,6 +69,8 @@ To try Stripe locally: `IHA_PAYMENTS_PROVIDER=stripe` plus test keys, and forwar
 2. For SMS, set the three `TWILIO_*` variables. Numbers without a country code are treated as Australian.
 
 Messages go out on background threads after the change commits. A failed send is logged without its content and not retried: the same notification is in the portal, and codes can be requested again. Message content goes to Resend and Twilio, so list them as overseas recipients in the privacy policy if they process data outside Australia.
+
+To rehearse all of this with no accounts, use the local mailbox: see `.env.example` and [development.md](development.md#test-everything-on-the-production-stack).
 
 ## Zoom
 

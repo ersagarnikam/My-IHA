@@ -10,6 +10,7 @@ RUN VITE_HOME_URL="$VITE_HOME_URL" npm run build
 FROM nginx:1.29-alpine
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /src/dist /usr/share/nginx/html
-# host:port of the API; the image fills this into the template on start.
-ENV API_UPSTREAM=api:8080
+# The image fills these into the template on start: the API's host:port, and the DNS server that
+# finds it (127.0.0.11 is Docker's own).
+ENV API_UPSTREAM=api:8080 DNS_RESOLVER=127.0.0.11
 EXPOSE 80

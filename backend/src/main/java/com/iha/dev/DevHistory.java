@@ -188,7 +188,9 @@ class DevHistory {
 		treatments.select(patient, option.getId());
 		PaymentService.Checkout checkout = payments.startTreatmentCheckout(patient, caseId);
 		payments.simulateSuccess(patient, checkout.intentId());
-		ZonedDateTime paidAt = ZonedDateTime.now(ZONE).minusMonths(monthsAgo).withDayOfMonth(12);
+		ZonedDateTime now = ZonedDateTime.now(ZONE);
+		ZonedDateTime twelfth = now.minusMonths(monthsAgo).withDayOfMonth(12);
+		ZonedDateTime paidAt = twelfth.isAfter(now) ? now : twelfth;
 		jdbc.update("update payments set paid_at = ?, created_at = ? where case_id = ?", Timestamp.from(paidAt.toInstant()),
 				Timestamp.from(paidAt.toInstant()), caseId);
 		Duration back = Duration.ofDays(monthsAgo * 30L + 20);

@@ -356,7 +356,7 @@
     "costItems": {
       "doctor_fees": "医生费用",
       "hospital_fees": "医院费用",
-      "iha_service_fee": "IHA 服务费"
+      "iha_service_fee": "MTA 服务费"
     },
     "notes": "备注",
     "careTeam": "医疗团队与专家",

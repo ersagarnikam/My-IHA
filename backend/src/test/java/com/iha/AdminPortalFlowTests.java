@@ -202,7 +202,7 @@ class AdminPortalFlowTests {
 		assertThat(caseStatus(caseA)).isEqualTo("treatment_plan");
 		perform(get("/api/patient/cases/" + caseA + "/treatment-options"), patientToken)
 			.andExpect(jsonPath("$.length()").value(1))
-			.andExpect(jsonPath("$[0].costBreakdown.items[?(@.label == 'IHA Service Fee')].amount").value(1400.0));
+			.andExpect(jsonPath("$[0].costBreakdown.items[?(@.label == 'MTA Service Fee')].amount").value(1400.0));
 		perform(post("/api/admin/plans/" + planA + "/reject").contentType(MediaType.APPLICATION_JSON)
 			.content("{\"reason\":\"Too late to decline now\"}"), adminToken)
 			.andExpect(jsonPath("$.code").value("invalid_transition"));

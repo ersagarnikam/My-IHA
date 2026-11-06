@@ -251,7 +251,7 @@ export function AdminPlanDetailPage() {
               onChange={(e) => setCommission(e.target.value)}
             />
             <span className="field-hint">
-              Suggested: 10% of the plan total. The patient sees it as "IHA Service Fee".
+              Suggested: 10% of the plan total. The patient sees it as "MTA Service Fee".
             </span>
           </label>
           <p style={{ margin: 0 }}>

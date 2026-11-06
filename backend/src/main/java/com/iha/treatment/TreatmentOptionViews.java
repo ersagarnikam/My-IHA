@@ -97,7 +97,7 @@ public class TreatmentOptionViews {
 								doctor.getPhotoUrl(), doctor.getYearsExperience()));
 	}
 
-	/** Doctor fees, hospital fees, extra plan items, specialists, then the IHA service fee. */
+	/** Doctor fees, hospital fees, extra plan items, specialists, then the MTA service fee. */
 	CostBreakdown costBreakdown(TreatmentOption option, TreatmentPlan plan, List<TreatmentPlanSpecialist> planSpecialists) {
 		List<CostItem> items = new ArrayList<>();
 		if (isPositive(plan.getDoctorFeesAud())) {
@@ -116,7 +116,7 @@ public class TreatmentOptionViews {
 			items.add(new CostItem(label, s.getCostAud(), null));
 		}
 		if (isPositive(option.getMtaCommissionAud())) {
-			items.add(new CostItem("IHA Service Fee", option.getMtaCommissionAud(), "iha_service_fee"));
+			items.add(new CostItem("MTA Service Fee", option.getMtaCommissionAud(), "iha_service_fee"));
 		}
 		BigDecimal total = items.stream().map(CostItem::amount).reduce(BigDecimal.ZERO, BigDecimal::add);
 		return new CostBreakdown(items, total);

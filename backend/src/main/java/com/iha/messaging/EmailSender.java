@@ -49,7 +49,7 @@ public class EmailSender {
 		}
 		try {
 			http.post()
-				.uri("https://api.resend.com/emails")
+				.uri(resend.baseUrl() + "/emails")
 				.header("Authorization", "Bearer " + resend.apiKey())
 				.contentType(MediaType.APPLICATION_JSON)
 				.body(Map.of("from", resend.fromAddress(), "to", List.of(to), "subject", subject, "html", body.html(),

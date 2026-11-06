@@ -356,7 +356,7 @@
     "costItems": {
       "doctor_fees": "Doctor Fees",
       "hospital_fees": "Hospital Fees",
-      "iha_service_fee": "IHA Service Fee"
+      "iha_service_fee": "MTA Service Fee"
     },
     "notes": "Notes",
     "careTeam": "Care Team & Specialists",

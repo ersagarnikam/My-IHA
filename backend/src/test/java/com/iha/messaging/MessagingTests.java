@@ -17,8 +17,8 @@ import org.springframework.web.client.RestClient;
 
 class MessagingTests {
 
-	private static final MessagingProperties.Resend RESEND = new MessagingProperties.Resend("re_test", "MTA <a@b.test>");
-	private static final MessagingProperties.Twilio TWILIO = new MessagingProperties.Twilio("AC1", "token", "+61400000000");
+	private static final MessagingProperties.Resend RESEND = new MessagingProperties.Resend("re_test", "MTA <a@b.test>", "https://api.resend.com");
+	private static final MessagingProperties.Twilio TWILIO = new MessagingProperties.Twilio("AC1", "token", "+61400000000", "https://api.twilio.com");
 	private static final EmailBody BODY = EmailBody.of("Heading", "Message", null, null, null);
 
 	private static MessagingProperties properties(MessagingProperties.Resend resend, MessagingProperties.Twilio twilio) {
@@ -59,8 +59,8 @@ class MessagingTests {
 	void nothingIsSentWithoutCredentials() {
 		RestClient.Builder builder = RestClient.builder();
 		MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-		MessagingProperties blank = properties(new MessagingProperties.Resend("", "MTA <a@b.test>"),
-				new MessagingProperties.Twilio("", "", ""));
+		MessagingProperties blank = properties(new MessagingProperties.Resend("", "MTA <a@b.test>", "https://api.resend.com"),
+				new MessagingProperties.Twilio("", "", "", "https://api.twilio.com"));
 
 		new EmailSender(blank, builder).send("wei@example.com", "Subject", BODY);
 		new SmsSender(blank, builder).send("+61412345678", "Message");

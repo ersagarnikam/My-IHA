@@ -15,7 +15,8 @@ The project is **mid-migration** from a Next.js + Supabase monorepo to Spring Bo
 | `e2e/` | **New.** Scripted Chrome (puppeteer-core) runs against the local dev servers: `journey.mjs` (patient), `doctor-journey.mjs` (doctor), `admin-journey.mjs` (admin; no API log needed; needs a freshly started API because it approves the one seeded pending doctor), `admin-tools.mjs` (user, audit, case and payment tools plus the live inbox; no API log; needs a fresh API), `hospital-journey.mjs` (hospital; needs the API log), `lawyer-journey.mjs` (lawyer; needs the API log and a freshly started API), `smoke.mjs` (opens every portal page as the demo accounts, desktop + phone; no API log). `E2E_BASE` overrides `http://localhost:5173`, `shot-doctor-dashboard.mjs` (full-page dashboard screenshot). Run with `API_LOG=<api log> node <script>`. |
 | `documentation/` | **New.** Technical docs of the new stack: architecture, development, backend/frontend guides, API reference, data model, patient/doctor portal guides, deployment. |
 | `apps/`, `packages/`, `supabase/` | **Old** Next.js/Supabase code. Kept untouched as the reference for porting. Do not edit; delete only when the user says so. |
-| `docs/` | Technical docs of the **old** stack (per app, per package). The best source for how a feature is supposed to behave. |
+| `docs/` | Technical docs of the **old** stack (per app, per package). The best source for how a feature is supposed to behave. `docs/demo/` is the exception: current demo guides for each portal. |
+| `tools/mailbox/` | **New.** Local stand-in for Resend and Twilio (`docker-compose.e2e.yml`, or `COMPOSE_PROFILES=mailbox`). |
 
 ## Progress tracker
 
@@ -51,17 +52,19 @@ This is how the team sees what is happening. **Every session must keep it curren
 | Admin portal | Done, except provider fee payments (Next) |
 | Australian launch items (refund fees by reason, tax invoices, provider verification, consent and retention) | Done |
 | Environment (Docker: Postgres + API + web) | Local test environment working; not hosted |
-| Real email/SMS | Code built (Resend, Twilio) and unit tested; **not yet tried with real accounts** |
+| Real email/SMS | Works against the local mailbox (real requests, Postgres, Java 21); **not yet tried with real accounts** |
+| Demo guides | Done: `docs/demo/`. Keep them current when a portal changes |
 | Data migration from old Supabase | Not started |
 
 **Last verified (visa lawyer portal, commit `92d600e`):** 32 backend tests, frontend build, all five e2e journeys, and `smoke.mjs` (110 pages) passed.
 
 **Environment (2026-11-06):** `docker-compose.yml`, Dockerfiles and `.env.example`; guide in `documentation/deployment.md`. Runs at http://localhost:8090 with the `prod` profile on Postgres 17, so no demo data; local secrets and the first admin login are in the git-ignored `.env`.
 - Verified: all 13 migrations on Postgres, sign-up with the code from the API log, uploads through nginx, live stream unbuffered, dev API and demo logins absent, data survives `docker compose down`, names encrypted in the database.
-- Not verified in the container: PDF output (invoices, hospital letters) and a full case journey. The e2e scripts need demo data, so they can't run against it.
+- PDFs and every e2e journey now verified on this stack with demo data (`docker-compose.e2e.yml`).
 - Undecided: where it will be hosted.
 
 **Activity log:**
+- 2026-11-06: Added the local mailbox and `docs/demo/`. Fixed nginx failing with 502 after the API container was replaced and renamed the patient-facing fee to "MTA Service Fee". All journeys passed on Postgres and Java 21 with email and SMS through the mailbox; outage recovery and PDFs checked. One hospital-journey run failed once with a browser connection error, cause unknown: it passed on the next two runs.
 - 2026-11-06: Finished the admin portal: users and suspension, adding staff, audit log, My Account, close or complete a case, payment export, live inbox. Fixed lawyer alerts linking to hospitals and the dashboard counting only doctors' registrations.
 - 2026-11-06: Added real email (Resend) and SMS (Twilio). 44 backend tests pass; checked in the Docker environment without provider keys, so no real message has been sent yet.
 - 2026-11-06: Added session coordination rules.
