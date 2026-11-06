@@ -39,6 +39,7 @@ This is how the team sees what is happening. **Every session must keep it curren
 
 | Started | Task | Files or area | Session |
 |---|---|---|---|
+| 2026-11-06 | Admin portal: fix and complete | `backend/.../admin/`, `frontend/src/portals/admin/` | IHA-Dev |
 
 **Status:**
 
@@ -51,7 +52,7 @@ This is how the team sees what is happening. **Every session must keep it curren
 | Admin portal | Core done; follow-ups open (see Next) |
 | Australian launch items (refund fees by reason, tax invoices, provider verification, consent and retention) | Done |
 | Environment (Docker: Postgres + API + web) | Local test environment working; not hosted |
-| Real email/SMS | **Not started; blocks production sign-up** |
+| Real email/SMS | Code built (Resend, Twilio) and unit tested; **not yet tried with real accounts** |
 | Data migration from old Supabase | Not started |
 
 **Last verified (visa lawyer portal, commit `92d600e`):** 32 backend tests, frontend build, all five e2e journeys, and `smoke.mjs` (110 pages) passed.
@@ -62,6 +63,7 @@ This is how the team sees what is happening. **Every session must keep it curren
 - Undecided: where it will be hosted.
 
 **Activity log:**
+- 2026-11-06: Added real email (Resend) and SMS (Twilio). 44 backend tests pass; checked in the Docker environment without provider keys, so no real message has been sent yet.
 - 2026-11-06: Added session coordination rules.
 - 2026-11-06: Added this tracker and the Docker test environment (runs locally).
 - 2026-10-26: Built the visa lawyer portal (`92d600e`).
@@ -69,7 +71,7 @@ This is how the team sees what is happening. **Every session must keep it curren
 
 **Next:**
 1. Choose a host and deploy the test environment.
-2. Wire real email/SMS into `notification/AlertDispatcher` and `auth/VerificationCodeSender`.
+2. Create Resend and Twilio accounts, verify the sending domain, and send a real sign-up code.
 3. Admin follow-ups: live pushes for the admin inbox; user, payment and settings tools.
 4. Provider fee payments for hospitals and lawyers.
 
@@ -91,7 +93,7 @@ This is how the team sees what is happening. **Every session must keep it curren
 - **Demo data:** `dev/DevDataSeeder` (+ `dev/DevHistory`) seeds on every dev start, through the real services: four hospitals; `patient@demo.local`; `doctor@demo.local` (Dr. Amelia Chen) with a new invitation, a case in evaluation (no consultation yet, to try the flow) and a year of history (treated/paid cases backdated over past months, a case lost to another doctor); `peer1@demo.local` and `peer2@demo.local` (Cardiology peers for benchmark/rank). Password for all: `Demo1234`. Tests also run in the dev profile, so seeding runs there too — keep it working.
 - **Dev simulation buttons** (dashed boxes, `import.meta.env.DEV` only) play admin/patient: approve registration, assign a case, upload requested documents, choose a time and pay, **fast-forward a consultation to "taken place"** (`DevTime`), publish a plan, request a follow-up consultation, open chats.
 - Case references are `MTA-<year>-<seq>` (the live system's format).
-- **Not yet built:** real email/SMS (`notification/AlertDispatcher` only logs — users can't verify email in production until this exists), multi-instance realtime (`RealtimeHub` is in-memory), migrating data from the old Supabase project, and doctor-side "no-show" recording for consultations.
+- **Not yet built:** multi-instance realtime (`RealtimeHub` is in-memory), migrating data from the old Supabase project, and doctor-side "no-show" recording for consultations.
 - **Design target:** the user wants the new UI to look like the old Next.js screens (they share screenshots of the old portal). Match the old components in `apps/<portal>/components` (Tailwind slate/cyan-700 palette, Geist font, lucide icons). The patient shell and dashboard already match.
 
 ## Website ↔ portal
@@ -117,7 +119,7 @@ npm install && API_LOG=<path to API log> node journey.mjs   # patient
 API_LOG=<path to API log> node doctor-journey.mjs                # doctor
 ```
 
-- Dev data is in memory: everything is lost on API restart. Register at `/register`; the 6-digit code is printed in the API log (`Verification code for …`). Email/SMS alerts are logged as `[email → …]`.
+- Dev data is in memory: everything is lost on API restart. Register at `/register`; the 6-digit code is printed in the API log (`Verification code for …`). Without Resend/Twilio keys, email and SMS are logged as `[email → …]` (dev only: `iha.messaging.log-content`).
 - Payments default to the simulated provider (`iha.payments.provider=fake`); Stripe needs `IHA_PAYMENTS_PROVIDER=stripe` + `STRIPE_*` keys. Zoom needs `ZOOM_*`.
 - **Claude Code preview servers:** `.claude/launch.json` has `api` (absolute path to `backend\mvnw.cmd` with `-f …\pom.xml -Djava.version=17`, `autoPort: true`) and `web` (`npm --prefix frontend run dev`, port 5173). Relative paths and `cmd /c "cd backend && …"` don't work through the preview tool on Windows. The API always binds 8080 regardless of the port the tool reports. The e2e scripts need an API log file, so for e2e runs stop the preview `api` and start `./mvnw … spring-boot:run > <log>` instead, then hand back to the preview tool.
 - **Sharing a link:** `cloudflared` is installed (`C:\Program Files (x86)\cloudflared\cloudflared.exe`). `cloudflared tunnel --url http://localhost:5173` gives a temporary public URL. The Vite proxy presents `Origin: http://localhost:5173` to the API — without it the API answers 403 "Invalid CORS request" for any other host.
@@ -141,7 +143,8 @@ API_LOG=<path to API log> node doctor-journey.mjs                # doctor
 - **Uploads:** always `Uploads.validate(...)`, which checks size and detects the type from file bytes (`storage/FileType`). Files are served through the API after an ownership check, never by storage path.
 - **Flyway:** migrations are append-only (`V14__…` next). SQL must run on both H2 (PostgreSQL mode) and Postgres: uuid ids generated in Java, `varchar` not `text`, no array defaults, no `gen_random_uuid()`.
 - **Spring Data ignores nested repository interfaces**: one repository per file.
-- **Tests:** `@SpringBootTest` + MockMvc journeys (`PatientJourneyTests`, `PatientCaseFlowTests`, `DoctorPortalFlowTests`, `AdminPortalFlowTests`, `SecurityAndAuthTests` (role matrix, forged tokens, auth codes, cross-user access, demo seed), `FeeSettingsTests`, `RefundTests`, `HospitalPortalFlowTests`, `TimeZoneTests`, `TaxInvoiceTests`, `VerificationTests`, `patient.PrivacyTests`, `LawyerPortalFlowTests`, plus `IhaApplicationTests`; 32 tests). Tests share the in-memory H2 database across Spring contexts but each class with its own `@TempDir` storage, so seeded files may be missing in a test — download files the test stored itself. Seed provider-side data directly in the test until those portals exist; admin steps go through `DoctorAdminService`.
+- **Tests:** `@SpringBootTest` + MockMvc journeys (`PatientJourneyTests`, `PatientCaseFlowTests`, `DoctorPortalFlowTests`, `AdminPortalFlowTests`, `SecurityAndAuthTests` (role matrix, forged tokens, auth codes, cross-user access, demo seed), `FeeSettingsTests`, `RefundTests`, `HospitalPortalFlowTests`, `TimeZoneTests`, `TaxInvoiceTests`, `VerificationTests`, `patient.PrivacyTests`, `LawyerPortalFlowTests`, `messaging.MessagingTests`, `notification.AlertDeliveryTests`, plus `IhaApplicationTests`; 44 tests). Tests share the in-memory H2 database across Spring contexts but each class with its own `@TempDir` storage, so seeded files may be missing in a test — download files the test stored itself. Seed provider-side data directly in the test until those portals exist; admin steps go through `DoctorAdminService`.
+- **Messaging:** `messaging/EmailSender` and `SmsSender` (async, failures logged, never thrown). Never log message content outside dev. Mock them in tests (`AlertDeliveryTests`).
 - **Notifications:** `NotificationService.send` drops a duplicate only when the same user, type, **title** and case repeat within 60 s (matching on type alone used to swallow real back-to-back updates). Give distinct events distinct titles. Doctor names usually already start with "Dr." — use `ConsultationService.withTitle` rather than prefixing.
 
 ## Frontend conventions

@@ -27,7 +27,7 @@ Open `PUBLIC_URL` (http://localhost:8090 by default; port chosen to stay clear o
 | Stop, keeping data | `docker compose down` |
 | Wipe database and uploads | `docker compose down -v` (permanent) |
 
-`.env.example` is set up for a **test** environment: simulated payments and sign-up codes in the API log. For production set `IHA_PAYMENTS_PROVIDER=stripe` with live keys, `IHA_VERIFICATION_LOGCODES=false` and real email first; `WEB_BIND=0.0.0.0` publishes the port, and HTTPS must be terminated in front of it. The compose file has no backups: see the go-live checklist.
+`.env.example` is set up for a **test** environment: simulated payments and sign-up codes in the API log. For production set `IHA_PAYMENTS_PROVIDER=stripe` with live keys, `RESEND_API_KEY`, and `IHA_VERIFICATION_LOGCODES=false`; `WEB_BIND=0.0.0.0` publishes the port, and HTTPS must be terminated in front of it. The compose file has no backups: see the go-live checklist.
 
 ## Environment variables
 
@@ -44,6 +44,9 @@ Start the API with `SPRING_PROFILES_ACTIVE=prod`.
 | `IHA_PAYMENTS_PROVIDER` | no | `stripe` (default in prod) or `fake`. Never `fake` in production. |
 | `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` | for payments | Stripe keys. |
 | `IHA_ADMIN_EMAIL`, `IHA_ADMIN_PASSWORD` | first start | Creates the first MTA admin account if that email doesn't exist (password ≥ 12 characters). Remove them afterwards. |
+| `IHA_PORTAL_URL` | for email | Public address of the portal, used in email links. No trailing slash. |
+| `RESEND_API_KEY`, `RESEND_FROM_ADDRESS` | yes | Email: sign-up and reset codes, alerts. Without a key nothing is sent and users can't verify. |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` | optional | SMS alerts, for users who turned them on. |
 | `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET` | optional | Zoom Server-to-Server OAuth app; without it, scheduled consultations have no meeting link. |
 
 Web app build-time variable: `VITE_HOME_URL` — the public website the portal sends signed-out visitors to (default `https://medicaltourismaustralia.com`; see `frontend/.env.example`).
@@ -59,6 +62,13 @@ PostgreSQL 14+. Flyway applies the migrations on startup; the entities are then 
 3. The same webhook completes patient payments and doctor fees.
 
 To try Stripe locally: `IHA_PAYMENTS_PROVIDER=stripe` plus test keys, and forward events with the Stripe CLI (`stripe listen --forward-to localhost:8080/api/payments/webhook`).
+
+## Email and SMS
+
+1. In Resend, verify the sending domain (DNS records) and create an API key. Set `RESEND_API_KEY`, `RESEND_FROM_ADDRESS` and `IHA_PORTAL_URL`. Resend's shared `onboarding@resend.dev` sender only reaches the account owner's own address.
+2. For SMS, set the three `TWILIO_*` variables. Numbers without a country code are treated as Australian.
+
+Messages go out on background threads after the change commits. A failed send is logged without its content and not retried: the same notification is in the portal, and codes can be requested again. Message content goes to Resend and Twilio, so list them as overseas recipients in the privacy policy if they process data outside Australia.
 
 ## Zoom
 
@@ -83,7 +93,6 @@ The portal's home is https://medicaltourismaustralia.com. Point the website's bu
 
 | Gap | What's needed |
 |---|---|
-| Email and SMS | Wire a provider (e.g. Resend, Twilio) into `notification/AlertDispatcher` and `auth/VerificationCodeSender` — today they only log. **Users can't verify their email in production until this is done.** |
 | Several API instances | `RealtimeHub` is in memory; add a broker before scaling out. |
 | File storage | Local disk only; use shared/object storage for more than one instance. |
 | Data from the old Supabase project | Needs a migration script (decrypt with the old pgcrypto key, re-encrypt with `IHA_PII_KEY`). |
@@ -95,7 +104,7 @@ The portal's home is https://medicaltourismaustralia.com. Point the website's bu
 - [ ] Strong, unique `IHA_JWT_SECRET` and `IHA_PII_KEY` from a secrets manager; `IHA_PII_KEY` backed up.
 - [ ] PostgreSQL backups and storage-directory backups scheduled and tested.
 - [ ] Stripe live keys and webhook secret; a test payment end to end.
-- [ ] Email delivery implemented and verified.
+- [ ] Resend domain verified and a real sign-up code received.
 - [ ] HTTPS everywhere; `IHA_CORS_ORIGINS` limited to the web origin.
 - [ ] `VITE_HOME_URL` set for the environment; website buttons point at the right host.
 - [ ] `/actuator/health` wired to monitoring.

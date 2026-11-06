@@ -74,6 +74,10 @@ public class AppUser {
 		this.passwordHash = unusableHash;
 	}
 
+	public boolean isClosed() {
+		return email.endsWith("@deleted.invalid");
+	}
+
 	public void markEmailVerified() {
 		if (emailVerifiedAt == null) {
 			emailVerifiedAt = Instant.now();

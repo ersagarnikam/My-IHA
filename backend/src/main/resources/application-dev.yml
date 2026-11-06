@@ -25,8 +25,11 @@ iha:
   crypto:
     pii-key: ZGV2LW9ubHktcGlpLWtleS0wMTIzNDU2Nzg5YWJjZGU=
   verification:
-    # Verification codes are written to the log instead of emailed.
+    # Codes also go to the log, so no email account is needed locally.
     log-codes: true
+  messaging:
+    # Without Resend/Twilio keys, messages are written to the log instead.
+    log-content: true
 
 logging:
   level:

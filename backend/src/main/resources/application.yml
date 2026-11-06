@@ -46,6 +46,16 @@ iha:
       secret-key: ${STRIPE_SECRET_KEY:}
       publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
       webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  messaging:
+    # Public address of the portal, for links in emails.
+    portal-url: ${IHA_PORTAL_URL:http://localhost:5173}
+    resend:
+      api-key: ${RESEND_API_KEY:}
+      from-address: ${RESEND_FROM_ADDRESS:MTA <onboarding@resend.dev>}
+    twilio:
+      account-sid: ${TWILIO_ACCOUNT_SID:}
+      auth-token: ${TWILIO_AUTH_TOKEN:}
+      phone-number: ${TWILIO_PHONE_NUMBER:}
   zoom:
     account-id: ${ZOOM_ACCOUNT_ID:}
     client-id: ${ZOOM_CLIENT_ID:}
