@@ -1,0 +1,70 @@
+# A production-style environment: PostgreSQL, the API (prod profile) and the web app behind nginx.
+# Copy .env.example to .env and fill it in, then: docker compose up -d --build
+# See documentation/deployment.md.
+name: iha
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: iha
+      POSTGRES_USER: iha
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?set in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iha -d iha"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:postgresql://db:5432/iha
+      DATABASE_USERNAME: iha
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      IHA_JWT_SECRET: ${IHA_JWT_SECRET:?set in .env}
+      IHA_PII_KEY: ${IHA_PII_KEY:?set in .env}
+      IHA_STORAGE_ROOT: /data/storage
+      IHA_CORS_ORIGINS: ${PUBLIC_URL:?set in .env}
+      IHA_PAYMENTS_PROVIDER: ${IHA_PAYMENTS_PROVIDER:-stripe}
+      IHA_VERIFICATION_LOGCODES: ${IHA_VERIFICATION_LOGCODES:-false}
+      IHA_ADMIN_EMAIL: ${IHA_ADMIN_EMAIL:-}
+      IHA_ADMIN_PASSWORD: ${IHA_ADMIN_PASSWORD:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      ZOOM_ACCOUNT_ID: ${ZOOM_ACCOUNT_ID:-}
+      ZOOM_CLIENT_ID: ${ZOOM_CLIENT_ID:-}
+      ZOOM_CLIENT_SECRET: ${ZOOM_CLIENT_SECRET:-}
+    volumes:
+      - uploads:/data/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_HOME_URL: ${VITE_HOME_URL:-https://medicaltourismaustralia.com}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8090}:80"
+
+volumes:
+  db-data:
+  uploads:

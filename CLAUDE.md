@@ -17,6 +17,62 @@ The project is **mid-migration** from a Next.js + Supabase monorepo to Spring Bo
 | `apps/`, `packages/`, `supabase/` | **Old** Next.js/Supabase code. Kept untouched as the reference for porting. Do not edit; delete only when the user says so. |
 | `docs/` | Technical docs of the **old** stack (per app, per package). The best source for how a feature is supposed to behave. |
 
+## Progress tracker
+
+Last updated: 2026-11-06.
+
+This is how the team sees what is happening. **Every session must keep it current:**
+- Update it when work starts, finishes, gets blocked, or a decision is made, not only at the end.
+- Change the status table and **Next**, set "Last updated", and add one line to **Activity log** (newest first, oldest beyond ten removed; git has the rest).
+- Say what was actually verified and what wasn't. Never mark something done without checking it.
+- Include the tracker change in the same commit as the work, so everyone gets it on pull.
+- No secrets, passwords or patient data: this file is in git.
+
+**Working together across sessions.** CLAUDE.md loads only when a session starts, so another session's changes won't reach you on their own. Before starting any task:
+1. Run `git pull` and `git status`, then re-read this tracker.
+2. Check **In progress now**. If your task overlaps a row, or touches the same files, stop and tell the user instead of carrying on.
+3. Add your row before changing anything. Remove it when you finish or stop, and record the result in the log.
+4. If a row is old and nothing shows that work is still happening, ask the user before taking it over. Never overwrite or revert uncommitted work you didn't make.
+5. For work that runs alongside another session, use a separate git worktree or branch. Migrations are numbered, so claim the next `V<n>` in your row before writing one.
+
+**In progress now:**
+
+| Started | Task | Files or area | Session |
+|---|---|---|---|
+
+**Status:**
+
+| Area | Status |
+|---|---|
+| Patient portal | Done |
+| Doctor portal | Done |
+| Hospital portal | Done |
+| Visa lawyer portal | Done |
+| Admin portal | Core done; follow-ups open (see Next) |
+| Australian launch items (refund fees by reason, tax invoices, provider verification, consent and retention) | Done |
+| Environment (Docker: Postgres + API + web) | Local test environment working; not hosted |
+| Real email/SMS | **Not started; blocks production sign-up** |
+| Data migration from old Supabase | Not started |
+
+**Last verified (visa lawyer portal, commit `92d600e`):** 32 backend tests, frontend build, all five e2e journeys, and `smoke.mjs` (110 pages) passed.
+
+**Environment (2026-11-06):** `docker-compose.yml`, Dockerfiles and `.env.example`; guide in `documentation/deployment.md`. Runs at http://localhost:8090 with the `prod` profile on Postgres 17, so no demo data; local secrets and the first admin login are in the git-ignored `.env`.
+- Verified: all 13 migrations on Postgres, sign-up with the code from the API log, uploads through nginx, live stream unbuffered, dev API and demo logins absent, data survives `docker compose down`, names encrypted in the database.
+- Not verified in the container: PDF output (invoices, hospital letters) and a full case journey. The e2e scripts need demo data, so they can't run against it.
+- Undecided: where it will be hosted.
+
+**Activity log:**
+- 2026-11-06: Added session coordination rules.
+- 2026-11-06: Added this tracker and the Docker test environment (runs locally).
+- 2026-10-26: Built the visa lawyer portal (`92d600e`).
+- 2026-10-26: Finished the hospital portal.
+
+**Next:**
+1. Choose a host and deploy the test environment.
+2. Wire real email/SMS into `notification/AlertDispatcher` and `auth/VerificationCodeSender`.
+3. Admin follow-ups: live pushes for the admin inbox; user, payment and settings tools.
+4. Provider fee payments for hospitals and lawyers.
+
 ## Porting status
 
 - **Done:** the entire patient portal (auth, onboarding/profile, dashboard, cases, documents, treatment options, consultations, payments + invoices, visa wizard and detail, chat, live notifications, English/Chinese). Backend journey tests and the e2e script cover it.
@@ -44,7 +100,7 @@ The project is **mid-migration** from a Next.js + Supabase monorepo to Spring Bo
 
 ## Running locally (this Windows machine)
 
-No pnpm, no Docker, no global Maven. **Only JDK 17 is installed** while the pom targets 21, so always pass `-Djava.version=17`:
+No pnpm, no global Maven. Docker Desktop is installed (engine 29.8, Compose v5.5). **Only JDK 17 is installed** while the pom targets 21, so always pass `-Djava.version=17`:
 
 ```bash
 # backend/  (API on :8080, dev profile, in-memory H2)
@@ -116,6 +172,7 @@ GitHub Actions (`.github/workflows/ci.yml`): API tests on **Java 21** (no `-Djav
 
 ## Before finishing work
 
+0. Update the **Progress tracker** at the top of this file and remove your row from **In progress now**.
 1. `./mvnw -Djava.version=17 test` passes.
 2. `npm run build` in `frontend/` passes.
 3. For UI changes, run `e2e/journey.mjs` and/or `e2e/doctor-journey.mjs` (or click through in the browser) and update `README.md`'s porting status and `documentation/`.

@@ -9,6 +9,26 @@ The platform is two deployables:
 
 Serve `frontend/dist/` from any static host or CDN with a fallback to `index.html` (client-side routing), and route `/api/**` on the same origin to the API (or allow the web origin with `IHA_CORS_ORIGINS`). Keep `/api/realtime` unbuffered — it's a server-sent-events stream (e.g. `proxy_buffering off` in nginx).
 
+## Docker environment
+
+`docker-compose.yml` runs a production-style environment: PostgreSQL, the API (`prod` profile) and the web app behind nginx (`frontend/nginx.conf.template`), which proxies `/api` so the browser stays on one origin. Database and uploads live in the named volumes `iha_db-data` and `iha_uploads`.
+
+```bash
+cp .env.example .env     # fill in: openssl rand -base64 32 for each secret
+docker compose up -d --build --wait
+```
+
+Open `PUBLIC_URL` (http://localhost:8090 by default; port chosen to stay clear of the dev servers). There is no demo data: sign in with `IHA_ADMIN_EMAIL` / `IHA_ADMIN_PASSWORD`, then remove both from `.env`.
+
+| Task | Command |
+|---|---|
+| Sign-up or reset code (test environments) | `docker compose logs api`, look for `code for <email>` |
+| Rebuild after code changes | `docker compose up -d --build --wait` |
+| Stop, keeping data | `docker compose down` |
+| Wipe database and uploads | `docker compose down -v` (permanent) |
+
+`.env.example` is set up for a **test** environment: simulated payments and sign-up codes in the API log. For production set `IHA_PAYMENTS_PROVIDER=stripe` with live keys, `IHA_VERIFICATION_LOGCODES=false` and real email first; `WEB_BIND=0.0.0.0` publishes the port, and HTTPS must be terminated in front of it. The compose file has no backups: see the go-live checklist.
+
 ## Environment variables
 
 Start the API with `SPRING_PROFILES_ACTIVE=prod`.
@@ -64,7 +84,6 @@ The portal's home is https://medicaltourismaustralia.com. Point the website's bu
 | Gap | What's needed |
 |---|---|
 | Email and SMS | Wire a provider (e.g. Resend, Twilio) into `notification/AlertDispatcher` and `auth/VerificationCodeSender` — today they only log. **Users can't verify their email in production until this is done.** |
-| Visa lawyer portal | Not ported; visa processing (lawyer assignment, document requests, approved visas) needs it, or direct database work. |
 | Several API instances | `RealtimeHub` is in memory; add a broker before scaling out. |
 | File storage | Local disk only; use shared/object storage for more than one instance. |
 | Data from the old Supabase project | Needs a migration script (decrypt with the old pgcrypto key, re-encrypt with `IHA_PII_KEY`). |
@@ -72,6 +91,7 @@ The portal's home is https://medicaltourismaustralia.com. Point the website's bu
 ## Go-live checklist
 
 - [ ] `SPRING_PROFILES_ACTIVE=prod`; no dev profile anywhere (it enables demo data and `/api/dev/**`).
+- [ ] `IHA_VERIFICATION_LOGCODES` off and `IHA_ADMIN_*` removed.
 - [ ] Strong, unique `IHA_JWT_SECRET` and `IHA_PII_KEY` from a secrets manager; `IHA_PII_KEY` backed up.
 - [ ] PostgreSQL backups and storage-directory backups scheduled and tested.
 - [ ] Stripe live keys and webhook secret; a test payment end to end.
