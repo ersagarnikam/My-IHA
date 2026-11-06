@@ -921,6 +921,11 @@ label.avatar-large {
   flex-shrink: 0;
 }
 
+a.topbar-user {
+  color: inherit;
+  text-decoration: none;
+}
+
 .topbar-user-text {
   line-height: 1.2;
 }

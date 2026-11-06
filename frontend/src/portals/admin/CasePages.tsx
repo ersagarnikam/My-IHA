@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router'
 import { Download, Eye, FileImage, FileText, UserPlus } from 'lucide-react'
 import { useToast } from '../../components/Toasts'
-import { ErrorState, FormError, Loading, StatusBadge } from '../../components/ui'
+import { ErrorState, Field, FormError, Loading, Modal, StatusBadge } from '../../components/ui'
 import { apiPost, openFile } from '../../lib/api'
+import { fieldError } from '../../components/ui'
 import { useFormat } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { BackHeader, formatDate, PillTabs, SearchBox, usePaged } from '../doctor/shared'
@@ -132,6 +133,103 @@ export function CasesTable({ rows, empty }: { rows: CaseRow[]; empty: string }) 
   )
 }
 
+const IN_PROGRESS_WITH_PAYMENT = ['payment_confirmed', 'visa_processing', 'travel_ready']
+const ENDED = ['completed', 'closed', 'visa_rejected']
+
+/** Ends a case: the doctor normally marks it completed; closing is for anything that won't go ahead. */
+function CaseActions({
+  caseDetail: c,
+  onChanged,
+}: {
+  caseDetail: CaseDetail
+  onChanged: () => void
+}) {
+  const toast = useToast()
+  const [closing, setClosing] = useState(false)
+  const [error, setError] = useState<unknown>(null)
+  const [pending, setPending] = useState(false)
+
+  async function run(path: string, body: unknown, done: string) {
+    setPending(true)
+    setError(null)
+    try {
+      await apiPost(`/api/admin/cases/${c.id}/${path}`, body)
+      toast({ title: done, tone: 'good' })
+      setClosing(false)
+      onChanged()
+    } catch (err) {
+      setError(err)
+    } finally {
+      setPending(false)
+    }
+  }
+
+  if (c.status === 'closed') {
+    return c.closedReason ? (
+      <section className="dr-card">
+        <strong>Closed by MTA.</strong> <span className="muted">{c.closedReason}</span>
+      </section>
+    ) : null
+  }
+  if (ENDED.includes(c.status)) return null
+
+  return (
+    <section className="dr-card stack">
+      <div className="row-between">
+        <span className="muted small">
+          Patient and invited doctors are told when a case ends. Refunds are separate: use Payments.
+        </span>
+        <div className="row-end">
+          {IN_PROGRESS_WITH_PAYMENT.includes(c.status) && (
+            <button
+              type="button"
+              className="ghost-button"
+              disabled={pending}
+              onClick={() => void run('complete', {}, 'Case marked completed.')}
+            >
+              Mark completed
+            </button>
+          )}
+          <button type="button" className="ghost-button" onClick={() => setClosing(true)}>
+            Close case
+          </button>
+        </div>
+      </div>
+      {!closing && <FormError error={error} />}
+      <Modal open={closing} onClose={() => setClosing(false)} title={`Close ${c.referenceNumber}`}>
+        <form
+          className="stack"
+          onSubmit={(event: FormEvent<HTMLFormElement>) => {
+            event.preventDefault()
+            void run(
+              'close',
+              { reason: new FormData(event.currentTarget).get('reason') },
+              'Case closed.',
+            )
+          }}
+        >
+          <p className="muted small" style={{ margin: 0 }}>
+            This can't be undone. The patient and invited doctors get a standard message, not this
+            reason.
+          </p>
+          <Field label="Reason" hint="At least 10 characters." error={fieldError(error, 'reason')}>
+            <textarea name="reason" rows={3} required minLength={10} maxLength={500} />
+          </Field>
+          <FormError error={error} />
+          <div className="row-end">
+            <button type="button" className="ghost-button" onClick={() => setClosing(false)}>
+              Cancel
+            </button>
+            <button type="submit" disabled={pending}>
+              {pending ? 'Closing…' : 'Close case'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </section>
+  )
+}
+
 export function AdminCaseDetailPage() {
   const { caseId } = useParams()
   const format = useFormat()
@@ -155,6 +253,8 @@ export function AdminCaseDetailPage() {
         </span>
         <StatusBadge status={c.status} small />
       </section>
+
+      <CaseActions caseDetail={c} onChanged={() => void detail.reload()} />
 
       {c.patient && (
         <section className="dr-card stack">

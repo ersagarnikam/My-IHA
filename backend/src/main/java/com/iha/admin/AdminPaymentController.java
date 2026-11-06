@@ -1,7 +1,10 @@
 package com.iha.admin;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -10,6 +13,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.iha.audit.AuditService;
 import com.iha.auth.CurrentUser;
 import com.iha.cases.CaseRepository;
 import com.iha.cases.MedicalCase;
@@ -29,7 +33,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,9 +63,12 @@ public class AdminPaymentController {
 	private final DoctorRepository doctors;
 	private final CaseRepository cases;
 	private final RefundService refunds;
+	private final AuditService audit;
 
 	AdminPaymentController(PaymentRepository payments, DoctorFeePaymentRepository feePayments,
-			PatientRepository patients, DoctorRepository doctors, CaseRepository cases, RefundService refunds) {
+			PatientRepository patients, DoctorRepository doctors, CaseRepository cases, RefundService refunds,
+			AuditService audit) {
+		this.audit = audit;
 		this.payments = payments;
 		this.feePayments = feePayments;
 		this.patients = patients;
@@ -79,6 +89,43 @@ public class AdminPaymentController {
 		List<DoctorFeePayment> doctorPayments = caseId != null ? List.of()
 				: feePayments.findAll().stream().filter(p -> p.getPaidAt() != null).toList();
 		return rows(patientPayments, doctorPayments);
+	}
+
+	/** Every payment as a spreadsheet, for MTA's accountant. Dates are in Brisbane time, like admin reporting. */
+	@GetMapping("/export")
+	@Transactional
+	public ResponseEntity<byte[]> export(@AuthenticationPrincipal Jwt jwt) {
+		List<PaymentRow> rows = list(null);
+		CurrentUser actor = CurrentUser.from(jwt);
+		audit.record(actor.id(), actor.email(), "admin", "payments.exported", "payment", null,
+				Map.of("rows", rows.size()));
+		return ResponseEntity.ok()
+			.contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"mta-payments.csv\"")
+			.body(csv(rows).getBytes(StandardCharsets.UTF_8));
+	}
+
+	static String csv(List<PaymentRow> rows) {
+		DateTimeFormatter dates = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.of("Australia/Brisbane"));
+		StringBuilder out = new StringBuilder(
+				"Paid at (Brisbane),Type,Payer,Case,Amount AUD,Refunded AUD,Back to card AUD,Status,Provider,Reference\r\n");
+		for (PaymentRow r : rows) {
+			out.append(String.join(",", cell(r.paidAt() == null ? null : dates.format(r.paidAt())), cell(r.type()),
+					cell(r.payerName()), cell(r.caseReference()), r.amountAud().toPlainString(),
+					r.refundedAud().toPlainString(), r.refundedToCardAud().toPlainString(), cell(r.status()),
+					cell(r.gateway()), cell(r.gatewayReference())))
+				.append("\r\n");
+		}
+		return out.toString();
+	}
+
+	/** Names are user input: quote them, and stop spreadsheets running one as a formula. */
+	private static String cell(String value) {
+		if (value == null) {
+			return "";
+		}
+		String safe = value.isEmpty() || "=+-@\t\r".indexOf(value.charAt(0)) < 0 ? value : "'" + value;
+		return '"' + safe.replace("\"", "\"\"") + '"';
 	}
 
 	@GetMapping("/{kind}/{paymentId}")

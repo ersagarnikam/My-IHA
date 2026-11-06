@@ -82,10 +82,20 @@ export function AdminDashboardPage() {
 
       <div className="dash-stats admin">
         <Tile
-          to="/admin/doctors"
+          to={
+            i.attention.pendingDoctors > 0
+              ? '/admin/doctors'
+              : i.attention.pendingHospitals > 0
+                ? '/admin/hospitals'
+                : i.attention.pendingLawyers > 0
+                  ? '/admin/lawyers'
+                  : '/admin/doctors'
+          }
           icon={Stethoscope}
-          label="Doctor registrations to review"
-          value={i.attention.pendingDoctors}
+          label="Registrations to review"
+          value={
+            i.attention.pendingDoctors + i.attention.pendingHospitals + i.attention.pendingLawyers
+          }
         />
         <Tile
           to="/admin/cases"
@@ -428,7 +438,7 @@ function NudgeCard({ insights: i }: { insights: Insights }) {
             : c.status === 'failed'
               ? `Check failed ${formatDate(c.date)}`
               : `${c.status === 'expired' ? 'Expired' : 'Expires'} ${formatDate(c.date)}`,
-        to: `/admin/${c.providerType === 'doctor' ? 'doctors' : 'hospitals'}/${c.providerId}`,
+        to: `/admin/${{ doctor: 'doctors', hospital: 'hospitals', lawyer: 'lawyers' }[c.providerType]}/${c.providerId}`,
       }),
     ),
     ...i.waitingInvitations.map(

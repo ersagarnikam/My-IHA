@@ -33,6 +33,12 @@ public class AppUser {
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
+	@Column(name = "suspended_at")
+	private Instant suspendedAt;
+
+	@Column(name = "suspended_reason")
+	private String suspendedReason;
+
 	protected AppUser() {
 	}
 
@@ -72,6 +78,24 @@ public class AppUser {
 	public void close(String placeholderEmail, String unusableHash) {
 		this.email = placeholderEmail;
 		this.passwordHash = unusableHash;
+	}
+
+	public void suspend(String reason) {
+		suspendedAt = Instant.now();
+		suspendedReason = reason;
+	}
+
+	public void reactivate() {
+		suspendedAt = null;
+		suspendedReason = null;
+	}
+
+	public boolean isSuspended() {
+		return suspendedAt != null;
+	}
+
+	public String getSuspendedReason() {
+		return suspendedReason;
 	}
 
 	public boolean isClosed() {

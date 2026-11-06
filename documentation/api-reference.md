@@ -269,6 +269,21 @@ See the [admin portal](admin-portal.md) guide.
 | POST | `/api/admin/chats/{kind}/{id}/open` · `/close` | Open or close the conversation. |
 | POST | `/api/admin/chats/{kind}/{id}/messages` | `{body}`. |
 
+### Admin tools
+
+| Method and path | Purpose |
+|---|---|
+| `GET /api/admin/users`, `GET /api/admin/users/{id}` | All accounts; one account with its cases and recent activity. |
+| `POST /api/admin/users/{id}/suspend` | `{ reason }` (10–500 characters). `409 cannot_suspend_self`, `409 account_closed`. |
+| `POST /api/admin/users/{id}/reactivate`, `/password-reset`, `/resend-verification` | Account help. Resend answers `409 already_verified` once verified. |
+| `POST /api/admin/users/admins` | `{ email }`: new MTA staff. `409 email_taken`. |
+| `GET /api/admin/audit?q=&page=` | Audit log, 50 to a page. |
+| `POST /api/admin/cases/{id}/close` | `{ reason }`. `409 invalid_case_status` once the case has ended. |
+| `POST /api/admin/cases/{id}/complete` | Paid cases only. `409 invalid_case_status` otherwise. |
+| `GET /api/admin/payments/export` | Every payment as CSV. |
+
+A suspended account gets `403 account_suspended` at sign-in and `401 account_suspended` on every request with a token it already holds.
+
 ## Development only (`dev` profile)
 
 Not available in production. They act only on the caller's own records.

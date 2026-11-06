@@ -10,6 +10,10 @@ import com.iha.auth.JwtProperties;
 import com.iha.auth.TokenService;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
+import com.iha.auth.AppUserRepository;
+import com.iha.auth.SuspendedAccountFilter;
+
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -40,7 +44,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http, AppUserRepository users) throws Exception {
 		http.csrf(csrf -> csrf.disable())
 			.cors(Customizer.withDefaults())
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -58,7 +62,8 @@ public class SecurityConfig {
 				.requestMatchers("/api/lawyer/**").hasRole("LAWYER")
 				.requestMatchers("/api/admin/**").hasRole("ADMIN")
 				.anyRequest().authenticated())
-			.oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+			.oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+			.addFilterAfter(new SuspendedAccountFilter(users), BearerTokenAuthenticationFilter.class);
 		return http.build();
 	}
 

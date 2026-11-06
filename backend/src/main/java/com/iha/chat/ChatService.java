@@ -11,6 +11,7 @@ import com.iha.patient.Patient;
 import com.iha.patient.PatientRegisteredEvent;
 import com.iha.patient.PatientRepository;
 import com.iha.patient.PatientService;
+import com.iha.realtime.AdminInboxEvent;
 import com.iha.realtime.RealtimeEvent;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -70,6 +71,7 @@ public class ChatService {
 		}
 		ChatMessage message = messages.save(new ChatMessage(thread.getId(), user.id(), ChatMessage.PATIENT, body.trim()));
 		events.publishEvent(new RealtimeEvent(user.id(), "chat_message", ChatController.MessageResponse.of(message)));
+		events.publishEvent(new AdminInboxEvent("patient"));
 		return message;
 	}
 
@@ -87,6 +89,7 @@ public class ChatService {
 			throw ApiException.conflict("thread_open", "This conversation is already open.");
 		}
 		thread.requestReopen(reason.trim());
+		events.publishEvent(new AdminInboxEvent("patient"));
 		audit.record(user.id(), user.email(), "patient", "chat.reopen_requested", "chat_thread", thread.getId(),
 				Map.of());
 		return thread;

@@ -85,6 +85,7 @@ export type Assignment = {
 }
 
 export type CaseDetail = {
+  closedReason: string | null
   id: string
   referenceNumber: string
   specialty: string
@@ -264,6 +265,8 @@ export type Insights = {
   }
   attention: {
     pendingDoctors: number
+    pendingHospitals: number
+    pendingLawyers: number
     casesNeedingDoctor: number
     plansToReview: number
     chatsWaiting: number
@@ -442,4 +445,36 @@ export function paymentStatus(p: Pick<AdminPayment, 'status' | 'refundedAud'>): 
   if (p.status === 'completed' && p.refundedAud > 0) return ['Partly refunded', 'badge-warn']
   if (p.status === 'completed') return ['Paid', 'badge-good']
   return [p.status, 'badge-muted']
+}
+
+export type UserRole = 'PATIENT' | 'DOCTOR' | 'HOSPITAL' | 'LAWYER' | 'ADMIN'
+
+export type AdminUser = {
+  id: string
+  email: string | null
+  role: UserRole
+  name: string | null
+  providerId: string | null
+  status: 'active' | 'unverified' | 'suspended' | 'closed'
+  createdAt: string
+}
+
+export type AuditEntry = {
+  id: string
+  actorEmail: string | null
+  app: string
+  action: string
+  entityType: string | null
+  entityId: string | null
+  metadata: string
+  createdAt: string
+}
+
+export type AuditPage = { rows: AuditEntry[]; page: number; pages: number; total: number }
+
+export type AdminUserDetail = {
+  user: AdminUser
+  suspendedReason: string | null
+  cases: { id: string; referenceNumber: string; status: string }[]
+  activity: AuditEntry[]
 }

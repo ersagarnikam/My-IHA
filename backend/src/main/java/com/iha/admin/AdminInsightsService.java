@@ -37,6 +37,8 @@ import com.iha.patient.Patient;
 import com.iha.patient.PatientRepository;
 import com.iha.payment.Payment;
 import com.iha.payment.PaymentRepository;
+import com.iha.hospital.HospitalAdminService;
+import com.iha.lawyer.LawyerAdminService;
 import com.iha.provider.Doctor;
 import com.iha.provider.DoctorCaseAssignment;
 import com.iha.provider.DoctorCaseAssignmentRepository;
@@ -87,6 +89,8 @@ public class AdminInsightsService {
 			new Stage("closed", "Closed or visa refused", EnumSet.of(CaseStatus.CLOSED, CaseStatus.VISA_REJECTED)));
 
 	private final AdminService admin;
+	private final HospitalAdminService hospitalAdmin;
+	private final LawyerAdminService lawyerAdmin;
 	private final DoctorRepository doctors;
 	private final DoctorCaseAssignmentRepository assignments;
 	private final CaseRepository cases;
@@ -105,8 +109,11 @@ public class AdminInsightsService {
 			CaseRepository cases, PatientRepository patients, TreatmentPlanRepository plans,
 			TreatmentOptionRepository options, PaymentRepository payments, DoctorFeePaymentRepository feePayments,
 			ConsultationRequestRepository consultations, ConsultationSlotRepository slots,
-			ConsultationService consultationService, RefundService refunds, ComplianceService compliance) {
+			ConsultationService consultationService, RefundService refunds, ComplianceService compliance,
+			HospitalAdminService hospitalAdmin, LawyerAdminService lawyerAdmin) {
 		this.compliance = compliance;
+		this.hospitalAdmin = hospitalAdmin;
+		this.lawyerAdmin = lawyerAdmin;
 		this.admin = admin;
 		this.doctors = doctors;
 		this.assignments = assignments;
@@ -253,7 +260,8 @@ public class AdminInsightsService {
 			.sorted(Comparator.comparing(FeeAlert::status).thenComparing(FeeAlert::fullName))
 			.toList();
 
-		return new Insights(platform, new Attention(overview.pendingDoctors(), overview.casesNeedingDoctor(),
+		return new Insights(platform, new Attention(overview.pendingDoctors(), hospitalAdmin.pendingCount(), lawyerAdmin.pendingCount(),
+				overview.casesNeedingDoctor(),
 				overview.plansToReview(), overview.chatsWaiting()), money, pipeline, doctorsByStatus, doctorStats,
 				specialtyCoverage, waiting, feeAlerts, compliance.alerts(), upcoming(s, now));
 	}
@@ -426,7 +434,7 @@ public class AdminInsightsService {
 			long casesInProgress, long casesCompleted, long newCasesThisMonth) {
 	}
 
-	public record Attention(long pendingDoctors, long casesNeedingDoctor, long plansToReview, long chatsWaiting) {
+	public record Attention(long pendingDoctors, long pendingHospitals, long pendingLawyers, long casesNeedingDoctor, long plansToReview, long chatsWaiting) {
 	}
 
 	/** Payments in the last 12 months less what was refunded to the card; {@code monthly} covers 12 calendar months. */

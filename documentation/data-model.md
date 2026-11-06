@@ -130,3 +130,11 @@ Two kinds share one table (`consultation_requests.kind`):
 | `doctor_fee_payments` | `registration` / `annual` | doctor starts checkout | webhook → doctor fee dates |
 
 Status: `pending` → `completed` or `failed`. At most one pending row per purpose (locked get-or-create).
+
+## Admin tools (V14)
+
+| Column | Meaning |
+|---|---|
+| `app_users.suspended_at`, `suspended_reason` | Set while MTA has suspended the account; the reason is staff-only. Both cleared on reactivation. |
+| `cases.closed_reason` | Why MTA closed the case. Staff-only. |
+

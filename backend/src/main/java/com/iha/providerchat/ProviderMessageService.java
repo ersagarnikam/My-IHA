@@ -9,6 +9,7 @@ import java.util.UUID;
 import com.iha.audit.AuditService;
 import com.iha.common.ApiException;
 import com.iha.notification.NotificationService;
+import com.iha.realtime.AdminInboxEvent;
 import com.iha.realtime.RealtimeEvent;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -67,6 +68,7 @@ public class ProviderMessageService {
 		ProviderMessage message = messages.save(new ProviderMessage(thread.getId(), account.userId(), account.type(),
 				body.trim()));
 		events.publishEvent(new RealtimeEvent(account.userId(), "provider_message", MessageView.of(message)));
+		events.publishEvent(new AdminInboxEvent("provider"));
 		audit.record(account.userId(), email, account.type(), "provider_message.sent", "provider_message_thread",
 				thread.getId(), Map.of());
 		return message;
@@ -84,6 +86,7 @@ public class ProviderMessageService {
 			throw ApiException.conflict("thread_open", "This conversation is already open.");
 		}
 		thread.requestReopen(reason.trim());
+		events.publishEvent(new AdminInboxEvent("provider"));
 		audit.record(account.userId(), email, account.type(), "provider_message.reopen_requested",
 				"provider_message_thread", thread.getId(), Map.of());
 	}

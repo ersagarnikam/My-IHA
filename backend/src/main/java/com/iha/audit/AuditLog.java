@@ -56,6 +56,26 @@ public class AuditLog {
 		this.createdAt = Instant.now();
 	}
 
+	public UUID getId() {
+		return id;
+	}
+
+	public String getActorEmail() {
+		return actorEmail;
+	}
+
+	public String getApp() {
+		return app;
+	}
+
+	public String getEntityType() {
+		return entityType;
+	}
+
+	public Instant getCreatedAt() {
+		return createdAt;
+	}
+
 	public String getAction() {
 		return action;
 	}

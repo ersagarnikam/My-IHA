@@ -93,6 +93,9 @@ public class AuthService {
 		if (!user.isEmailVerified()) {
 			throw ApiException.forbidden("email_not_verified", "Please verify your email before signing in.");
 		}
+		if (user.isSuspended()) {
+			throw ApiException.forbidden("account_suspended", "This account is suspended. Please contact MTA.");
+		}
 		signInGuards.forEach(guard -> guard.check(user));
 		audit.record(user.getId(), user.getEmail(), app(user), "auth.login", "user", user.getId(), Map.of());
 		return issue(user);

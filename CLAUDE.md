@@ -12,7 +12,7 @@ The project is **mid-migration** from a Next.js + Supabase monorepo to Spring Bo
 |---|---|
 | `backend/` | **New.** Java 21, Spring Boot 4.1, Spring Security (JWT), Spring Data JPA, Flyway. H2 in dev, PostgreSQL in prod. |
 | `frontend/` | **New.** React 19, TypeScript, Vite, React Router 7. One SPA with a route tree per role. |
-| `e2e/` | **New.** Scripted Chrome (puppeteer-core) runs against the local dev servers: `journey.mjs` (patient), `doctor-journey.mjs` (doctor), `admin-journey.mjs` (admin; no API log needed; needs a freshly started API because it approves the one seeded pending doctor), `hospital-journey.mjs` (hospital; needs the API log), `lawyer-journey.mjs` (lawyer; needs the API log and a freshly started API), `smoke.mjs` (opens every portal page as the demo accounts, desktop + phone; no API log). `E2E_BASE` overrides `http://localhost:5173`, `shot-doctor-dashboard.mjs` (full-page dashboard screenshot). Run with `API_LOG=<api log> node <script>`. |
+| `e2e/` | **New.** Scripted Chrome (puppeteer-core) runs against the local dev servers: `journey.mjs` (patient), `doctor-journey.mjs` (doctor), `admin-journey.mjs` (admin; no API log needed; needs a freshly started API because it approves the one seeded pending doctor), `admin-tools.mjs` (user, audit, case and payment tools plus the live inbox; no API log; needs a fresh API), `hospital-journey.mjs` (hospital; needs the API log), `lawyer-journey.mjs` (lawyer; needs the API log and a freshly started API), `smoke.mjs` (opens every portal page as the demo accounts, desktop + phone; no API log). `E2E_BASE` overrides `http://localhost:5173`, `shot-doctor-dashboard.mjs` (full-page dashboard screenshot). Run with `API_LOG=<api log> node <script>`. |
 | `documentation/` | **New.** Technical docs of the new stack: architecture, development, backend/frontend guides, API reference, data model, patient/doctor portal guides, deployment. |
 | `apps/`, `packages/`, `supabase/` | **Old** Next.js/Supabase code. Kept untouched as the reference for porting. Do not edit; delete only when the user says so. |
 | `docs/` | Technical docs of the **old** stack (per app, per package). The best source for how a feature is supposed to behave. |
@@ -39,7 +39,6 @@ This is how the team sees what is happening. **Every session must keep it curren
 
 | Started | Task | Files or area | Session |
 |---|---|---|---|
-| 2026-11-06 | Admin portal: fix and complete | `backend/.../admin/`, `frontend/src/portals/admin/` | IHA-Dev |
 
 **Status:**
 
@@ -49,7 +48,7 @@ This is how the team sees what is happening. **Every session must keep it curren
 | Doctor portal | Done |
 | Hospital portal | Done |
 | Visa lawyer portal | Done |
-| Admin portal | Core done; follow-ups open (see Next) |
+| Admin portal | Done, except provider fee payments (Next) |
 | Australian launch items (refund fees by reason, tax invoices, provider verification, consent and retention) | Done |
 | Environment (Docker: Postgres + API + web) | Local test environment working; not hosted |
 | Real email/SMS | Code built (Resend, Twilio) and unit tested; **not yet tried with real accounts** |
@@ -63,6 +62,7 @@ This is how the team sees what is happening. **Every session must keep it curren
 - Undecided: where it will be hosted.
 
 **Activity log:**
+- 2026-11-06: Finished the admin portal: users and suspension, adding staff, audit log, My Account, close or complete a case, payment export, live inbox. Fixed lawyer alerts linking to hospitals and the dashboard counting only doctors' registrations.
 - 2026-11-06: Added real email (Resend) and SMS (Twilio). 44 backend tests pass; checked in the Docker environment without provider keys, so no real message has been sent yet.
 - 2026-11-06: Added session coordination rules.
 - 2026-11-06: Added this tracker and the Docker test environment (runs locally).
@@ -72,8 +72,7 @@ This is how the team sees what is happening. **Every session must keep it curren
 **Next:**
 1. Choose a host and deploy the test environment.
 2. Create Resend and Twilio accounts, verify the sending domain, and send a real sign-up code.
-3. Admin follow-ups: live pushes for the admin inbox; user, payment and settings tools.
-4. Provider fee payments for hospitals and lawyers.
+3. Provider fee payments for hospitals and lawyers.
 
 ## Porting status
 
@@ -85,8 +84,8 @@ This is how the team sees what is happening. **Every session must keep it curren
 - **Started (2026-10-21):** admin portal — backend `admin/` (AdminService, AdminController, AdminChatController, AdminBootstrap via IHA_ADMIN_EMAIL/IHA_ADMIN_PASSWORD), migration V6 (plan rejection_reason), frontend `portals/admin/` (dashboard with live insights from `AdminInsightsService` — no invented numbers, doctor approvals with per-doctor performance, cases + assign, plan review publish/decline, messages inbox, Settings → platform fees with change history via `fees/FeeSettingsService`, migration V7; Payments → full/partial refunds via `refund/RefundService` with the card processing fee deducted once per payment unless waived, credit notes, migration V8). Tests: `AdminPortalFlowTests`, `e2e/admin-journey.mjs`. Demo login `admin@demo.local` / `Demo1234`. Guide: `documentation/admin-portal.md`.
 - **Done (2026-10-26):** hospital portal — backend `hospital/` (HospitalAccountService, HospitalPortalService, HospitalLetterRenderer, HospitalAdminService, HospitalPaymentListener), admin Hospital Approvals (`AdminHospitalController`, `portals/admin/HospitalPages.tsx`), frontend `portals/hospital/` (English only). A hospital sees a case once a non-draft plan names it; case pages are keyed by **plan id**. Its only write action is the two visa letters (PDFBox), which unlock the patient's visa application once both are sent. Hospitals aren't charged fees yet. Demo `hospital@demo.local` (St Vincent's) and `pending.hospital@demo.local`. Tests: `HospitalPortalFlowTests`, `e2e/hospital-journey.mjs`. Guide: `documentation/hospital-portal.md`.
 - **Done (2026-10-26):** visa lawyer portal — backend `lawyer/` (LawyerAccountService, LawyerCaseService, LawyerAdminService), `visa/VisaCaseNote`, admin Lawyer Approvals and Visa Cases (`AdminLawyerController`, `portals/admin/LawyerPages.tsx`), frontend `portals/lawyer/` (English only), migration V13. Lawyers register with a MARN or a practising certificate; approval needs a passing register check. A lawyer sees only submissions assigned to them (404 otherwise); `VisaSubmission.TRANSITIONS` is the status workflow and the case status follows. Lawyers aren't charged fees yet. Demo `lawyer@demo.local` (James Whitfield, with a submitted visa application from `dev/DevVisaCase`) and `pending.lawyer@demo.local`. Tests: `LawyerPortalFlowTests`, `e2e/lawyer-journey.mjs`. Guide: `documentation/lawyer-portal.md`.
-- **Next:** admin follow-ups (live pushes for the admin inbox, user/payment/settings tools); provider fee payments for hospitals and lawyers.
-  - Admin-side operations already written as services: `DoctorAdminService` (review doctor, assign case, publish plan), `ProviderMessageService.open/close/sendAsAdmin`, `ChatService.openThread/sendAsAdmin`, `CaseStatusService.transition`, `VisaSubmission.assignLawyer`. Expose them under `/api/admin/**`.
+- **Done (2026-11-06):** admin tools: `AdminUserService` (users, suspension via `auth/SuspendedAccountFilter`, staff), `AdminCaseService` (close, complete), audit search, payment CSV, `admin_inbox` pushes, migration V14. Tests: `AdminToolsTests`, `e2e/admin-tools.mjs`.
+- **Next:** provider fee payments for hospitals and lawyers.
   - Provider chat is generic (`ProviderAccount` type doctor/hospital/lawyer): hospital and lawyer portals reuse `ProviderMessageService`.
   - Doctor fee payments ride the shared `PaymentGateway`/webhook: `PaymentService` publishes `UnmatchedIntentEvent` for intents that aren't patient payments; `DoctorFeeService` claims them. Do the same for any new payment type.
   - **Dev stand-ins** (`dev/DevSimulationController.java`, `dev/DoctorDevController.java`, `portals/patient/DevPanel.tsx`, `portals/doctor/DevPanel.tsx`) are kept for now: the patient and doctor e2e scripts use them, and the hospital step has no real portal yet. Remove them once the scripts drive the real portals.
@@ -141,9 +140,9 @@ API_LOG=<path to API log> node doctor-journey.mjs                # doctor
 - **Errors:** throw `ApiException` (status + stable `code` + user-safe message) or `FieldValidationException`; both render as problem details with `code` / `fieldErrors`.
 - **Encrypted columns** (`*_enc`) use the JPA converters in `crypto/` (string, date, decimal, string list). Never log their values; audit entries record only that something changed.
 - **Uploads:** always `Uploads.validate(...)`, which checks size and detects the type from file bytes (`storage/FileType`). Files are served through the API after an ownership check, never by storage path.
-- **Flyway:** migrations are append-only (`V14__…` next). SQL must run on both H2 (PostgreSQL mode) and Postgres: uuid ids generated in Java, `varchar` not `text`, no array defaults, no `gen_random_uuid()`.
+- **Flyway:** migrations are append-only (`V15__…` next). SQL must run on both H2 (PostgreSQL mode) and Postgres: uuid ids generated in Java, `varchar` not `text`, no array defaults, no `gen_random_uuid()`.
 - **Spring Data ignores nested repository interfaces**: one repository per file.
-- **Tests:** `@SpringBootTest` + MockMvc journeys (`PatientJourneyTests`, `PatientCaseFlowTests`, `DoctorPortalFlowTests`, `AdminPortalFlowTests`, `SecurityAndAuthTests` (role matrix, forged tokens, auth codes, cross-user access, demo seed), `FeeSettingsTests`, `RefundTests`, `HospitalPortalFlowTests`, `TimeZoneTests`, `TaxInvoiceTests`, `VerificationTests`, `patient.PrivacyTests`, `LawyerPortalFlowTests`, `messaging.MessagingTests`, `notification.AlertDeliveryTests`, plus `IhaApplicationTests`; 44 tests). Tests share the in-memory H2 database across Spring contexts but each class with its own `@TempDir` storage, so seeded files may be missing in a test — download files the test stored itself. Seed provider-side data directly in the test until those portals exist; admin steps go through `DoctorAdminService`.
+- **Tests:** `@SpringBootTest` + MockMvc journeys (`PatientJourneyTests`, `PatientCaseFlowTests`, `DoctorPortalFlowTests`, `AdminPortalFlowTests`, `SecurityAndAuthTests` (role matrix, forged tokens, auth codes, cross-user access, demo seed), `FeeSettingsTests`, `RefundTests`, `HospitalPortalFlowTests`, `TimeZoneTests`, `TaxInvoiceTests`, `VerificationTests`, `patient.PrivacyTests`, `LawyerPortalFlowTests`, `messaging.MessagingTests`, `notification.AlertDeliveryTests`, `AdminToolsTests`, `admin.PaymentCsvTests`, plus `IhaApplicationTests`; 52 tests). Tests share the in-memory H2 database across Spring contexts but each class with its own `@TempDir` storage, so seeded files may be missing in a test — download files the test stored itself. Seed provider-side data directly in the test until those portals exist; admin steps go through `DoctorAdminService`.
 - **Messaging:** `messaging/EmailSender` and `SmsSender` (async, failures logged, never thrown). Never log message content outside dev. Mock them in tests (`AlertDeliveryTests`).
 - **Notifications:** `NotificationService.send` drops a duplicate only when the same user, type, **title** and case repeat within 60 s (matching on type alone used to swallow real back-to-back updates). Give distinct events distinct titles. Doctor names usually already start with "Dr." — use `ConsultationService.withTitle` rather than prefixing.
 

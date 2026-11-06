@@ -3,6 +3,7 @@ import { useOutletContext, useSearchParams } from 'react-router'
 import { ErrorState, FormError, Loading } from '../../components/ui'
 import { apiPost } from '../../lib/api'
 import { useFormat } from '../../lib/format'
+import { useRealtime } from '../../lib/realtime'
 import { useApi } from '../../lib/useApi'
 import type { AdminOutletContext } from './AdminLayout'
 import type { Thread, ThreadRow } from './types'
@@ -23,9 +24,10 @@ export function AdminMessagesPage() {
   const selectedKind = params.get('kind') ?? 'patient'
   const [filter, setFilter] = useState<'all' | 'patient' | 'provider'>('all')
 
-  // New patient/provider messages don't push to admins yet; poll the inbox.
+  // New messages arrive live; the slow poll only covers a dropped connection.
+  useRealtime('admin_inbox', () => void list.reload())
   useEffect(() => {
-    const timer = setInterval(() => void list.reload(), 20_000)
+    const timer = setInterval(() => void list.reload(), 60_000)
     return () => clearInterval(timer)
   }, [list.reload])
 
@@ -98,6 +100,7 @@ function ThreadPane({ kind, id, onChanged }: { kind: string; id: string; onChang
   const format = useFormat()
   const { refreshCounts } = useOutletContext<AdminOutletContext>()
   const thread = useApi<Thread>(`/api/admin/chats/${kind}/${id}`)
+  useRealtime('admin_inbox', () => void thread.reload())
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<unknown>(null)
   const [pending, setPending] = useState(false)

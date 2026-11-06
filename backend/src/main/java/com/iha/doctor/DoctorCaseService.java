@@ -49,7 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DoctorCaseService {
 
 	/** Paid but not yet treated: the doctor confirms treatment took place. */
-	static final Set<CaseStatus> COMPLETABLE = EnumSet.of(CaseStatus.PAYMENT_CONFIRMED, CaseStatus.VISA_PROCESSING,
+	public static final Set<CaseStatus> COMPLETABLE = EnumSet.of(CaseStatus.PAYMENT_CONFIRMED, CaseStatus.VISA_PROCESSING,
 			CaseStatus.TRAVEL_READY);
 
 	static final Map<String, String> DOCUMENT_LABELS = Map.of("lab_report", "Lab Report", "mri_ct", "MRI / CT Scan",

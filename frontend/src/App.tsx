@@ -101,6 +101,9 @@ import { AdminMessagesPage } from './portals/admin/MessagesPage'
 import { AdminPaymentDetailPage, AdminPaymentsPage } from './portals/admin/PaymentPages'
 import { AdminPlanDetailPage, AdminPlansPage } from './portals/admin/PlanPages'
 import { AdminSettingsPage } from './portals/admin/SettingsPage'
+import { AdminAccountPage } from './portals/admin/AccountPage'
+import { AdminAuditPage } from './portals/admin/AuditPage'
+import { AdminUserDetailPage, AdminUsersPage } from './portals/admin/UserPages'
 import { TreatmentPlanPage } from './portals/doctor/TreatmentPlanPage'
 
 /**
@@ -422,6 +425,10 @@ const router = createBrowserRouter([
               { path: 'payments', element: <AdminPaymentsPage /> },
               { path: 'payments/:kind/:paymentId', element: <AdminPaymentDetailPage /> },
               { path: 'settings', element: <AdminSettingsPage /> },
+              { path: 'users', element: <AdminUsersPage /> },
+              { path: 'users/:userId', element: <AdminUserDetailPage /> },
+              { path: 'audit', element: <AdminAuditPage /> },
+              { path: 'account', element: <AdminAccountPage /> },
             ],
           },
         ],

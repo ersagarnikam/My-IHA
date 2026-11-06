@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router'
 import { useToast } from '../../components/Toasts'
 import { ErrorState, FormError, Loading, Modal } from '../../components/ui'
-import { apiPost } from '../../lib/api'
+import { apiPost, openFile } from '../../lib/api'
 import { useFormat } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 import { BackHeader, formatDate, PillTabs, SearchBox, usePaged } from '../doctor/shared'
@@ -61,9 +61,18 @@ export function AdminPaymentsPage() {
     <div className="dr-page">
       <div className="row-between">
         <h1 className="dr-title">Payments</h1>
-        <p className="muted small" style={{ margin: 0 }}>
-          {aud(received)} received · {aud(refunded)} refunded to cards
-        </p>
+        <div className="row-end">
+          <p className="muted small" style={{ margin: 0 }}>
+            {aud(received)} received · {aud(refunded)} refunded to cards
+          </p>
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={() => void openFile('/api/admin/payments/export', 'mta-payments.csv')}
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
       <PillTabs
         tabs={TABS}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet } from 'react-router'
 import {
   BriefcaseMedical,
   Building2,
@@ -12,14 +12,17 @@ import {
   LogOut,
   Menu,
   Scale,
+  ScrollText,
   MessageSquare,
   Settings,
   Stethoscope,
+  Users,
   X,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { DEFAULT_TIME_ZONE, setProviderTimeZone } from '../../lib/format'
+import { RealtimeProvider, useRealtime } from '../../lib/realtime'
 import { useApi } from '../../lib/useApi'
 import { LogoutDialog } from '../doctor/DoctorLayout'
 import '../doctor/doctor.css'
@@ -65,6 +68,8 @@ const NAV: { to: string; label: string; icon: LucideIcon; count?: (o: Overview) 
   },
   { to: '/admin/messages', label: 'Messages', icon: MessageSquare, count: (o) => o.chatsWaiting },
   { to: '/admin/payments', label: 'Payments', icon: CreditCard },
+  { to: '/admin/users', label: 'Users', icon: Users },
+  { to: '/admin/audit', label: 'Audit Log', icon: ScrollText },
   { to: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -72,10 +77,19 @@ export type AdminOutletContext = { refreshCounts: () => void }
 
 /** Shell for MTA staff, same look as the doctor portal. */
 export function AdminLayout() {
+  return (
+    <RealtimeProvider>
+      <AdminShell />
+    </RealtimeProvider>
+  )
+}
+
+function AdminShell() {
   // MTA works in Brisbane time; don't inherit a doctor's zone from an earlier sign-in in this tab.
   setProviderTimeZone(DEFAULT_TIME_ZONE)
   const { user } = useAuth()
   const overview = useApi<Overview>('/api/admin/overview')
+  useRealtime('admin_inbox', () => void overview.reload())
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
@@ -174,13 +188,13 @@ export function AdminLayout() {
           </div>
           <div className="topbar-right">
             <span className="topbar-badge admin">MTA Admin</span>
-            <div className="topbar-user">
+            <Link to="/admin/account" className="topbar-user" title="My account">
               <span className="avatar">{(user?.email ?? 'A').slice(0, 1).toUpperCase()}</span>
               <div className="topbar-user-text">
                 <p className="topbar-name">{user?.email}</p>
                 <p className="topbar-role">Coordinator</p>
               </div>
-            </div>
+            </Link>
             <button
               type="button"
               className="ghost-button"

@@ -42,6 +42,7 @@ const consultations = await api('/api/doctor/consultations', doctor.accessToken)
 const adminDoctor = first(await api('/api/admin/doctors', admin.accessToken), 'doctors')
 const adminCase = first(await api('/api/admin/cases', admin.accessToken), 'cases')
 const adminPlan = first(await api('/api/admin/plans', admin.accessToken), 'plans')
+const adminUser = first(await api('/api/admin/users', admin.accessToken), 'users')
 const adminPayment = first(await api('/api/admin/payments', admin.accessToken), 'payments')
 const adminHospital = first(await api('/api/admin/hospitals', admin.accessToken), 'hospitals')
 const hospitalCase = first(await api('/api/hospital/cases', hospital.accessToken), 'hospital cases')
@@ -128,6 +129,10 @@ const portals = [
       '/admin/payments',
       `/admin/payments/${adminPayment.kind}/${adminPayment.id}`,
       '/admin/settings',
+      '/admin/users',
+      `/admin/users/${adminUser.id}`,
+      '/admin/audit',
+      '/admin/account',
     ],
   },
 ]

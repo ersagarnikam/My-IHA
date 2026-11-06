@@ -57,6 +57,14 @@ public class RealtimeHub {
 		}
 	}
 
+	/** Ends the user's streams, e.g. when the account is suspended. */
+	public void disconnect(UUID userId) {
+		Set<SseEmitter> userStreams = streams.remove(userId);
+		if (userStreams != null) {
+			userStreams.forEach(SseEmitter::complete);
+		}
+	}
+
 	/** Keeps idle connections open through proxies. */
 	@Scheduled(fixedDelay = 25_000)
 	void heartbeat() {

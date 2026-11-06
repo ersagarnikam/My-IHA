@@ -38,6 +38,10 @@ public class MedicalCase {
 	@Column(nullable = false)
 	private CaseStatus status;
 
+	/** MTA's reason, internal. */
+	@Column(name = "closed_reason")
+	private String closedReason;
+
 	@Column(name = "need_travel_assistance", nullable = false)
 	private boolean needTravelAssistance;
 
@@ -73,7 +77,15 @@ public class MedicalCase {
 		updatedAt = Instant.now();
 	}
 
-	void setStatus(CaseStatus status) {
+	public void close(String reason) {
+		closedReason = reason;
+	}
+
+	public String getClosedReason() {
+		return closedReason;
+	}
+
+	public void setStatus(CaseStatus status) {
 		this.status = status;
 	}
 

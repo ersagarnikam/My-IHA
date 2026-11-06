@@ -48,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
 	private final AdminService admin;
+	private final AdminCaseService adminCases;
 	private final DoctorAdminService doctorAdmin;
 	private final DoctorAccountService doctorAccounts;
 	private final AdminInsightsService insights;
@@ -55,7 +56,8 @@ public class AdminController {
 	private final LawyerAdminService lawyerAdmin;
 
 	AdminController(AdminService admin, DoctorAdminService doctorAdmin, DoctorAccountService doctorAccounts,
-			AdminInsightsService insights, HospitalAdminService hospitalAdmin, LawyerAdminService lawyerAdmin) {
+			AdminInsightsService insights, HospitalAdminService hospitalAdmin, LawyerAdminService lawyerAdmin, AdminCaseService adminCases) {
+		this.adminCases = adminCases;
 		this.lawyerAdmin = lawyerAdmin;
 		this.admin = admin;
 		this.doctorAdmin = doctorAdmin;
@@ -164,6 +166,19 @@ public class AdminController {
 		return CaseDetailResponse.of(admin.caseDetail(caseId));
 	}
 
+	@PostMapping("/cases/{caseId}/close")
+	public CaseDetailResponse closeCase(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID caseId,
+			@Valid @RequestBody CloseCaseRequest request) {
+		adminCases.close(CurrentUser.from(jwt), caseId, request.reason());
+		return CaseDetailResponse.of(admin.caseDetail(caseId));
+	}
+
+	@PostMapping("/cases/{caseId}/complete")
+	public CaseDetailResponse completeCase(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID caseId) {
+		adminCases.complete(CurrentUser.from(jwt), caseId);
+		return CaseDetailResponse.of(admin.caseDetail(caseId));
+	}
+
 	// ── Treatment plans ─────────────────────────────────────────────────────
 
 	/** {@code status} defaults to everything that has been submitted. */
@@ -251,6 +266,9 @@ public class AdminController {
 
 	}
 
+	public record CloseCaseRequest(@NotBlank @Size(min = 10, max = 500) String reason) {
+	}
+
 	public record PatientSummary(String fullName, LocalDate dateOfBirth, String gender, String nationality,
 			String countryOfResidence, String phone) {
 	}
@@ -265,14 +283,14 @@ public class AdminController {
 	}
 
 	public record CaseDetailResponse(UUID id, String referenceNumber, String specialty, String specialtyOther,
-			String description, CaseStatus status, Instant createdAt, PatientSummary patient,
+			String description, CaseStatus status, Instant createdAt, String closedReason, PatientSummary patient,
 			List<CaseDocumentResponse> documents, List<AssignmentResponse> assignments) {
 
 		static CaseDetailResponse of(AdminService.CaseDetail d) {
 			MedicalCase c = d.medicalCase();
 			Patient p = d.patient();
 			return new CaseDetailResponse(c.getId(), c.getReferenceNumber(), c.getSpecialty(), c.getSpecialtyOther(),
-					c.getDescription(), c.getStatus(), c.getCreatedAt(),
+					c.getDescription(), c.getStatus(), c.getCreatedAt(), c.getClosedReason(),
 					p == null ? null
 							: new PatientSummary(p.getFullName(), p.getDateOfBirth(), p.getGender(), p.getNationality(),
 									p.getCountryOfResidence(), p.getPhone()),

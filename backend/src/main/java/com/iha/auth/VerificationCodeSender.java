@@ -1,7 +1,11 @@
 package com.iha.auth;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 import com.iha.messaging.EmailBody;
 import com.iha.messaging.EmailSender;
+import com.iha.messaging.MessagingProperties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +22,12 @@ public class VerificationCodeSender {
 
 	private final VerificationProperties properties;
 	private final EmailSender email;
+	private final MessagingProperties messaging;
 
-	public VerificationCodeSender(VerificationProperties properties, EmailSender email) {
+	public VerificationCodeSender(VerificationProperties properties, EmailSender email, MessagingProperties messaging) {
 		this.properties = properties;
 		this.email = email;
+		this.messaging = messaging;
 	}
 
 	public void send(String address, String purpose, String code) {
@@ -32,7 +38,11 @@ public class VerificationCodeSender {
 		String heading = reset ? "Reset your password" : "Verify your email";
 		String message = "Your code is %s. It expires in %d minutes. If this wasn't you, you can ignore this email."
 			.formatted(code, properties.codeTtl().toMinutes());
-		email.send(address, heading + ": " + code, EmailBody.of(heading, message, null, null, null));
+		// A reset can start from MTA (a new admin, a user who asked for help), so the email must lead somewhere.
+		String resetUrl = reset
+				? messaging.portalUrl() + "/reset-password?email=" + URLEncoder.encode(address, StandardCharsets.UTF_8)
+				: null;
+		email.send(address, heading + ": " + code, EmailBody.of(heading, message, "Enter your code", resetUrl, null));
 	}
 
 	private static String label(String purpose) {
