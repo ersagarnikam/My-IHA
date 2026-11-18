@@ -27,7 +27,7 @@ Open `PUBLIC_URL` (http://localhost:8090 by default; port chosen to stay clear o
 | Stop, keeping data | `docker compose down` |
 | Wipe database and uploads | `docker compose down -v` (permanent) |
 
-`.env.example` is set up for a **test** environment: simulated payments and sign-up codes in the API log. For production set `IHA_PAYMENTS_PROVIDER=stripe` with live keys, `RESEND_API_KEY`, and `IHA_VERIFICATION_LOGCODES=false`; `WEB_BIND=0.0.0.0` publishes the port, and HTTPS must be terminated in front of it. The compose file has no backups: see the go-live checklist.
+`.env.example` is set up for a **test** environment: simulated payments and sign-up codes in the API log. For production set `IHA_PAYMENTS_PROVIDER=stripe` with live keys, `RESEND_API_KEY`, and `IHA_VERIFICATION_LOGCODES=false`; `WEB_BIND=0.0.0.0` publishes the port, and HTTPS must be terminated in front of it. The compose file has no backups: see the [go-live checklist](go-live-checklist.md).
 
 ## Environment variables
 
@@ -101,12 +101,4 @@ The portal's home is https://medicaltourismaustralia.com. Point the website's bu
 
 ## Go-live checklist
 
-- [ ] `SPRING_PROFILES_ACTIVE=prod`; no dev profile anywhere (it enables demo data and `/api/dev/**`).
-- [ ] `IHA_VERIFICATION_LOGCODES` off and `IHA_ADMIN_*` removed.
-- [ ] Strong, unique `IHA_JWT_SECRET` and `IHA_PII_KEY` from a secrets manager; `IHA_PII_KEY` backed up.
-- [ ] PostgreSQL backups and storage-directory backups scheduled and tested.
-- [ ] Stripe live keys and webhook secret; a test payment end to end.
-- [ ] Resend domain verified and a real sign-up code received.
-- [ ] HTTPS everywhere; `IHA_CORS_ORIGINS` limited to the web origin.
-- [ ] `VITE_HOME_URL` set for the environment; website buttons point at the right host.
-- [ ] `/actuator/health` wired to monitoring.
+See [go-live-checklist.md](go-live-checklist.md).
