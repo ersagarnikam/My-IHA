@@ -12,6 +12,8 @@ Medical Tourism Australia (MTA) connects international patients with Australian 
 
 **New here?** Read [end-to-end-journey.md](end-to-end-journey.md) first. It follows one case through all five portals and gives a 20-minute and a 45-minute demo plan.
 
+**Every screen with a screenshot:** [screen-flows/](screen-flows/README.md) has one document per portal, in the order a user meets the screens.
+
 ## Start the demo
 
 Needs Docker Desktop and Node. From the project folder:
