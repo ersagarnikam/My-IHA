@@ -60,8 +60,19 @@ Anything else is `409 invalid_transition`. The case follows (old `sync_case_stat
 | Visa grant uploaded | patient | Your approved visa is ready |
 | Registration reviewed | lawyer | Registration approved / Registration not approved / More information needed |
 
+## Membership fees
+
+Visa lawyers pay MTA a one-time **registration fee** and an **annual membership fee**, set by MTA under admin → Settings (`lawyer_registration_fee`, `lawyer_annual_fee`). The rules (`providerfee/ProviderFeeService`, migration V15):
+
+- **Registration fee above $0:** once MTA approves the account, the portal stays locked on `/lawyer/registration-fee` until the fee is paid by card (the API answers `403 registration_fee_unpaid` for everything past the gate except billing and the support chat). MTA can't assign a visa case to a lawyer whose registration fee is unpaid (`409 registration_fee_unpaid`).
+- **Fee at $0:** nothing is charged. Approval records the registration fee as waived and starts the yearly cycle. Accounts approved while the fee was $0 never owe it, even if MTA raises it later; accounts approved before V15 count as waived.
+- **Annual fee:** falls due a year after registration (paid or waived) and after each renewal (Brisbane dates). An overdue renewal shows a banner on the dashboard and a **Pay now** button under Account & Settings → Billing; it never locks the portal. While the annual fee is $0 nothing falls due.
+- **Billing tab:** registration status, next renewal date, paid fees with PDF invoices (`MTA-HO-…` / `MTA-VL-…`, tax invoices once MTA is GST-registered; GST class *Hospital and visa lawyer membership fees*, taxable by default) and any refunds.
+- MTA sees the payments under admin → Payments (Hospitals / Lawyers tabs) and can refund them like doctors' fees; the provider's admin page shows a **Membership** line.
+
 ## Demo data and tests
 
 - `lawyer@demo.local` (James Whitfield, MARN, Sydney) with a submitted visa application for a paid hip replacement at St Vincent's (both letters sent, passport, photo and bank statement uploaded) — `dev/DevVisaCase`. `pending.lawyer@demo.local` (Harbourside Immigration Lawyers, Victorian practising certificate) waits in Lawyer Approvals.
 - `LawyerPortalFlowTests`: sign-up with consent, registration validation, more-info and resubmission, the register check and approval, assignment, the whole status workflow with notifications and case status, requests, notes, the visa grant, chat.
+- `ProviderFeeTests`: the lawyer gate until the registration fee is paid; another lawyer can't complete their payment.
 - `e2e/lawyer-journey.mjs`: signs up and registers a lawyer through the wizard, MTA records the OMARA check and approves in the admin portal, assigns the demo case on Visa Cases, and the lawyer works it to approved and uploads the grant. Needs the API log and a freshly started API (it moves the demo case to Approved; the case goes back to the demo lawyer at the end).

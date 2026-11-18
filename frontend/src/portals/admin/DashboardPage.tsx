@@ -69,7 +69,7 @@ export function AdminDashboardPage() {
           </p>
           <p className="dash-hero-note">
             {money(m.treatmentPaymentsAud)} treatments · {money(m.consultationFeesAud)}{' '}
-            consultations · {money(m.doctorMembershipFeesAud)} doctor membership fees
+            consultations · {money(m.doctorMembershipFeesAud)} membership fees
           </p>
         </div>
         <div className="dash-hero-stats">
@@ -267,7 +267,7 @@ function RevenueCard({ money: m }: { money: Insights['money'] }) {
           <p className="dash-earn green">{money(m.mtaServiceFeesAud)}</p>
         </div>
         <div>
-          <p className="muted small">Doctor fees</p>
+          <p className="muted small">Membership fees</p>
           <p className="dash-earn orange">{money(m.doctorMembershipFeesAud)}</p>
         </div>
       </div>
@@ -276,7 +276,7 @@ function RevenueCard({ money: m }: { money: Insights['money'] }) {
           <div
             key={x.month}
             className="admin-bar"
-            title={`${month(x.month)}: ${money(x.patientPaymentsAud)} from patients, ${money(x.doctorFeesAud)} doctor fees`}
+            title={`${month(x.month)}: ${money(x.patientPaymentsAud)} from patients, ${money(x.doctorFeesAud)} membership fees`}
           >
             <span
               className="patients"
@@ -289,7 +289,7 @@ function RevenueCard({ money: m }: { money: Insights['money'] }) {
       <div className="row-between muted small">
         <span>{month(m.monthly[0]?.month ?? '')}</span>
         <span className="admin-legend">
-          <i className="patients" /> Patients <i className="doctors" /> Doctor fees
+          <i className="patients" /> Patients <i className="doctors" /> Membership fees
         </span>
         <span>{month(m.monthly.at(-1)?.month ?? '')}</span>
       </div>

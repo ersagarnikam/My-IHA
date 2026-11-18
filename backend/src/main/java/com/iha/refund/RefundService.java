@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,6 +30,10 @@ import com.iha.payment.PaymentGateway;
 import com.iha.payment.PaymentRepository;
 import com.iha.payment.RefundStatusEvent;
 import com.iha.provider.DoctorRepository;
+import com.iha.provider.HospitalRepository;
+import com.iha.provider.LawyerRepository;
+import com.iha.providerfee.ProviderFeePayment;
+import com.iha.providerfee.ProviderFeePaymentRepository;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -37,7 +42,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Full and partial refunds by MTA admin, of patient payments (treatment,
- * consultation) and doctor fees (registration, annual). The card processing
+ * consultation) and provider fees (doctor, hospital and lawyer registration and
+ * annual fees). The card processing
  * fee is deducted only when the refund is for the payer's own reasons (see
  * {@link #FEE_KEPT}): when the doctor, hospital or MTA is at fault, Australian
  * Consumer Law gives a full refund, so MTA absorbs the fee. It is deducted at
@@ -50,6 +56,8 @@ public class RefundService {
 
 	public static final String PATIENT = "patient";
 	public static final String DOCTOR = "doctor";
+	public static final String HOSPITAL = "hospital";
+	public static final String LAWYER = "lawyer";
 
 	/** Reason codes and their labels (shown to admin and in the patient's notification). */
 	public static final Map<String, String> REASONS = new LinkedHashMap<>();
@@ -74,6 +82,9 @@ public class RefundService {
 
 	private final PaymentRepository payments;
 	private final DoctorFeePaymentRepository feePayments;
+	private final ProviderFeePaymentRepository providerPayments;
+	private final HospitalRepository hospitals;
+	private final LawyerRepository lawyers;
 	private final PaymentRefundRepository refunds;
 	private final PaymentGateway gateway;
 	private final FeeSettingsService fees;
@@ -87,8 +98,12 @@ public class RefundService {
 	RefundService(PaymentRepository payments, DoctorFeePaymentRepository feePayments, PaymentRefundRepository refunds,
 			PaymentGateway gateway, FeeSettingsService fees, PatientRepository patients, DoctorRepository doctors,
 			CaseRepository cases, NotificationService notifications, AuditService audit,
-			ApplicationEventPublisher events) {
+			ApplicationEventPublisher events, ProviderFeePaymentRepository providerPayments, HospitalRepository hospitals,
+			LawyerRepository lawyers) {
 		this.payments = payments;
+		this.providerPayments = providerPayments;
+		this.hospitals = hospitals;
+		this.lawyers = lawyers;
 		this.feePayments = feePayments;
 		this.refunds = refunds;
 		this.gateway = gateway;
@@ -229,8 +244,11 @@ public class RefundService {
 		if (PATIENT.equals(t.kind())) {
 			payments.findById(t.id()).ifPresent(p -> p.setRefunded(full));
 		}
-		else {
+		else if (DOCTOR.equals(t.kind())) {
 			feePayments.findById(t.id()).ifPresent(p -> p.setRefunded(full));
+		}
+		else {
+			providerPayments.findById(t.id()).ifPresent(p -> p.setRefunded(full));
 		}
 		return full;
 	}
@@ -254,12 +272,13 @@ public class RefundService {
 			});
 		}
 		else {
-			doctors.findById(t.payerId()).ifPresent(d -> {
-				if (d.getUserId() != null) {
-					notifications.notifyWithAlert(d.getUserId(), "refund_issued", title, "MTA has refunded "
-							+ aud(refund.getRefundedAud()) + " of your " + t.label() + "." + fee + timing, null);
-				}
-			});
+			Optional<UUID> userId = switch (t.kind()) {
+				case DOCTOR -> doctors.findById(t.payerId()).map(d -> d.getUserId());
+				case HOSPITAL -> hospitals.findById(t.payerId()).map(h -> h.getUserId());
+				default -> lawyers.findById(t.payerId()).map(l -> l.getUserId());
+			};
+			userId.ifPresent(id -> notifications.notifyWithAlert(id, "refund_issued", title, "MTA has refunded "
+					+ aud(refund.getRefundedAud()) + " of your " + t.label() + "." + fee + timing, null));
 		}
 	}
 
@@ -275,6 +294,13 @@ public class RefundService {
 			DoctorFeePayment p = feePayments.findById(id).orElseThrow(() -> ApiException.notFound("Payment not found."));
 			return new Target(kind, p.getId(), p.getDoctorId(), null, null, p.getFeeType(),
 					DoctorFeePayment.REGISTRATION.equals(p.getFeeType()) ? "registration fee" : "annual membership fee",
+					p.getAmountAud(), p.getPaymentIntentId(), p.getGateway(), p.getPaidAt());
+		}
+		if (HOSPITAL.equals(kind) || LAWYER.equals(kind)) {
+			ProviderFeePayment p = providerPayments.findByIdAndProviderType(id, kind)
+				.orElseThrow(() -> ApiException.notFound("Payment not found."));
+			return new Target(kind, p.getId(), p.getProviderId(), null, null, p.getFeeType(),
+					ProviderFeePayment.REGISTRATION.equals(p.getFeeType()) ? "registration fee" : "annual membership fee",
 					p.getAmountAud(), p.getPaymentIntentId(), p.getGateway(), p.getPaidAt());
 		}
 		throw ApiException.notFound("Payment not found.");
@@ -293,7 +319,7 @@ public class RefundService {
 		return "A" + format.format(amount);
 	}
 
-	/** {@code payerId}: the patient or doctor id. */
+	/** {@code payerId}: the patient, doctor, hospital or lawyer id. */
 	private record Target(String kind, UUID id, UUID payerId, UUID caseId, UUID consultationRequestId, String type,
 			String label, BigDecimal amount, String intentId, String gateway, Instant paidAt) {
 	}

@@ -18,13 +18,13 @@ const GROUPS: { id: FeeSetting['group']; title: string; intro: string }[] = [
     id: 'lawyers',
     title: 'Visa lawyers',
     intro:
-      "Saved now and charged once the visa lawyer portal launches. Leave at $0 if lawyers shouldn't pay.",
+      'Charged by card in the lawyer portal once MTA approves them; the portal stays locked until the registration fee is paid. At $0 nothing is charged, and lawyers approved while it is $0 never owe it.',
   },
   {
     id: 'hospitals',
     title: 'Hospitals',
     intro:
-      "Saved now and charged once the hospital portal launches. Leave at $0 if hospitals shouldn't pay.",
+      'Charged by card in the hospital portal once MTA approves them; the portal stays locked until the registration fee is paid. At $0 nothing is charged, and hospitals approved while it is $0 never owe it.',
   },
   {
     id: 'patients',

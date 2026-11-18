@@ -137,7 +137,7 @@ public class LawyerCaseService {
 	/** Assigned cases, most recently updated first. */
 	@Transactional(readOnly = true)
 	public List<CaseRow> cases(CurrentUser user) {
-		Lawyer lawyer = accounts.requireApproved(user);
+		Lawyer lawyer = accounts.requireActive(user);
 		List<VisaSubmission> mine = submissions.findByAssignedLawyerIdOrderByUpdatedAtDesc(lawyer.getId());
 		Map<UUID, MedicalCase> caseById = cases.findAllById(mine.stream().map(VisaSubmission::getCaseId).toList())
 			.stream()
@@ -167,7 +167,7 @@ public class LawyerCaseService {
 
 	@Transactional(readOnly = true)
 	public CaseDetail detail(CurrentUser user, UUID caseId) {
-		Lawyer lawyer = accounts.requireApproved(user);
+		Lawyer lawyer = accounts.requireActive(user);
 		VisaSubmission s = requireAssigned(lawyer, caseId);
 		MedicalCase c = cases.findById(caseId).orElseThrow();
 		Patient p = patients.findById(s.getPatientId()).orElseThrow();
@@ -197,7 +197,7 @@ public class LawyerCaseService {
 	/** Moves the application on; the patient (and, for the outcome, the doctor and hospital) are told. */
 	@Transactional
 	public CaseDetail updateStatus(CurrentUser user, UUID caseId, String status, String rejectionReason) {
-		Lawyer lawyer = accounts.requireApproved(user);
+		Lawyer lawyer = accounts.requireActive(user);
 		VisaSubmission s = requireAssigned(lawyer, caseId);
 		if (!VisaSubmission.TRANSITIONS.getOrDefault(s.getStatus(), Set.of()).contains(status)) {
 			throw ApiException.conflict("invalid_transition", "The visa application can't move to that status now.");
@@ -226,7 +226,7 @@ public class LawyerCaseService {
 	@Transactional
 	public CaseDetail requestDocument(CurrentUser user, UUID caseId, String category, String documentType,
 			String instructions) {
-		Lawyer lawyer = accounts.requireApproved(user);
+		Lawyer lawyer = accounts.requireActive(user);
 		VisaSubmission s = requireAssigned(lawyer, caseId);
 		if (!VisaDocument.UPLOADABLE_CATEGORIES.contains(category)) {
 			throw ApiException.badRequest("invalid_category", "Choose a document the patient can upload.");
@@ -253,7 +253,7 @@ public class LawyerCaseService {
 
 	@Transactional
 	public NoteView addNote(CurrentUser user, UUID caseId, String body) {
-		Lawyer lawyer = accounts.requireApproved(user);
+		Lawyer lawyer = accounts.requireActive(user);
 		requireAssigned(lawyer, caseId);
 		String text = body == null ? "" : body.trim();
 		if (text.isEmpty()) {
@@ -268,7 +268,7 @@ public class LawyerCaseService {
 	/** The approved visa for the patient; replacing it re-sends it. Only once the case is approved. */
 	@Transactional
 	public DocView uploadApprovedVisa(CurrentUser user, UUID caseId, MultipartFile file) {
-		Lawyer lawyer = accounts.requireApproved(user);
+		Lawyer lawyer = accounts.requireActive(user);
 		VisaSubmission s = requireAssigned(lawyer, caseId);
 		if (!VisaSubmission.APPROVED.equals(s.getStatus())) {
 			throw ApiException.conflict("visa_not_approved",
@@ -300,7 +300,7 @@ public class LawyerCaseService {
 
 	@Transactional(readOnly = true)
 	public VisaService.Stored openDocument(CurrentUser user, UUID caseId, UUID documentId) {
-		requireAssigned(accounts.requireApproved(user), caseId);
+		requireAssigned(accounts.requireActive(user), caseId);
 		VisaDocument doc = documents.findById(documentId)
 			.filter(d -> caseId.equals(d.getCaseId()))
 			.orElseThrow(() -> ApiException.notFound("Document not found."));

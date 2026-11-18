@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router'
-import { Bell, Building2, Lock, Pencil, X, type LucideIcon } from 'lucide-react'
+import { Bell, Building2, CreditCard, Lock, Pencil, X, type LucideIcon } from 'lucide-react'
+import { ProviderBillingTab } from '../../components/ProviderBilling'
 import { useToast } from '../../components/Toasts'
 import { Field, FormError, fieldError } from '../../components/ui'
 import { ApiError, apiPut } from '../../lib/api'
@@ -10,13 +11,14 @@ import { useApi } from '../../lib/useApi'
 import { Group } from '../doctor/registration/RegistrationForm'
 import { KV, SecurityTab, Toggle } from '../doctor/settings/AccountSettingsPage'
 import { formatDate, TimeZoneSelect } from '../doctor/shared'
-import { useHospital } from './HospitalContext'
+import { useHospital, useHospitalAccount } from './HospitalContext'
 import { HOSPITAL_TYPES, type HospitalProfile } from './types'
 
-type Tab = 'profile' | 'security' | 'notifications'
+type Tab = 'profile' | 'billing' | 'security' | 'notifications'
 
 const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: 'profile', label: 'Hospital Profile', icon: Building2 },
+  { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'security', label: 'Security', icon: Lock },
   { id: 'notifications', label: 'Notifications', icon: Bell },
 ]
@@ -24,11 +26,14 @@ const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
 export function HospitalSettingsPage() {
   const [params, setParams] = useSearchParams()
   const tab = (TABS.find((t) => t.id === params.get('tab'))?.id ?? 'profile') as Tab
+  const { reload } = useHospitalAccount()
   return (
     <div className="dr-page">
       <div>
         <h1 className="dr-title">Account &amp; Settings</h1>
-        <p className="muted">Manage your hospital's profile, password and notifications.</p>
+        <p className="muted">
+          Manage your hospital's profile, billing, password and notifications.
+        </p>
       </div>
       <div className="dr-settings">
         <nav className="dr-settings-nav" aria-label="Settings">
@@ -50,6 +55,9 @@ export function HospitalSettingsPage() {
               <BasicInfoCard />
               <DetailsCard />
             </>
+          )}
+          {tab === 'billing' && (
+            <ProviderBillingTab portal="hospital" onChanged={() => void reload()} />
           )}
           {tab === 'security' && <SecurityTab />}
           {tab === 'notifications' && <NotificationsTab />}

@@ -12,6 +12,7 @@ import com.iha.common.ApiException;
 import com.iha.notification.NotificationService;
 import com.iha.provider.Hospital;
 import com.iha.provider.HospitalRepository;
+import com.iha.providerfee.ProviderFeeService;
 import com.iha.verification.ProviderVerification;
 import com.iha.verification.VerificationService;
 
@@ -29,13 +30,15 @@ public class HospitalAdminService {
 	private final NotificationService notifications;
 	private final AuditService audit;
 	private final VerificationService verification;
+	private final ProviderFeeService fees;
 
 	HospitalAdminService(HospitalRepository hospitals, NotificationService notifications, AuditService audit,
-			VerificationService verification) {
+			VerificationService verification, ProviderFeeService fees) {
 		this.hospitals = hospitals;
 		this.notifications = notifications;
 		this.audit = audit;
 		this.verification = verification;
+		this.fees = fees;
 	}
 
 	/** Hospitals with a portal login (seeded reference hospitals without one aren't reviewed). Newest first. */
@@ -71,11 +74,17 @@ public class HospitalAdminService {
 			verification.requirePassing(ProviderVerification.HOSPITAL, hospitalId);
 		}
 		hospital.review(outcome, reason);
+		if (hospital.isApproved()) {
+			fees.onApproved(hospital);
+		}
 		if (hospital.getUserId() != null) {
 			switch (outcome) {
 				case Hospital.APPROVED -> notifications.notifyWithAlert(hospital.getUserId(), "registration_approved",
 						"Registration approved",
-						"Your MTA hospital registration has been approved. Your hospital portal is now open.", null);
+						hospital.getRegistrationFeePaidAt() != null
+								? "Your MTA hospital registration has been approved. Your hospital portal is now open."
+								: "Your MTA hospital registration has been approved. Pay the registration fee to open your hospital portal.",
+						null);
 				case Hospital.REJECTED -> notifications.notifyWithAlert(hospital.getUserId(), "registration_rejected",
 						"Registration not approved", "Your MTA hospital registration was not approved."
 								+ (reason != null ? " Reason: " + reason : ""),

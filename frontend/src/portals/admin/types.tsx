@@ -380,7 +380,7 @@ export type FeeSettings = {
 // /api/admin/payments (backend admin/AdminPaymentController, refund/RefundService).
 
 export type AdminPayment = {
-  kind: 'patient' | 'doctor'
+  kind: 'patient' | 'doctor' | 'hospital' | 'lawyer'
   id: string
   type: 'treatment' | 'consultation' | 'registration' | 'annual'
   payerName: string | null
@@ -435,8 +435,8 @@ export type AdminPaymentDetail = {
 export const PAYMENT_TYPE: Record<AdminPayment['type'], string> = {
   treatment: 'Treatment',
   consultation: 'Consultation fee',
-  registration: 'Doctor registration fee',
-  annual: 'Doctor annual fee',
+  registration: 'Registration fee',
+  annual: 'Annual membership fee',
 }
 
 /** completed with a refund shows as partly refunded. */

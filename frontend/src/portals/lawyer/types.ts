@@ -1,3 +1,4 @@
+import type { Membership } from '../../components/ProviderBilling'
 // Types for the visa lawyer portal (backend lawyer/LawyerAccountController, LawyerPortalController).
 
 export type LawyerStatus = 'pending' | 'approved' | 'rejected' | 'more_info_requested'
@@ -34,7 +35,12 @@ export type LawyerProfile = {
   }[]
 }
 
-export type LawyerAccount = { registered: boolean; lawyer: LawyerProfile | null }
+/** {@code membership}: fee status once approved (absent on a freshly saved registration). */
+export type LawyerAccount = {
+  registered: boolean
+  lawyer: LawyerProfile | null
+  membership?: Membership | null
+}
 
 export const LAWYER_TYPES: Record<string, string> = {
   individual: 'Individual lawyer / agent',

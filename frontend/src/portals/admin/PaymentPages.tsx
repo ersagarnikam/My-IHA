@@ -19,12 +19,21 @@ import {
 const audFormat = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' })
 export const aud = (amount: number) => audFormat.format(amount)
 
-type Tab = 'all' | 'patient' | 'doctor' | 'refunds'
+const PAYER_KIND: Record<AdminPayment['kind'], string> = {
+  patient: 'Patient',
+  doctor: 'Doctor',
+  hospital: 'Hospital',
+  lawyer: 'Lawyer',
+}
+
+type Tab = 'all' | 'patient' | 'doctor' | 'hospital' | 'lawyer' | 'refunds'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'patient', label: 'Patients' },
   { id: 'doctor', label: 'Doctors' },
+  { id: 'hospital', label: 'Hospitals' },
+  { id: 'lawyer', label: 'Lawyers' },
   { id: 'refunds', label: 'With refunds' },
 ]
 
@@ -136,7 +145,7 @@ export function PaymentsTable({
                 <td>
                   <span className="strong">{p.payerName ?? '—'}</span>
                   <br />
-                  <span className="muted small">{p.kind === 'patient' ? 'Patient' : 'Doctor'}</span>
+                  <span className="muted small">{PAYER_KIND[p.kind]}</span>
                 </td>
               )}
               <td>{PAYMENT_TYPE[p.type]}</td>
@@ -195,9 +204,9 @@ export function AdminPaymentDetailPage() {
               Case {p.caseReference}
             </Link>
           )}
-          {p.kind === 'doctor' && (
-            <Link className="small" to={`/admin/doctors/${p.payerId}`}>
-              Open doctor
+          {p.kind !== 'patient' && (
+            <Link className="small" to={`/admin/${p.kind}s/${p.payerId}`}>
+              Open {PAYER_KIND[p.kind].toLowerCase()}
             </Link>
           )}
         </span>

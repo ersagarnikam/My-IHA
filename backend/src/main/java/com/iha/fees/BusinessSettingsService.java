@@ -31,6 +31,7 @@ public class BusinessSettingsService {
 	public enum Charge {
 		MTA_SERVICE_FEE("gst_mta_service_fee", "MTA service fee on treatment plans"),
 		DOCTOR_FEES("gst_doctor_fees", "Doctor registration and annual membership fees"),
+		PROVIDER_FEES("gst_provider_fees", "Hospital and visa lawyer registration and annual membership fees"),
 		CONSULTATION_FEE("gst_consultation_fee", "Online consultation fee"),
 		TREATMENT_COSTS("gst_treatment_costs", "Treatment costs (doctor, hospital and other medical items)");
 

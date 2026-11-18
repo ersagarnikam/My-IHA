@@ -14,6 +14,7 @@ import com.iha.hospital.HospitalAccountController;
 import com.iha.privacy.Consent;
 import com.iha.privacy.ConsentService;
 import com.iha.provider.Lawyer;
+import com.iha.providerfee.ProviderFeeService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -43,8 +44,10 @@ public class LawyerAccountController {
 
 	private final LawyerAccountService accounts;
 	private final ConsentService consents;
+	private final ProviderFeeService fees;
 
-	LawyerAccountController(LawyerAccountService accounts, ConsentService consents) {
+	LawyerAccountController(LawyerAccountService accounts, ConsentService consents, ProviderFeeService fees) {
+		this.fees = fees;
 		this.accounts = accounts;
 		this.consents = consents;
 	}
@@ -63,8 +66,8 @@ public class LawyerAccountController {
 	@GetMapping("/api/lawyer/account")
 	public AccountResponse account(@AuthenticationPrincipal Jwt jwt) {
 		return accounts.find(CurrentUser.from(jwt))
-			.map(l -> new AccountResponse(true, profile(l)))
-			.orElse(new AccountResponse(false, null));
+			.map(l -> new AccountResponse(true, profile(l), fees.membership(l)))
+			.orElse(new AccountResponse(false, null, null));
 	}
 
 	@PostMapping(path = "/api/lawyer/registration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -174,7 +177,8 @@ public class LawyerAccountController {
 	public record NotificationPreferencesRequest(boolean emailNotificationsEnabled, boolean smsNotificationsEnabled) {
 	}
 
-	public record AccountResponse(boolean registered, ProfileResponse lawyer) {
+	/** {@code membership}: registration and annual fee status (gates the portal while the registration fee is due). */
+	public record AccountResponse(boolean registered, ProfileResponse lawyer, ProviderFeeService.Membership membership) {
 	}
 
 	public record DocumentResponse(int index, String fileName, String category, String mimeType, long fileSizeBytes) {

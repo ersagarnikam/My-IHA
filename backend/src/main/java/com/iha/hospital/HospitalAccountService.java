@@ -25,6 +25,7 @@ import com.iha.provider.Hospital;
 import com.iha.provider.HospitalRepository;
 import com.iha.providerchat.ProviderAccount;
 import com.iha.providerchat.ProviderMessageService;
+import com.iha.providerfee.ProviderFeeService;
 import com.iha.specialty.SpecialtyRepository;
 import com.iha.storage.FileType;
 import com.iha.storage.StorageService;
@@ -40,8 +41,8 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * Hospital accounts (ported from {@code register_hospital}, {@code resubmit_hospital_registration},
  * {@code update_hospital_basic_info} / {@code update_hospital_details} and the dashboard
- * layout's approval gate). Every hospital-scoped query starts from {@link #requireApproved}
- * or {@link #requireCurrent}. Hospitals aren't charged fees yet.
+ * layout's approval gate). Every hospital-scoped query starts from {@link #requireActive}
+ * or {@link #requireCurrent}. Fees: {@link ProviderFeeService}.
  */
 @Service
 public class HospitalAccountService implements AlertPreferences {
@@ -58,9 +59,11 @@ public class HospitalAccountService implements AlertPreferences {
 	private final StorageService storage;
 	private final AuditService audit;
 	private final JsonMapper json;
+	private final ProviderFeeService fees;
 
 	HospitalAccountService(HospitalRepository hospitals, SpecialtyRepository specialties, AuthService authService,
-			ProviderMessageService providerMessages, StorageService storage, AuditService audit, JsonMapper json) {
+			ProviderMessageService providerMessages, StorageService storage, AuditService audit, JsonMapper json,
+			ProviderFeeService fees) {
 		this.hospitals = hospitals;
 		this.specialties = specialties;
 		this.authService = authService;
@@ -68,6 +71,7 @@ public class HospitalAccountService implements AlertPreferences {
 		this.storage = storage;
 		this.audit = audit;
 		this.json = json;
+		this.fees = fees;
 	}
 
 	// ── Sign-up and registration ────────────────────────────────────────────
@@ -139,6 +143,14 @@ public class HospitalAccountService implements AlertPreferences {
 		return hospital;
 	}
 
+	/** Approved with the registration fee settled (paid, waived or not charged); required for everything past the gate. */
+	@Transactional(readOnly = true)
+	public Hospital requireActive(CurrentUser user) {
+		Hospital hospital = requireApproved(user);
+		fees.requireSettled(hospital);
+		return hospital;
+	}
+
 	public ProviderAccount account(Hospital hospital) {
 		return new ProviderAccount(ProviderAccount.HOSPITAL, hospital.getId(), hospital.getUserId());
 	}
@@ -167,7 +179,7 @@ public class HospitalAccountService implements AlertPreferences {
 
 	@Transactional
 	public Hospital updateBasicInfo(CurrentUser user, BasicInput input) {
-		Hospital hospital = requireApproved(user);
+		Hospital hospital = requireActive(user);
 		hospital.updateBasicInfo(basicInfo(user, input));
 		if (input.timeZone() != null) {
 			hospital.setTimeZone(input.timeZone());
@@ -179,7 +191,7 @@ public class HospitalAccountService implements AlertPreferences {
 
 	@Transactional
 	public Hospital updateDetails(CurrentUser user, DetailsInput input) {
-		Hospital hospital = requireApproved(user);
+		Hospital hospital = requireActive(user);
 		hospital.updateDetails(details(input));
 		audit.record(user.id(), user.email(), "hospital", "hospital.details_updated", "hospital", hospital.getId(),
 				Map.of());
@@ -188,7 +200,7 @@ public class HospitalAccountService implements AlertPreferences {
 
 	@Transactional
 	public Hospital updateNotificationPreferences(CurrentUser user, boolean email, boolean sms) {
-		Hospital hospital = requireApproved(user);
+		Hospital hospital = requireActive(user);
 		hospital.setNotificationPreferences(email, sms);
 		audit.record(user.id(), user.email(), "hospital", "hospital.notification_preferences_updated", "hospital",
 				hospital.getId(), Map.of());

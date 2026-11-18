@@ -9,15 +9,17 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import { RenewalDueBanner } from '../../components/ProviderBilling'
 import { ErrorState, Loading } from '../../components/ui'
 import { useApi } from '../../lib/useApi'
 import { formatDate } from '../doctor/shared'
 import { CaseStatusPill } from './CasePages'
-import { useHospital } from './HospitalContext'
+import { useHospitalAccount, useHospital } from './HospitalContext'
 import type { Dashboard } from './types'
 
 export function HospitalDashboardPage() {
   const hospital = useHospital()
+  const { account } = useHospitalAccount()
   const data = useApi<Dashboard>('/api/hospital/dashboard')
   if (data.error) return <ErrorState error={data.error} onRetry={data.reload} />
   if (!data.data) return <Loading />
@@ -25,6 +27,7 @@ export function HospitalDashboardPage() {
 
   return (
     <div className="dash">
+      <RenewalDueBanner portal="hospital" membership={account.membership} />
       <div className="dash-welcome">
         <div>
           <h1>Welcome, {hospital.name}</h1>

@@ -113,7 +113,7 @@ public class HospitalPortalService {
 
 	@Transactional(readOnly = true)
 	public Dashboard dashboard(CurrentUser user) {
-		Hospital hospital = accounts.requireApproved(user);
+		Hospital hospital = accounts.requireActive(user);
 		List<CaseRow> rows = caseRows(hospital);
 		LocalDate today = LocalDate.now(AustralianTimeZones.zone(hospital.getTimeZone()));
 		List<CaseRow> confirmed = rows.stream().filter(CaseRow::chosen).toList();
@@ -135,13 +135,13 @@ public class HospitalPortalService {
 
 	@Transactional(readOnly = true)
 	public List<CaseRow> cases(CurrentUser user) {
-		return caseRows(accounts.requireApproved(user));
+		return caseRows(accounts.requireActive(user));
 	}
 
 	/** {@code planId} identifies the case and doctor: one case can reach the hospital through two doctors. */
 	@Transactional(readOnly = true)
 	public CaseDetail caseDetail(CurrentUser user, UUID planId) {
-		Hospital hospital = accounts.requireApproved(user);
+		Hospital hospital = accounts.requireActive(user);
 		TreatmentPlan plan = visiblePlan(hospital, planId);
 		AdminService.PlanDetail p = planDetails.plan(plan.getId());
 		MedicalCase c = p.medicalCase();
@@ -168,7 +168,7 @@ public class HospitalPortalService {
 
 	@Transactional(readOnly = true)
 	public List<PatientRow> patients(CurrentUser user) {
-		List<CaseRow> rows = caseRows(accounts.requireApproved(user));
+		List<CaseRow> rows = caseRows(accounts.requireActive(user));
 		Map<UUID, List<CaseRow>> byPatient = rows.stream()
 			.collect(Collectors.groupingBy(CaseRow::patientId, LinkedHashMap::new, Collectors.toList()));
 		Map<UUID, Patient> patientById = byId(patients.findAllById(byPatient.keySet()), Patient::getId);
@@ -184,7 +184,7 @@ public class HospitalPortalService {
 
 	@Transactional(readOnly = true)
 	public PatientDetail patient(CurrentUser user, UUID patientId) {
-		List<CaseRow> rows = caseRows(accounts.requireApproved(user)).stream()
+		List<CaseRow> rows = caseRows(accounts.requireActive(user)).stream()
 			.filter(r -> r.patientId().equals(patientId))
 			.toList();
 		if (rows.isEmpty()) {
@@ -199,7 +199,7 @@ public class HospitalPortalService {
 	/** Doctors who list this hospital as an affiliation (they choose it themselves). */
 	@Transactional(readOnly = true)
 	public List<DoctorRow> doctors(CurrentUser user) {
-		Hospital hospital = accounts.requireApproved(user);
+		Hospital hospital = accounts.requireActive(user);
 		List<UUID> ids = affiliations.findByHospitalId(hospital.getId()).stream()
 			.map(DoctorHospitalAffiliation::getDoctorId)
 			.toList();
@@ -214,7 +214,7 @@ public class HospitalPortalService {
 
 	@Transactional(readOnly = true)
 	public DoctorDetail doctor(CurrentUser user, UUID doctorId) {
-		Hospital hospital = accounts.requireApproved(user);
+		Hospital hospital = accounts.requireActive(user);
 		if (!affiliations.existsByDoctorIdAndHospitalId(doctorId, hospital.getId())) {
 			throw ApiException.notFound("Doctor not found.");
 		}
@@ -234,12 +234,12 @@ public class HospitalPortalService {
 	/** Cases whose patient chose and paid for this hospital's plan, with their letters. */
 	@Transactional(readOnly = true)
 	public List<CaseRow> letterCases(CurrentUser user) {
-		return caseRows(accounts.requireApproved(user)).stream().filter(CaseRow::lettersEligible).toList();
+		return caseRows(accounts.requireActive(user)).stream().filter(CaseRow::lettersEligible).toList();
 	}
 
 	@Transactional
 	public LetterView generate(CurrentUser user, UUID planId, String type) {
-		Hospital hospital = accounts.requireApproved(user);
+		Hospital hospital = accounts.requireActive(user);
 		if (!LETTER_TYPES.contains(type)) {
 			throw ApiException.badRequest("invalid_document_type", "Unknown letter type.");
 		}
@@ -285,7 +285,7 @@ public class HospitalPortalService {
 
 	@Transactional
 	public LetterView send(CurrentUser user, UUID planId, String type) {
-		Hospital hospital = accounts.requireApproved(user);
+		Hospital hospital = accounts.requireActive(user);
 		TreatmentPlan plan = visiblePlan(hospital, planId);
 		MedicalCase c = cases.findById(plan.getCaseId()).orElseThrow();
 		requireEligible(plan, c);
@@ -310,7 +310,7 @@ public class HospitalPortalService {
 
 	@Transactional(readOnly = true)
 	public LetterFile letterFile(CurrentUser user, UUID planId, String type) {
-		Hospital hospital = accounts.requireApproved(user);
+		Hospital hospital = accounts.requireActive(user);
 		TreatmentPlan plan = visiblePlan(hospital, planId);
 		VisaDocument doc = visaDocuments
 			.findFirstByCaseIdAndSourceAndCategory(plan.getCaseId(), VisaDocument.HOSPITAL_GENERATED, type)

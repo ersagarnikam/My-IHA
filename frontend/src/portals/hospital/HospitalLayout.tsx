@@ -36,6 +36,8 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
 /** Where a notification leads in the hospital portal. */
 export function hospitalNotificationHref(n: Notification) {
   if (n.type === 'new_message') return '/hospital/messages'
+  if (n.type.includes('fee') || n.type === 'refund_issued')
+    return '/hospital/account-settings?tab=billing'
   if (n.type === 'hospital_treatment_confirmed') return '/hospital/documents'
   if (n.caseId) return `/hospital/cases/by-case/${n.caseId}`
   return '/hospital/notifications'

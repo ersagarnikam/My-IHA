@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router'
-import { Bell, Briefcase, Lock, Pencil, X, type LucideIcon } from 'lucide-react'
+import { Bell, Briefcase, CreditCard, Lock, Pencil, X, type LucideIcon } from 'lucide-react'
+import { ProviderBillingTab } from '../../components/ProviderBilling'
 import { useToast } from '../../components/Toasts'
 import { Field, FormError, fieldError } from '../../components/ui'
 import { ApiError, apiPut } from '../../lib/api'
@@ -8,13 +9,14 @@ import { AU_TIME_ZONES } from '../../lib/format'
 import { Group } from '../doctor/registration/RegistrationForm'
 import { KV, SecurityTab, Toggle } from '../doctor/settings/AccountSettingsPage'
 import { formatDate, TimeZoneSelect } from '../doctor/shared'
-import { useLawyer } from './LawyerContext'
+import { useLawyer, useLawyerAccount } from './LawyerContext'
 import { CREDENTIALS, LAWYER_TYPES, STATES, type LawyerProfile } from './types'
 
-type Tab = 'profile' | 'security' | 'notifications'
+type Tab = 'profile' | 'billing' | 'security' | 'notifications'
 
 const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: 'profile', label: 'Profile', icon: Briefcase },
+  { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'security', label: 'Security', icon: Lock },
   { id: 'notifications', label: 'Notifications', icon: Bell },
 ]
@@ -22,11 +24,14 @@ const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
 export function LawyerSettingsPage() {
   const [params, setParams] = useSearchParams()
   const tab = (TABS.find((t) => t.id === params.get('tab'))?.id ?? 'profile') as Tab
+  const { reload } = useLawyerAccount()
   return (
     <div className="dr-page">
       <div>
         <h1 className="dr-title">Account &amp; Settings</h1>
-        <p className="muted">Manage your practice details, registration, password and alerts.</p>
+        <p className="muted">
+          Manage your practice details, registration, billing, password and alerts.
+        </p>
       </div>
       <div className="dr-settings">
         <nav className="dr-settings-nav" aria-label="Settings">
@@ -48,6 +53,9 @@ export function LawyerSettingsPage() {
               <ProfileCard />
               <CredentialCard />
             </>
+          )}
+          {tab === 'billing' && (
+            <ProviderBillingTab portal="lawyer" onChanged={() => void reload()} />
           )}
           {tab === 'security' && <SecurityTab />}
           {tab === 'notifications' && <NotificationsTab />}

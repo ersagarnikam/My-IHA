@@ -5,7 +5,12 @@ import { ApiError, apiPut } from '../../lib/api'
 import { useFormat } from '../../lib/format'
 import { useApi } from '../../lib/useApi'
 
-type Charge = 'MTA_SERVICE_FEE' | 'DOCTOR_FEES' | 'CONSULTATION_FEE' | 'TREATMENT_COSTS'
+type Charge =
+  | 'MTA_SERVICE_FEE'
+  | 'DOCTOR_FEES'
+  | 'PROVIDER_FEES'
+  | 'CONSULTATION_FEE'
+  | 'TREATMENT_COSTS'
 
 type Business = {
   legalName: string

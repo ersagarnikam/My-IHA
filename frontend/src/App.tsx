@@ -70,6 +70,7 @@ import {
 import {
   HospitalPendingApprovalPage,
   HospitalRegisterPage,
+  HospitalRegistrationFeePage,
   HospitalSignUpPage,
 } from './portals/hospital/RegistrationPages'
 import { HospitalSettingsPage } from './portals/hospital/SettingsPage'
@@ -91,6 +92,7 @@ import { LawyerLayout, lawyerNotificationHref } from './portals/lawyer/LawyerLay
 import {
   LawyerPendingApprovalPage,
   LawyerRegisterPage,
+  LawyerRegistrationFeePage,
   LawyerSignUpPage,
 } from './portals/lawyer/RegistrationPages'
 import { LawyerSettingsPage } from './portals/lawyer/SettingsPage'
@@ -314,6 +316,14 @@ const router = createBrowserRouter([
                 ),
               },
               {
+                path: 'registration-fee',
+                element: (
+                  <HospitalGateStep path="/hospital/registration-fee">
+                    <HospitalRegistrationFeePage />
+                  </HospitalGateStep>
+                ),
+              },
+              {
                 element: <RequireApprovedHospital />,
                 children: [
                   {
@@ -368,6 +378,14 @@ const router = createBrowserRouter([
                 element: (
                   <LawyerGateStep path="/lawyer/pending-approval">
                     <LawyerPendingApprovalPage />
+                  </LawyerGateStep>
+                ),
+              },
+              {
+                path: 'registration-fee',
+                element: (
+                  <LawyerGateStep path="/lawyer/registration-fee">
+                    <LawyerRegistrationFeePage />
                   </LawyerGateStep>
                 ),
               },

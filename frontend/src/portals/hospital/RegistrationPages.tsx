@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { ProviderRegistrationFeePage } from '../../components/ProviderBilling'
 import { ConsentChecks, consentValues } from '../../components/ConsentChecks'
 import { Link, useNavigate } from 'react-router'
 import { CheckCircle2, Clock, FileText, Upload, X, XCircle } from 'lucide-react'
@@ -752,4 +753,16 @@ export const DOCUMENT_LABELS: Record<string, string> = {
   license: 'Hospital license',
   registration_certificate: 'Registration certificate',
   other: 'Other document',
+}
+
+/** After approval, while the registration fee is unpaid. */
+export function HospitalRegistrationFeePage() {
+  const { account, reload } = useHospitalAccount()
+  return (
+    <ProviderRegistrationFeePage
+      portal="hospital"
+      membership={account.membership!}
+      reload={reload}
+    />
+  )
 }

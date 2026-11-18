@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { ProviderRegistrationFeePage } from '../../components/ProviderBilling'
 import { Link, useNavigate } from 'react-router'
 import { CheckCircle2, Clock, FileText, Upload, X, XCircle } from 'lucide-react'
 import { ConsentChecks, consentValues } from '../../components/ConsentChecks'
@@ -657,5 +658,13 @@ export function LawyerRegistrationForm({
         )}
       </div>
     </form>
+  )
+}
+
+/** After approval, while the registration fee is unpaid. */
+export function LawyerRegistrationFeePage() {
+  const { account, reload } = useLawyerAccount()
+  return (
+    <ProviderRegistrationFeePage portal="lawyer" membership={account.membership!} reload={reload} />
   )
 }

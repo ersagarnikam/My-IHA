@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { BadgeCheck, FilePlus2, FileWarning, Hourglass, type LucideIcon } from 'lucide-react'
+import { RenewalDueBanner } from '../../components/ProviderBilling'
 import { ErrorState, Loading } from '../../components/ui'
 import { useApi } from '../../lib/useApi'
 import { CaseTable } from './CasePages'
-import { useLawyer } from './LawyerContext'
+import { useLawyerAccount, useLawyer } from './LawyerContext'
 import type { CaseRow } from './types'
 
 type Dashboard = {
@@ -17,6 +18,7 @@ type Dashboard = {
 
 export function LawyerDashboardPage() {
   const lawyer = useLawyer()
+  const { account } = useLawyerAccount()
   const data = useApi<Dashboard>('/api/lawyer/dashboard')
   if (data.error) return <ErrorState error={data.error} onRetry={data.reload} />
   if (!data.data) return <Loading />
@@ -24,6 +26,7 @@ export function LawyerDashboardPage() {
 
   return (
     <div className="dash">
+      <RenewalDueBanner portal="lawyer" membership={account.membership} />
       <div className="dash-welcome">
         <div>
           <h1>Welcome, {lawyer.name}</h1>

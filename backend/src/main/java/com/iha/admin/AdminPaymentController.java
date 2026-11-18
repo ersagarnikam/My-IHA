@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,6 +27,11 @@ import com.iha.payment.Payment;
 import com.iha.payment.PaymentRepository;
 import com.iha.provider.Doctor;
 import com.iha.provider.DoctorRepository;
+import com.iha.provider.FeePayingProvider;
+import com.iha.provider.HospitalRepository;
+import com.iha.provider.LawyerRepository;
+import com.iha.providerfee.ProviderFeePayment;
+import com.iha.providerfee.ProviderFeePaymentRepository;
 import com.iha.refund.PaymentRefund;
 import com.iha.refund.RefundService;
 import jakarta.validation.Valid;
@@ -50,8 +56,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * MTA admin: every payment received (patient payments and doctor fees) and
- * refunds. {@code kind} is {@code patient} or {@code doctor}.
+ * MTA admin: every payment received (patient payments and doctor, hospital and
+ * lawyer fees) and refunds. {@code kind} is {@code patient}, {@code doctor},
+ * {@code hospital} or {@code lawyer}.
  */
 @RestController
 @RequestMapping("/api/admin/payments")
@@ -59,6 +66,9 @@ public class AdminPaymentController {
 
 	private final PaymentRepository payments;
 	private final DoctorFeePaymentRepository feePayments;
+	private final ProviderFeePaymentRepository providerPayments;
+	private final HospitalRepository hospitals;
+	private final LawyerRepository lawyers;
 	private final PatientRepository patients;
 	private final DoctorRepository doctors;
 	private final CaseRepository cases;
@@ -67,8 +77,12 @@ public class AdminPaymentController {
 
 	AdminPaymentController(PaymentRepository payments, DoctorFeePaymentRepository feePayments,
 			PatientRepository patients, DoctorRepository doctors, CaseRepository cases, RefundService refunds,
-			AuditService audit) {
+			AuditService audit, ProviderFeePaymentRepository providerPayments, HospitalRepository hospitals,
+			LawyerRepository lawyers) {
 		this.audit = audit;
+		this.providerPayments = providerPayments;
+		this.hospitals = hospitals;
+		this.lawyers = lawyers;
 		this.payments = payments;
 		this.feePayments = feePayments;
 		this.patients = patients;
@@ -88,7 +102,9 @@ public class AdminPaymentController {
 			.toList();
 		List<DoctorFeePayment> doctorPayments = caseId != null ? List.of()
 				: feePayments.findAll().stream().filter(p -> p.getPaidAt() != null).toList();
-		return rows(patientPayments, doctorPayments);
+		List<ProviderFeePayment> otherFees = caseId != null ? List.of()
+				: providerPayments.findAll().stream().filter(p -> p.getPaidAt() != null).toList();
+		return rows(patientPayments, doctorPayments, otherFees);
 	}
 
 	/** Every payment as a spreadsheet, for MTA's accountant. Dates are in Brisbane time, like admin reporting. */
@@ -148,8 +164,10 @@ public class AdminPaymentController {
 
 	private PaymentRow row(String kind, UUID id) {
 		List<PaymentRow> found = switch (kind) {
-			case RefundService.PATIENT -> rows(payments.findById(id).stream().toList(), List.of());
-			case RefundService.DOCTOR -> rows(List.of(), feePayments.findById(id).stream().toList());
+			case RefundService.PATIENT -> rows(payments.findById(id).stream().toList(), List.of(), List.of());
+			case RefundService.DOCTOR -> rows(List.of(), feePayments.findById(id).stream().toList(), List.of());
+			case RefundService.HOSPITAL, RefundService.LAWYER ->
+				rows(List.of(), List.of(), providerPayments.findByIdAndProviderType(id, kind).stream().toList());
 			default -> List.of();
 		};
 		if (found.isEmpty()) {
@@ -158,10 +176,12 @@ public class AdminPaymentController {
 		return found.get(0);
 	}
 
-	private List<PaymentRow> rows(List<Payment> patientPayments, List<DoctorFeePayment> doctorPayments) {
+	private List<PaymentRow> rows(List<Payment> patientPayments, List<DoctorFeePayment> doctorPayments,
+			List<ProviderFeePayment> providerFees) {
 		List<UUID> ids = new ArrayList<>();
 		patientPayments.forEach(p -> ids.add(p.getId()));
 		doctorPayments.forEach(p -> ids.add(p.getId()));
+		providerFees.forEach(p -> ids.add(p.getId()));
 		Map<UUID, List<PaymentRefund>> refunded = refunds.refundsByPayment(ids);
 		Map<UUID, Patient> patientById = byId(
 				patients.findAllById(patientPayments.stream().map(Payment::getPatientId).distinct().toList()),
@@ -188,6 +208,24 @@ public class AdminPaymentController {
 					p.getDoctorId(), null, null, p.getAmountAud(), p.getStatus(), p.getGateway(), p.getGatewayReference(),
 					p.getPaidAt(), refunded.getOrDefault(p.getId(), List.of())));
 		}
+		Map<UUID, String> providerNames = new HashMap<>();
+		List<UUID> hospitalIds = providerFees.stream()
+			.filter(p -> FeePayingProvider.HOSPITAL.equals(p.getProviderType()))
+			.map(ProviderFeePayment::getProviderId)
+			.distinct()
+			.toList();
+		List<UUID> lawyerIds = providerFees.stream()
+			.filter(p -> FeePayingProvider.LAWYER.equals(p.getProviderType()))
+			.map(ProviderFeePayment::getProviderId)
+			.distinct()
+			.toList();
+		hospitals.findAllById(hospitalIds).forEach(h -> providerNames.put(h.getId(), h.getName()));
+		lawyers.findAllById(lawyerIds).forEach(l -> providerNames.put(l.getId(), l.getName()));
+		for (ProviderFeePayment p : providerFees) {
+			rows.add(PaymentRow.of(p.getProviderType(), p.getId(), p.getFeeType(), providerNames.get(p.getProviderId()),
+					p.getProviderId(), null, null, p.getAmountAud(), p.getStatus(), p.getGateway(), p.getGatewayReference(),
+					p.getPaidAt(), refunded.getOrDefault(p.getId(), List.of())));
+		}
 		rows.sort(Comparator.comparing(PaymentRow::paidAt).reversed());
 		return rows;
 	}
@@ -203,7 +241,8 @@ public class AdminPaymentController {
 
 	/**
 	 * @param type treatment, consultation, registration or annual
-	 * @param payerId the patient or doctor id
+	 * @param kind patient, doctor, hospital or lawyer
+	 * @param payerId the patient, doctor, hospital or lawyer id
 	 * @param refundedAud refunded so far (before fees); {@code refundedToCardAud} after fees
 	 */
 	public record PaymentRow(String kind, UUID id, String type, String payerName, UUID payerId, UUID caseId,

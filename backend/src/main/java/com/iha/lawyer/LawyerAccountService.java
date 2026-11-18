@@ -25,6 +25,7 @@ import com.iha.provider.Lawyer;
 import com.iha.provider.LawyerRepository;
 import com.iha.providerchat.ProviderAccount;
 import com.iha.providerchat.ProviderMessageService;
+import com.iha.providerfee.ProviderFeeService;
 import com.iha.storage.FileType;
 import com.iha.storage.StorageService;
 import com.iha.storage.Uploads;
@@ -41,7 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
  * {@code resubmit_lawyer_registration}, {@code update_lawyer_basic_info} /
  * {@code update_lawyer_professional_details} and the dashboard layout's
  * approval gate), with the Australian credential: a MARN or a practising
- * certificate. Lawyers aren't charged fees yet.
+ * certificate. Fees: {@link ProviderFeeService}.
  */
 @Service
 public class LawyerAccountService implements AlertPreferences {
@@ -65,15 +66,18 @@ public class LawyerAccountService implements AlertPreferences {
 	private final StorageService storage;
 	private final AuditService audit;
 	private final JsonMapper json;
+	private final ProviderFeeService fees;
 
 	LawyerAccountService(LawyerRepository lawyers, AuthService authService, ProviderMessageService providerMessages,
-			StorageService storage, AuditService audit, JsonMapper json) {
+			StorageService storage, AuditService audit, JsonMapper json,
+			ProviderFeeService fees) {
 		this.lawyers = lawyers;
 		this.authService = authService;
 		this.providerMessages = providerMessages;
 		this.storage = storage;
 		this.audit = audit;
 		this.json = json;
+		this.fees = fees;
 	}
 
 	// ── Sign-up and registration ────────────────────────────────────────────
@@ -142,6 +146,14 @@ public class LawyerAccountService implements AlertPreferences {
 		return lawyer;
 	}
 
+	/** Approved with the registration fee settled (paid, waived or not charged); required for everything past the gate. */
+	@Transactional(readOnly = true)
+	public Lawyer requireActive(CurrentUser user) {
+		Lawyer lawyer = requireApproved(user);
+		fees.requireSettled(lawyer);
+		return lawyer;
+	}
+
 	public ProviderAccount account(Lawyer lawyer) {
 		return new ProviderAccount(ProviderAccount.LAWYER, lawyer.getId(), lawyer.getUserId());
 	}
@@ -170,7 +182,7 @@ public class LawyerAccountService implements AlertPreferences {
 
 	@Transactional
 	public Lawyer updateProfile(CurrentUser user, ProfileInput input) {
-		Lawyer lawyer = requireApproved(user);
+		Lawyer lawyer = requireActive(user);
 		lawyer.updateProfile(profile(user, input));
 		if (input.timeZone() != null) {
 			lawyer.setTimeZone(input.timeZone());
@@ -182,7 +194,7 @@ public class LawyerAccountService implements AlertPreferences {
 	/** A renewed or changed credential; MTA re-checks it (the latest check stays on record). */
 	@Transactional
 	public Lawyer updateCredential(CurrentUser user, CredentialInput input) {
-		Lawyer lawyer = requireApproved(user);
+		Lawyer lawyer = requireActive(user);
 		lawyer.updateCredential(credential(input));
 		audit.record(user.id(), user.email(), "lawyer", "lawyer.professional_details_updated", "lawyer",
 				lawyer.getId(), Map.of("credential", lawyer.getCredentialType()));
@@ -191,7 +203,7 @@ public class LawyerAccountService implements AlertPreferences {
 
 	@Transactional
 	public Lawyer updateNotificationPreferences(CurrentUser user, boolean email, boolean sms) {
-		Lawyer lawyer = requireApproved(user);
+		Lawyer lawyer = requireActive(user);
 		lawyer.setNotificationPreferences(email, sms);
 		audit.record(user.id(), user.email(), "lawyer", "lawyer.notification_preferences_updated", "lawyer",
 				lawyer.getId(), Map.of());

@@ -24,6 +24,8 @@ erDiagram
   consultation_requests ||--o{ consultation_slots : "doctor proposes"
   cases ||--o{ payments : "paid by patient"
   doctors ||--o{ doctor_fee_payments : pays
+  hospitals ||--o{ provider_fee_payments : pays
+  lawyers ||--o{ provider_fee_payments : pays
   cases ||--o| visa_submissions : "visa application"
   visa_submissions ||--o{ visa_documents : ""
   patients ||--|| chat_threads : "support chat"
@@ -61,7 +63,8 @@ erDiagram
 | `consultation_requests`, `consultation_slots` | Paid online consultations and the proposed times. |
 | `payments`, `payment_methods` | Patient payments (treatment, consultation fee) and saved cards. |
 | `doctor_fee_payments` | Doctor registration and annual fees (status `pending`, `completed`, `failed`, `refunded`). |
-| `payment_refunds` | Admin refunds of either kind of payment (`payment_kind` `patient`/`doctor`): amount, card fee deducted (`fee_source` `stripe`, `estimate`, `waived` or `none`), amount back to the card, reason and note, provider refund id and status (`pending`, `succeeded`, `failed`), who and when (V8). A payment refunded in full gets status `refunded`. |
+| `provider_fee_payments` | Hospital and lawyer registration and annual fees (`provider_type` `hospital` \| `lawyer`, `provider_id`; otherwise like `doctor_fee_payments`). `hospitals` and `lawyers` hold `registration_fee_paid_at`, `registration_fee_waived` (fee was $0 at approval) and `annual_fee_next_due_at` (V15). |
+| `payment_refunds` | Admin refunds of either kind of payment (`payment_kind` `patient`/`doctor`/`hospital`/`lawyer`; the last two since V15): amount, card fee deducted (`fee_source` `stripe`, `estimate`, `waived` or `none`), amount back to the card, reason and note, provider refund id and status (`pending`, `succeeded`, `failed`), who and when (V8). A payment refunded in full gets status `refunded`. |
 | `visa_submissions`, `visa_documents`, `visa_document_requests`, `visa_case_notes` | Visa application, its documents (patient uploads; hospital letters — `source = hospital_generated`, `hospital_id`, one per case and category, visible to the patient once `sent_to_patient_at` is set; approved visa), lawyer requests (category, what is needed, instructions) and the lawyer's confidential notes. `assigned_lawyer_id` is set by MTA admin; the lawyer issues the approved visa (`source = lawyer_issued`, one per case). |
 | `chat_threads`, `chat_messages` | Patient ↔ coordinator chat. |
 | `provider_message_threads`, `provider_messages` | Doctor/hospital/lawyer ↔ admin chat (one thread per provider account). |
@@ -128,6 +131,7 @@ Two kinds share one table (`consultation_requests.kind`):
 | `payments` | `full_payment` | patient selects an option | webhook → plan `patient_confirmed`, case `payment_confirmed` |
 | `payments` | `consultation_fee` | patient selects a slot | webhook → consultation `scheduled` (+ Zoom) |
 | `doctor_fee_payments` | `registration` / `annual` | doctor starts checkout | webhook → doctor fee dates |
+| `provider_fee_payments` | `registration` / `annual` | hospital or lawyer starts checkout | webhook → hospital / lawyer fee dates |
 
 Status: `pending` → `completed` or `failed`. At most one pending row per purpose (locked get-or-create).
 

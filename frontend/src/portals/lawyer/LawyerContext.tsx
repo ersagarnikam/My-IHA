@@ -37,17 +37,21 @@ export function useLawyerAccount() {
 /** For pages behind the gate, where the lawyer is known to be registered and approved. */
 export function useLawyer(): LawyerProfile & { update: (h: LawyerProfile) => void } {
   const { account, setAccount } = useLawyerAccount()
-  return { ...account.lawyer!, update: (lawyer) => setAccount({ registered: true, lawyer }) }
+  return {
+    ...account.lawyer!,
+    update: (lawyer) => setAccount({ ...account, registered: true, lawyer }),
+  }
 }
 
 /** Where the lawyer should be, given how far their registration has got (old dashboard layout gate). */
 export function lawyerGatePath(account: LawyerAccount) {
   if (!account.registered || !account.lawyer) return '/lawyer/register'
   if (account.lawyer.status !== 'approved') return '/lawyer/pending-approval'
+  if (account.membership?.registrationFeeDue) return '/lawyer/registration-fee'
   return null
 }
 
-/** Keeps unregistered or unapproved lawyers on their gate page. */
+/** Keeps unregistered, unapproved or unpaid lawyers on their gate page. */
 export function RequireApprovedLawyer() {
   const { account } = useLawyerAccount()
   const location = useLocation()

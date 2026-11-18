@@ -1,3 +1,4 @@
+import type { Membership } from '../../components/ProviderBilling'
 import type { CaseStatus } from '../../lib/cases'
 
 // Shapes returned by /api/hospital/** (backend hospital/HospitalAccountController, HospitalPortalController).
@@ -43,7 +44,12 @@ export type HospitalProfile = {
   documents: HospitalDocument[]
 }
 
-export type HospitalAccount = { registered: boolean; hospital: HospitalProfile | null }
+/** {@code membership}: fee status once approved (absent on a freshly saved registration). */
+export type HospitalAccount = {
+  registered: boolean
+  hospital: HospitalProfile | null
+  membership?: Membership | null
+}
 
 /** One case as it reaches the hospital through one doctor's treatment plan (keyed by plan id). */
 export type CaseRow = {

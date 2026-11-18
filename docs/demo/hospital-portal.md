@@ -11,7 +11,8 @@
 1. Sign up and verify email.
 2. Complete the 4-step registration: basics with ABN, location, hospital details, documents.
 3. MTA checks accreditation and the state licence, then approves, rejects or asks for more information.
-4. The hospital becomes selectable by doctors as an affiliation. No fees are charged yet.
+4. If MTA has set a hospital registration fee (admin → Settings), the hospital pays it by card before its portal opens; at $0 nothing is charged. The annual membership fee is paid under Account & Settings → Billing when it falls due.
+5. The hospital becomes selectable by doctors as an affiliation.
 
 **Each case:**
 

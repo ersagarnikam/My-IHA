@@ -11,7 +11,8 @@
 1. Sign up with consent and verify email.
 2. Complete the 3-step registration: practice with ABN, credential, documents and agreement.
 3. Choose a credential: a **MARN** (7 digits, on the OMARA register) or an **Australian practising certificate** with the issuing state. Lawyers with a practising certificate haven't needed a MARN since 2021.
-4. MTA checks that register and approves, rejects or asks for more information. No fees are charged yet.
+4. MTA checks that register and approves, rejects or asks for more information.
+5. If MTA has set a lawyer registration fee (admin → Settings), the lawyer pays it by card before their portal opens and before MTA can assign them cases; at $0 nothing is charged. The annual membership fee is paid under Account & Settings → Billing when it falls due.
 
 **Each case:**
 

@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "lawyers")
-public class Lawyer {
+public class Lawyer implements FeePayingProvider {
 
 	public static final String PENDING = "pending";
 	public static final String APPROVED = "approved";
@@ -106,6 +106,15 @@ public class Lawyer {
 	/** IANA zone the account works in; see {@link AustralianTimeZones}. */
 	@Column(name = "time_zone", nullable = false)
 	private String timeZone = AustralianTimeZones.DEFAULT;
+
+	@Column(name = "registration_fee_paid_at")
+	private Instant registrationFeePaidAt;
+
+	@Column(name = "registration_fee_waived", nullable = false)
+	private boolean registrationFeeWaived;
+
+	@Column(name = "annual_fee_next_due_at")
+	private Instant annualFeeNextDueAt;
 
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
@@ -285,6 +294,47 @@ public class Lawyer {
 
 	public Instant getCreatedAt() {
 		return createdAt;
+	}
+
+	// ── Membership fees (FeePayingProvider) ─────────────────────────────────
+
+	@Override
+	public String providerType() {
+		return LAWYER;
+	}
+
+	@Override
+	public Instant getRegistrationFeePaidAt() {
+		return registrationFeePaidAt;
+	}
+
+	@Override
+	public boolean isRegistrationFeeWaived() {
+		return registrationFeeWaived;
+	}
+
+	@Override
+	public Instant getAnnualFeeNextDueAt() {
+		return annualFeeNextDueAt;
+	}
+
+	@Override
+	public void markRegistrationFeePaid(Instant paidAt, Instant nextDue) {
+		this.registrationFeePaidAt = paidAt;
+		this.registrationFeeWaived = false;
+		this.annualFeeNextDueAt = nextDue;
+	}
+
+	@Override
+	public void markRegistrationFeeWaived(Instant at, Instant nextDue) {
+		this.registrationFeePaidAt = at;
+		this.registrationFeeWaived = true;
+		this.annualFeeNextDueAt = nextDue;
+	}
+
+	@Override
+	public void markAnnualFeePaid(Instant nextDue) {
+		this.annualFeeNextDueAt = nextDue;
 	}
 
 	/** Name, firm type, ABN and contact details. {@code contactEmail} is always the login email. */

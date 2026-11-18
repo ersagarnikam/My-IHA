@@ -34,6 +34,8 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
 /** Where a notification leads in the lawyer portal. */
 export function lawyerNotificationHref(n: Notification) {
   if (n.type === 'new_message') return '/lawyer/messages'
+  if (n.type.includes('fee') || n.type === 'refund_issued')
+    return '/lawyer/account-settings?tab=billing'
   if (n.caseId) return `/lawyer/cases/${n.caseId}`
   return '/lawyer/notifications'
 }

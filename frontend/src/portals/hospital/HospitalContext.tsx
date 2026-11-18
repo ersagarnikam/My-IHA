@@ -37,17 +37,21 @@ export function useHospitalAccount() {
 /** For pages behind the gate, where the hospital is known to be registered and approved. */
 export function useHospital(): HospitalProfile & { update: (h: HospitalProfile) => void } {
   const { account, setAccount } = useHospitalAccount()
-  return { ...account.hospital!, update: (hospital) => setAccount({ registered: true, hospital }) }
+  return {
+    ...account.hospital!,
+    update: (hospital) => setAccount({ ...account, registered: true, hospital }),
+  }
 }
 
 /** Where the hospital should be, given how far its registration has got (old dashboard layout gate). */
 export function hospitalGatePath(account: HospitalAccount) {
   if (!account.registered || !account.hospital) return '/hospital/register'
   if (account.hospital.status !== 'approved') return '/hospital/pending-approval'
+  if (account.membership?.registrationFeeDue) return '/hospital/registration-fee'
   return null
 }
 
-/** Keeps unregistered or unapproved hospitals on their gate page. */
+/** Keeps unregistered, unapproved or unpaid hospitals on their gate page. */
 export function RequireApprovedHospital() {
   const { account } = useHospitalAccount()
   const location = useLocation()

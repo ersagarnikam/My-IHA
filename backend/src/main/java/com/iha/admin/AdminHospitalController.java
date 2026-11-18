@@ -13,6 +13,7 @@ import com.iha.hospital.HospitalAccountService;
 import com.iha.hospital.HospitalAdminService;
 import com.iha.provider.DoctorHospitalAffiliationRepository;
 import com.iha.provider.Hospital;
+import com.iha.providerfee.ProviderFeeService;
 import com.iha.treatment.TreatmentPlan;
 import com.iha.treatment.TreatmentPlanRepository;
 import jakarta.validation.Valid;
@@ -40,9 +41,11 @@ public class AdminHospitalController {
 	private final HospitalAccountService accounts;
 	private final DoctorHospitalAffiliationRepository affiliations;
 	private final TreatmentPlanRepository plans;
+	private final ProviderFeeService fees;
 
 	AdminHospitalController(HospitalAdminService hospitals, HospitalAccountService accounts,
-			DoctorHospitalAffiliationRepository affiliations, TreatmentPlanRepository plans) {
+			DoctorHospitalAffiliationRepository affiliations, TreatmentPlanRepository plans, ProviderFeeService fees) {
+		this.fees = fees;
 		this.hospitals = hospitals;
 		this.accounts = accounts;
 		this.affiliations = affiliations;
@@ -65,7 +68,8 @@ public class AdminHospitalController {
 				IntStream.range(0, docs.size())
 					.mapToObj(i -> new DocumentResponse(i, docs.get(i).fileName(), docs.get(i).category(),
 							docs.get(i).mimeType(), docs.get(i).fileSizeBytes()))
-					.toList());
+					.toList(),
+				h.isApproved() ? fees.membership(h) : null);
 	}
 
 	@GetMapping("/{hospitalId}/documents/{index}")
@@ -117,7 +121,7 @@ public class AdminHospitalController {
 			String address, String zipCode, String registrationType, Integer bedCount, List<String> roomTypes,
 			String licenseNumber, String accreditationBody, LocalDate accreditationExpiresOn, LocalDate licenceExpiresOn,
 			String rejectionReason, String moreInfoMessage,
-			List<DocumentResponse> documents) {
+			List<DocumentResponse> documents, ProviderFeeService.Membership membership) {
 	}
 
 }

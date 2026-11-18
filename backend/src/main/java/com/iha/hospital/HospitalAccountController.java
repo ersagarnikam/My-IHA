@@ -11,6 +11,7 @@ import com.iha.auth.CurrentUser;
 import com.iha.common.validation.PhoneNumber;
 import com.iha.common.validation.StrongPassword;
 import com.iha.provider.Hospital;
+import com.iha.providerfee.ProviderFeeService;
 import com.iha.privacy.Consent;
 import com.iha.privacy.ConsentService;
 import com.iha.auth.AppUser;
@@ -48,8 +49,10 @@ public class HospitalAccountController {
 
 	private final ConsentService consents;
 	private final HospitalAccountService accounts;
+	private final ProviderFeeService fees;
 
-	HospitalAccountController(HospitalAccountService accounts, ConsentService consents) {
+	HospitalAccountController(HospitalAccountService accounts, ConsentService consents, ProviderFeeService fees) {
+		this.fees = fees;
 		this.consents = consents;
 		this.accounts = accounts;
 	}
@@ -68,8 +71,8 @@ public class HospitalAccountController {
 	@GetMapping("/api/hospital/account")
 	public AccountResponse account(@AuthenticationPrincipal Jwt jwt) {
 		return accounts.find(CurrentUser.from(jwt))
-			.map(h -> new AccountResponse(true, profile(h)))
-			.orElse(new AccountResponse(false, null));
+			.map(h -> new AccountResponse(true, profile(h), fees.membership(h)))
+			.orElse(new AccountResponse(false, null, null));
 	}
 
 	@PostMapping(path = "/api/hospital/registration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -211,7 +214,8 @@ public class HospitalAccountController {
 	public record NotificationPreferencesRequest(boolean emailNotificationsEnabled, boolean smsNotificationsEnabled) {
 	}
 
-	public record AccountResponse(boolean registered, ProfileResponse hospital) {
+	/** {@code membership}: registration and annual fee status (gates the portal while the registration fee is due). */
+	public record AccountResponse(boolean registered, ProfileResponse hospital, ProviderFeeService.Membership membership) {
 	}
 
 	public record DocumentResponse(int index, String fileName, String category, String mimeType, long fileSizeBytes) {

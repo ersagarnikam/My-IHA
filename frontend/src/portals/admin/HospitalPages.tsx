@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router'
 import { Download, Eye, FileText } from 'lucide-react'
+import { MembershipSummary, type Membership } from '../../components/ProviderBilling'
 import { useToast } from '../../components/Toasts'
 import { ErrorState, Loading } from '../../components/ui'
 import { ApiError, apiPost, openFile } from '../../lib/api'
@@ -41,6 +42,7 @@ type HospitalDetail = {
   licenceExpiresOn: string | null
   rejectionReason: string | null
   moreInfoMessage: string | null
+  membership: Membership | null
   documents: {
     index: number
     fileName: string
@@ -231,6 +233,8 @@ export function AdminHospitalDetailPage() {
           </div>
         )}
       </section>
+
+      {d.membership && <MembershipSummary membership={d.membership} />}
 
       {(d.moreInfoMessage || d.rejectionReason) && (
         <div className={`dr-banner${d.rejectionReason ? ' bad' : ''}`}>

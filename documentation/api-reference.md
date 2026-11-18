@@ -182,7 +182,11 @@ See the [hospital portal](hospital-portal.md) guide. Everything except the accou
 | Method | Path | Description |
 |---|---|---|
 | POST | `/api/auth/register/hospital` | Public. `{email, password}` → emails a 6-digit code; `POST /api/auth/verify` signs in. |
-| GET | `/api/hospital/account` | `{registered, hospital}` — status, review messages, profile, documents. |
+| GET | `/api/hospital/account` | `{registered, hospital, membership}` — status, review messages, profile, documents; `membership` = `{registrationFeeAud, annualFeeAud, registrationFeeDue, registrationFeePaidAt, registrationFeeWaived, annualFeeNextDueAt, annualFeeDue}` (`registrationFeeDue` locks the portal). |
+| GET | `/api/hospital/billing` | `{membership, provider, publishableKey, payments}` (each payment with `refundedAud`). Open once approved, before the fee is paid. |
+| POST | `/api/hospital/billing/checkout` | `{feeType: registration\|annual}` → client secret. `already_paid`, `no_fee`, `registration_fee_not_paid`, `not_due_yet`, `invalid_fee_type`. |
+| POST | `/api/hospital/billing/simulate/{intentId}` | Simulated provider only. |
+| GET | `/api/hospital/billing/payments/{id}/invoice` | PDF invoice. |
 | POST / PUT | `/api/hospital/registration` | *Multipart*: name, registrationNumber, abnNumber, phone, country, city, address, zipCode, registrationType (`multi_specialty`/`single_specialty`), specialties (repeated), bedCount, roomTypes (repeated), licenseNumber, accreditationBody, hospitalLicense, registrationCertificate, otherDocuments. PUT resubmits after a rejection or more-info request (files optional). Codes: `invalid_abn`, `invalid_registration_number`, `invalid_license_number`, `documents_required`, `already_registered`, `not_resubmittable`. |
 | GET | `/api/hospital/registration/documents/{index}` | One of the hospital's registration documents. |
 | PUT | `/api/hospital/profile/basic` | Name, registration number, ABN, phone, country, city, address, zip code. |
@@ -211,7 +215,8 @@ See the [lawyer portal](lawyer-portal.md) guide. Everything except the account, 
 | Method | Path | Notes |
 |---|---|---|
 | POST | `/api/auth/register/lawyer` | Public. `{email, password, acceptTerms}` → emails a 6-digit code. |
-| GET | `/api/lawyer/account` | `{registered, lawyer}` — status, review messages, profile, credential, documents. |
+| GET | `/api/lawyer/account` | `{registered, lawyer, membership}` — status, review messages, profile, credential, documents, fee status (as for hospitals). |
+| GET / POST | `/api/lawyer/billing` · `/billing/checkout` · `/billing/simulate/{intentId}` · `/billing/payments/{id}/invoice` | Same as the hospital billing endpoints. |
 | POST / PUT | `/api/lawyer/registration` | Multipart: lawyerType, name, abnNumber, phone, address, city, zipCode, experience?, timeZone?, credentialType (`marn` \| `practising_certificate`), credentialNumber, practisingState (certificates), credentialExpiresOn, credentialCertificate (required on POST), indemnityInsurance?, otherDocuments*. PUT resubmits. `invalid_marn`, `invalid_practising_certificate`, `invalid_practising_state`, `invalid_credential_expiry`, `invalid_abn`, `documents_required`, `already_registered`, `not_resubmittable`. |
 | GET | `/api/lawyer/registration/documents/{index}` | A registration document. |
 | PUT | `/api/lawyer/profile` · `/profile/credential` · `/profile/notification-preferences` | Settings. |

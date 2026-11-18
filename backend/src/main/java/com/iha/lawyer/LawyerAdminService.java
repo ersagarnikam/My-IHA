@@ -18,6 +18,7 @@ import com.iha.patient.Patient;
 import com.iha.patient.PatientRepository;
 import com.iha.provider.Lawyer;
 import com.iha.provider.LawyerRepository;
+import com.iha.providerfee.ProviderFeeService;
 import com.iha.verification.ProviderVerification;
 import com.iha.verification.VerificationService;
 import com.iha.visa.VisaSubmission;
@@ -39,10 +40,11 @@ public class LawyerAdminService {
 	private final VerificationService verification;
 	private final NotificationService notifications;
 	private final AuditService audit;
+	private final ProviderFeeService fees;
 
 	LawyerAdminService(LawyerRepository lawyers, VisaSubmissionRepository submissions, CaseRepository cases,
 			PatientRepository patients, VerificationService verification, NotificationService notifications,
-			AuditService audit) {
+			AuditService audit, ProviderFeeService fees) {
 		this.lawyers = lawyers;
 		this.submissions = submissions;
 		this.cases = cases;
@@ -50,6 +52,7 @@ public class LawyerAdminService {
 		this.verification = verification;
 		this.notifications = notifications;
 		this.audit = audit;
+		this.fees = fees;
 	}
 
 	/** Lawyers with a portal login, newest first. */
@@ -86,11 +89,17 @@ public class LawyerAdminService {
 			verification.requirePassing(ProviderVerification.LAWYER, lawyerId);
 		}
 		lawyer.review(outcome, reason);
+		if (lawyer.isApproved()) {
+			fees.onApproved(lawyer);
+		}
 		if (lawyer.getUserId() != null) {
 			switch (outcome) {
 				case Lawyer.APPROVED -> notifications.notifyWithAlert(lawyer.getUserId(), "registration_approved",
 						"Registration approved",
-						"Your MTA visa lawyer registration has been approved. Your portal is now open.", null);
+						lawyer.getRegistrationFeePaidAt() != null
+								? "Your MTA visa lawyer registration has been approved. Your portal is now open."
+								: "Your MTA visa lawyer registration has been approved. Pay the registration fee to open your portal.",
+						null);
 				case Lawyer.REJECTED -> notifications.notifyWithAlert(lawyer.getUserId(), "registration_rejected",
 						"Registration not approved", "Your MTA visa lawyer registration was not approved."
 								+ (reason != null ? " Reason: " + reason : ""),
@@ -150,6 +159,10 @@ public class LawyerAdminService {
 		Lawyer lawyer = lawyer(lawyerId);
 		if (!lawyer.isApproved()) {
 			throw ApiException.conflict("lawyer_not_approved", "Only approved lawyers can be assigned.");
+		}
+		if (fees.registrationFeeOwed(lawyer)) {
+			throw ApiException.conflict("registration_fee_unpaid",
+					"This lawyer hasn't paid the registration fee yet, so their portal is locked.");
 		}
 		if (lawyerId.equals(s.getAssignedLawyerId())) {
 			throw ApiException.conflict("already_assigned", "This lawyer already has the case.");

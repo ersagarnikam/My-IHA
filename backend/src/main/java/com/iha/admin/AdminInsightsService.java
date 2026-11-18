@@ -33,6 +33,8 @@ import com.iha.consultation.ConsultationSlot;
 import com.iha.consultation.ConsultationSlotRepository;
 import com.iha.doctor.DoctorFeePayment;
 import com.iha.doctor.DoctorFeePaymentRepository;
+import com.iha.providerfee.ProviderFeePayment;
+import com.iha.providerfee.ProviderFeePaymentRepository;
 import com.iha.patient.Patient;
 import com.iha.patient.PatientRepository;
 import com.iha.payment.Payment;
@@ -104,13 +106,16 @@ public class AdminInsightsService {
 	private final ConsultationService consultationService;
 	private final RefundService refunds;
 	private final ComplianceService compliance;
+	private final ProviderFeePaymentRepository providerPayments;
 
 	AdminInsightsService(AdminService admin, DoctorRepository doctors, DoctorCaseAssignmentRepository assignments,
 			CaseRepository cases, PatientRepository patients, TreatmentPlanRepository plans,
 			TreatmentOptionRepository options, PaymentRepository payments, DoctorFeePaymentRepository feePayments,
 			ConsultationRequestRepository consultations, ConsultationSlotRepository slots,
 			ConsultationService consultationService, RefundService refunds, ComplianceService compliance,
-			HospitalAdminService hospitalAdmin, LawyerAdminService lawyerAdmin) {
+			HospitalAdminService hospitalAdmin, LawyerAdminService lawyerAdmin,
+			ProviderFeePaymentRepository providerPayments) {
+		this.providerPayments = providerPayments;
 		this.compliance = compliance;
 		this.hospitalAdmin = hospitalAdmin;
 		this.lawyerAdmin = lawyerAdmin;
@@ -152,6 +157,11 @@ public class AdminInsightsService {
 		Map<UUID, BigDecimal> refundedToCard = new HashMap<>();
 		List<UUID> paidIds = new ArrayList<>(paid.stream().map(Payment::getId).toList());
 		paidIds.addAll(feesPaid.stream().map(DoctorFeePayment::getId).toList());
+		List<ProviderFeePayment> providerFeesPaid = providerPayments.findAll()
+			.stream()
+			.filter(p -> p.getPaidAt() != null)
+			.toList();
+		paidIds.addAll(providerFeesPaid.stream().map(ProviderFeePayment::getId).toList());
 		refunds.refundsByPayment(paidIds).forEach((id, list) -> refundedToCard.put(id, list.stream()
 			.map(PaymentRefund::getRefundedAud)
 			.reduce(BigDecimal.ZERO, BigDecimal::add)));
@@ -187,6 +197,17 @@ public class AdminInsightsService {
 		}
 		BigDecimal membershipYear = BigDecimal.ZERO;
 		for (DoctorFeePayment p : feesPaid) {
+			BigDecimal kept = p.getAmountAud().subtract(refundedToCard.getOrDefault(p.getId(), BigDecimal.ZERO));
+			BigDecimal[] month = monthly.get(YearMonth.from(p.getPaidAt().atZone(ZONE)));
+			if (month != null) {
+				month[1] = month[1].add(kept);
+			}
+			if (p.getPaidAt().isAfter(yearAgo)) {
+				membershipYear = membershipYear.add(kept);
+			}
+		}
+		// Hospital and lawyer membership fees count with doctors' in the same column.
+		for (ProviderFeePayment p : providerFeesPaid) {
 			BigDecimal kept = p.getAmountAud().subtract(refundedToCard.getOrDefault(p.getId(), BigDecimal.ZERO));
 			BigDecimal[] month = monthly.get(YearMonth.from(p.getPaidAt().atZone(ZONE)));
 			if (month != null) {

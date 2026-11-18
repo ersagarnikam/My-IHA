@@ -44,9 +44,20 @@ The **Hospital Invitation Letter** (for the visa authorities) and the **Appointm
 
 ## Approval by MTA
 
-In the admin portal, **Hospital Approvals** lists hospitals that registered through the portal (seeded reference hospitals without a login aren't listed), with Pending / More Info Requested / Approved / Rejected tabs. The review page shows the details and documents with **Approve**, **Request more info** and **Reject** (the last two need a reason the hospital sees). Approval opens the portal and makes the hospital selectable as a doctor affiliation. Hospital fees exist under Settings but **aren't charged yet**.
+In the admin portal, **Hospital Approvals** lists hospitals that registered through the portal (seeded reference hospitals without a login aren't listed), with Pending / More Info Requested / Approved / Rejected tabs. The review page shows the details and documents with **Approve**, **Request more info** and **Reject** (the last two need a reason the hospital sees). Approval opens the portal and makes the hospital selectable as a doctor affiliation. If a registration fee applies, the portal opens once the hospital pays it (see [Membership fees](#membership-fees)).
+
+## Membership fees
+
+Hospitals pay MTA a one-time **registration fee** and an **annual membership fee**, set by MTA under admin → Settings (`hospital_registration_fee`, `hospital_annual_fee`). The rules (`providerfee/ProviderFeeService`, migration V15):
+
+- **Registration fee above $0:** once MTA approves the account, the portal stays locked on `/hospital/registration-fee` until the fee is paid by card (the API answers `403 registration_fee_unpaid` for everything past the gate except billing and the support chat). Approval's notification then says to pay the fee.
+- **Fee at $0:** nothing is charged. Approval records the registration fee as waived and starts the yearly cycle. Accounts approved while the fee was $0 never owe it, even if MTA raises it later; accounts approved before V15 count as waived.
+- **Annual fee:** falls due a year after registration (paid or waived) and after each renewal (Brisbane dates). An overdue renewal shows a banner on the dashboard and a **Pay now** button under Account & Settings → Billing; it never locks the portal. While the annual fee is $0 nothing falls due.
+- **Billing tab:** registration status, next renewal date, paid fees with PDF invoices (`MTA-HO-…` / `MTA-VL-…`, tax invoices once MTA is GST-registered; GST class *Hospital and visa lawyer membership fees*, taxable by default) and any refunds.
+- MTA sees the payments under admin → Payments (Hospitals / Lawyers tabs) and can refund them like doctors' fees; the provider's admin page shows a **Membership** line.
 
 ## Tests
 
 - `HospitalPortalFlowTests` (backend): sign-up, registration validation (ABN checksum, documents), the gate, admin review with more info → resubmission → approval, settings; the demo hospital's cases, case detail (no patient contact details), generating, previewing and sending both letters, the patient's visa application unlocking, patients and doctors, 404s for records it can't see.
+- `ProviderFeeTests` (backend): a $0 fee is waived at approval, a fee above $0 locks the portal until paid, invoices, the annual renewal as a reminder, admin listing and refunding the payment.
 - `e2e/hospital-journey.mjs`: signs up and registers a new hospital through the wizard (including an invalid ABN), MTA asks for more info, the hospital resubmits, MTA approves in the admin portal, then the demo hospital generates and sends both letters for a paid case through the UI. Needs the API log for the verification code.

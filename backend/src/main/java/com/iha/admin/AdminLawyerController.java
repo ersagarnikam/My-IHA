@@ -12,6 +12,7 @@ import com.iha.documents.PatientDocumentController;
 import com.iha.lawyer.LawyerAccountService;
 import com.iha.lawyer.LawyerAdminService;
 import com.iha.provider.Lawyer;
+import com.iha.providerfee.ProviderFeeService;
 import com.iha.visa.VisaSubmission;
 import com.iha.visa.VisaSubmissionRepository;
 import jakarta.validation.Valid;
@@ -39,9 +40,11 @@ public class AdminLawyerController {
 	private final LawyerAdminService lawyers;
 	private final LawyerAccountService accounts;
 	private final VisaSubmissionRepository submissions;
+	private final ProviderFeeService fees;
 
 	AdminLawyerController(LawyerAdminService lawyers, LawyerAccountService accounts,
-			VisaSubmissionRepository submissions) {
+			VisaSubmissionRepository submissions, ProviderFeeService fees) {
+		this.fees = fees;
 		this.lawyers = lawyers;
 		this.accounts = accounts;
 		this.submissions = submissions;
@@ -62,7 +65,8 @@ public class AdminLawyerController {
 				IntStream.range(0, docs.size())
 					.mapToObj(i -> new DocumentResponse(i, docs.get(i).fileName(), docs.get(i).category(),
 							docs.get(i).mimeType(), docs.get(i).fileSizeBytes()))
-					.toList());
+					.toList(),
+				l.isApproved() ? fees.membership(l) : null);
 	}
 
 	@GetMapping("/lawyers/{lawyerId}/documents/{index}")
@@ -125,7 +129,8 @@ public class AdminLawyerController {
 
 	public record LawyerDetail(LawyerRow lawyer, String abnNumber, String phone, String address, String zipCode,
 			String experience, String credentialNumber, String practisingState, LocalDate credentialExpiresOn,
-			String rejectionReason, String moreInfoMessage, List<DocumentResponse> documents) {
+			String rejectionReason, String moreInfoMessage, List<DocumentResponse> documents,
+			ProviderFeeService.Membership membership) {
 	}
 
 }
